@@ -2,7 +2,7 @@ import { c as _c } from "react/compiler-runtime";
 import React, { useState } from 'react';
 import { type OptionWithDescription, Select } from '../../components/CustomSelect/select.js';
 import { Dialog } from '../../components/design-system/Dialog.js';
-import { Box, Text } from '../../ink.js';
+import { translate } from '../../i18n/index.js';
 import { useAppState } from '../../state/AppState.js';
 import { isClaudeAISubscriber } from '../../utils/auth.js';
 import { openBrowser } from '../../utils/browser.js';
@@ -133,7 +133,7 @@ function ClaudeInChromeMenu(t0) {
     }
     let t5;
     if ($[10] === Symbol.for("react.memo_cache_sentinel")) {
-      t5 = <Text>Manage permissions</Text>;
+      t5 = <Text>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.managePermissions')}</Text>;
       $[10] = t5;
     } else {
       t5 = $[10];
@@ -151,7 +151,7 @@ function ClaudeInChromeMenu(t0) {
     }
     let t7;
     if ($[13] === Symbol.for("react.memo_cache_sentinel")) {
-      t7 = <Text>Reconnect extension</Text>;
+      t7 = <Text>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.reconnectExtension')}</Text>;
       $[13] = t7;
     } else {
       t7 = $[13];
@@ -167,7 +167,7 @@ function ClaudeInChromeMenu(t0) {
     } else {
       t8 = $[15];
     }
-    const t9 = `Enabled by default: ${enabledByDefault ? "Yes" : "No"}`;
+    const t9 = translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.enabledByDefault', { value: enabledByDefault ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.yes') : translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.no') });
     let t10;
     if ($[16] !== t9) {
       t10 = {
@@ -197,14 +197,14 @@ function ClaudeInChromeMenu(t0) {
   }
   let t6;
   if ($[20] === Symbol.for("react.memo_cache_sentinel")) {
-    t6 = <Text>Claude in Chrome works with the Chrome extension to let you control your browser directly from Claude Code. Navigate websites, fill forms, capture screenshots, record GIFs, and debug with console logs and network requests.</Text>;
+    t6 = <Text>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.intro')}</Text>;
     $[20] = t6;
   } else {
     t6 = $[20];
   }
   let t7;
   if ($[21] !== isWSL) {
-    t7 = isWSL && <Text color="error">Claude in Chrome is not supported in WSL at this time.</Text>;
+    t7 = isWSL && <Text color="error">{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.unsupportedInWsl')}</Text>;
     $[21] = isWSL;
     $[22] = t7;
   } else {
@@ -212,7 +212,7 @@ function ClaudeInChromeMenu(t0) {
   }
   let t8;
   if ($[23] !== isClaudeAISubscriber) {
-    t8 = true && !isClaudeAISubscriber && <Text color="error">Claude in Chrome requires a claude.ai subscription.</Text>;
+    t8 = true && !isClaudeAISubscriber && <Text color="error">{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.requiresSubscription')}</Text>;
     $[23] = isClaudeAISubscriber;
     $[24] = t8;
   } else {
@@ -220,7 +220,7 @@ function ClaudeInChromeMenu(t0) {
   }
   let t9;
   if ($[25] !== handleAction || $[26] !== isConnected || $[27] !== isDisabled || $[28] !== isExtensionInstalled || $[29] !== options || $[30] !== selectKey || $[31] !== showInstallHint) {
-    t9 = !isDisabled && <>{!isHomespace && <Box flexDirection="column"><Text>Status:{" "}{isConnected ? <Text color="success">Enabled</Text> : <Text color="inactive">Disabled</Text>}</Text><Text>Extension:{" "}{isExtensionInstalled ? <Text color="success">Installed</Text> : <Text color="warning">Not detected</Text>}</Text></Box>}<Select key={selectKey} options={options} onChange={handleAction} hideIndexes={true} />{showInstallHint && <Text color="warning">Once installed, select {"\"Reconnect extension\""} to connect.</Text>}<Text><Text dimColor={true}>Usage: </Text><Text>claude --chrome</Text><Text dimColor={true}> or </Text><Text>claude --no-chrome</Text></Text><Text dimColor={true}>Site-level permissions are inherited from the Chrome extension. Manage permissions in the Chrome extension settings to control which sites Claude can browse, click, and type on.</Text></>;
+    t9 = !isDisabled && <>{!isHomespace && <Box flexDirection="column"><Text>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.status', { value: isConnected ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.enabled') : translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.disabled') })}</Text><Text>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.extension', { value: isExtensionInstalled ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.installed') : translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.notDetected') })}</Text></Box>}<Select key={selectKey} options={options} onChange={handleAction} hideIndexes={true} />{showInstallHint && <Text color="warning">{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.reconnectHint')}</Text>}<Text><Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.usagePrefix')}</Text><Text>claude --chrome</Text><Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.usageOr')}</Text><Text>claude --no-chrome</Text></Text><Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.permissionsHint')}</Text></>;
     $[25] = handleAction;
     $[26] = isConnected;
     $[27] = isDisabled;
@@ -234,7 +234,7 @@ function ClaudeInChromeMenu(t0) {
   }
   let t10;
   if ($[33] === Symbol.for("react.memo_cache_sentinel")) {
-    t10 = <Text dimColor={true}>Learn more: https://code.claude.com/docs/en/chrome</Text>;
+    t10 = <Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.learnMore')}</Text>;
     $[33] = t10;
   } else {
     t10 = $[33];
@@ -251,7 +251,7 @@ function ClaudeInChromeMenu(t0) {
   }
   let t12;
   if ($[38] !== t11 || $[39] !== t5) {
-    t12 = <Dialog title="Claude in Chrome (Beta)" onCancel={t5} color="chromeYellow">{t11}</Dialog>;
+    t12 = <Dialog title={translate(process.env.CLAUDE_CODE_LANGUAGE, 'chrome.title')} onCancel={t5} color="chromeYellow">{t11}</Dialog>;
     $[38] = t11;
     $[39] = t5;
     $[40] = t12;

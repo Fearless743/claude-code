@@ -5,6 +5,8 @@ import type { ValidationError } from '../utils/settings/validation.js';
 import { Select } from './CustomSelect/index.js';
 import { Dialog } from './design-system/Dialog.js';
 import { ValidationErrorsList } from './ValidationErrorsList.js';
+import { translate } from '../i18n/index.js';
+import { getInitialSettings } from '../utils/settings/settings.js';
 type Props = {
   settingsErrors: ValidationError[];
   onContinue: () => void;
@@ -22,6 +24,7 @@ export function InvalidSettingsDialog(t0) {
     onContinue,
     onExit
   } = t0;
+  const uiLanguage = getInitialSettings().language;
   let t1;
   if ($[0] !== onContinue || $[1] !== onExit) {
     t1 = function handleSelect(value) {
@@ -48,7 +51,7 @@ export function InvalidSettingsDialog(t0) {
   }
   let t3;
   if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = <Text dimColor={true}>Files with errors are skipped entirely, not just the invalid settings.</Text>;
+    t3 = <Text dimColor={true}>{translate(uiLanguage, 'dialogs.invalidSettingsSkippedHint')}</Text>;
     $[5] = t3;
   } else {
     t3 = $[5];
@@ -56,10 +59,10 @@ export function InvalidSettingsDialog(t0) {
   let t4;
   if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
     t4 = [{
-      label: "Exit and fix manually",
+      label: translate(uiLanguage, 'dialogs.invalidSettingsExit'),
       value: "exit"
     }, {
-      label: "Continue without these settings",
+      label: translate(uiLanguage, 'dialogs.invalidSettingsContinue'),
       value: "continue"
     }];
     $[6] = t4;
@@ -76,7 +79,7 @@ export function InvalidSettingsDialog(t0) {
   }
   let t6;
   if ($[9] !== onExit || $[10] !== t2 || $[11] !== t5) {
-    t6 = <Dialog title="Settings Error" onCancel={onExit} color="warning">{t2}{t3}{t5}</Dialog>;
+    t6 = <Dialog title={translate(uiLanguage, 'dialogs.invalidSettingsTitle')} onCancel={onExit} color="warning">{t2}{t3}{t5}</Dialog>;
     $[9] = onExit;
     $[10] = t2;
     $[11] = t5;

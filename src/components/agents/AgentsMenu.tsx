@@ -7,6 +7,7 @@ import type { CommandResultDisplay } from '../../commands.js';
 import { useExitOnCtrlCDWithKeybindings } from '../../hooks/useExitOnCtrlCDWithKeybindings.js';
 import { useMergedTools } from '../../hooks/useMergedTools.js';
 import { Box, Text } from '../../ink.js';
+import { translate } from '../../i18n/index.js';
 import { useAppState, useSetAppState } from '../../state/AppState.js';
 import type { Tools } from '../../Tool.js';
 import { type ResolvedAgent, resolveAgentOverrides } from '../../tools/AgentTool/agentDisplay.js';
@@ -34,6 +35,7 @@ export function AgentsMenu(t0) {
     tools,
     onExit
   } = t0;
+  const uiLanguage = useAppState(s => s.settings.language);
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = {
@@ -175,7 +177,9 @@ export function AgentsMenu(t0) {
             }
           };
         });
-        setChanges(prev_0 => [...prev_0, `Deleted agent: ${chalk.bold(agent.agentType)}`]);
+        setChanges(prev_0 => [...prev_0, translate(uiLanguage, 'agents.deletedAgent', {
+          name: chalk.bold(agent.agentType),
+        })]);
         setModeState({
           mode: "list-agents",
           source: "all"
@@ -218,8 +222,10 @@ export function AgentsMenu(t0) {
         let t15;
         if ($[34] !== changes || $[35] !== onExit) {
           t15 = () => {
-            const exitMessage = changes.length > 0 ? `Agent changes:\n${changes.join("\n")}` : undefined;
-            onExit(exitMessage ?? "Agents dialog dismissed", {
+            const exitMessage = changes.length > 0 ? translate(uiLanguage, 'agents.changesPrefix', {
+              changes: changes.join("\n"),
+            }) : undefined;
+            onExit(exitMessage ?? translate(uiLanguage, 'agents.dialogDismissed'), {
               display: changes.length === 0 ? "system" : undefined
             });
           };
@@ -329,7 +335,7 @@ export function AgentsMenu(t0) {
         let t14;
         if ($[60] === Symbol.for("react.memo_cache_sentinel")) {
           t14 = {
-            label: "View agent",
+            label: translate(uiLanguage, 'agents.menuView'),
             value: "view"
           };
           $[60] = t14;
@@ -339,10 +345,10 @@ export function AgentsMenu(t0) {
         let t15;
         if ($[61] !== isEditable) {
           t15 = isEditable ? [{
-            label: "Edit agent",
+            label: translate(uiLanguage, 'agents.menuEdit'),
             value: "edit"
           }, {
-            label: "Delete agent",
+            label: translate(uiLanguage, 'agents.menuDelete'),
             value: "delete"
           }] : [];
           $[61] = isEditable;
@@ -353,7 +359,7 @@ export function AgentsMenu(t0) {
         let t16;
         if ($[63] === Symbol.for("react.memo_cache_sentinel")) {
           t16 = {
-            label: "Back",
+            label: translate(uiLanguage, 'agents.menuBack'),
             value: "back"
           };
           $[63] = t16;
@@ -553,7 +559,7 @@ export function AgentsMenu(t0) {
         }
         let t18;
         if ($[109] === Symbol.for("react.memo_cache_sentinel")) {
-          t18 = <AgentNavigationFooter instructions="Press Enter or Esc to go back" />;
+          t18 = <AgentNavigationFooter instructions={translate(uiLanguage, 'agents.navViewInstructions')} />;
           $[109] = t18;
         } else {
           t18 = $[109];

@@ -4,6 +4,8 @@
  */
 
 import { getDefaultSubagentModel } from '../../utils/model/agent.js'
+import { translate } from '../../i18n/index.js'
+import { getInitialSettings } from '../../utils/settings/settings.js'
 import {
   getSourceDisplayName,
   type SettingSource,
@@ -21,15 +23,20 @@ export type AgentSourceGroup = {
  * Ordered list of agent source groups for display.
  * Both the CLI and interactive UI should use this to ensure consistent ordering.
  */
-export const AGENT_SOURCE_GROUPS: AgentSourceGroup[] = [
-  { label: 'User agents', source: 'userSettings' },
-  { label: 'Project agents', source: 'projectSettings' },
-  { label: 'Local agents', source: 'localSettings' },
-  { label: 'Managed agents', source: 'policySettings' },
-  { label: 'Plugin agents', source: 'plugin' },
-  { label: 'CLI arg agents', source: 'flagSettings' },
-  { label: 'Built-in agents', source: 'built-in' },
-]
+export function getAgentSourceGroups(): AgentSourceGroup[] {
+  const uiLanguage = getInitialSettings().language
+  return [
+    { label: translate(uiLanguage, 'agents.userAgentsTitle'), source: 'userSettings' },
+    { label: translate(uiLanguage, 'agents.projectAgentsTitle'), source: 'projectSettings' },
+    { label: translate(uiLanguage, 'agents.localAgentsTitle'), source: 'localSettings' },
+    { label: translate(uiLanguage, 'agents.managedAgentsTitle'), source: 'policySettings' },
+    { label: translate(uiLanguage, 'agents.pluginAgentsTitle'), source: 'plugin' },
+    { label: translate(uiLanguage, 'agents.cliArgAgentsTitle'), source: 'flagSettings' },
+    { label: translate(uiLanguage, 'agents.builtInAgentsTitle'), source: 'built-in' },
+  ]
+}
+
+export const AGENT_SOURCE_GROUPS = getAgentSourceGroups()
 
 export type ResolvedAgent = AgentDefinition & {
   overriddenBy?: AgentSource

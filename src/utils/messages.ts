@@ -23,7 +23,7 @@ import { sanitizeToolNameForAnalytics } from 'src/services/analytics/metadata.js
 import type { AgentId } from 'src/types/ids.js'
 import { companionIntroText } from '../buddy/prompt.js'
 import { NO_CONTENT_MESSAGE } from '../constants/messages.js'
-import { OUTPUT_STYLE_CONFIG } from '../constants/outputStyles.js'
+import { translate } from '../i18n/index.js'
 import { isAutoMemoryEnabled } from '../memdir/paths.js'
 import {
   checkStatsigFeatureGate_CACHED_MAY_BE_STALE,
@@ -4201,7 +4201,9 @@ You have exited auto mode. The user may now want to interact more directly. You 
     case 'date_change': {
       return wrapMessagesInSystemReminder([
         createUserMessage({
-          content: `The date has changed. Today's date is now ${attachment.newDate}. DO NOT mention this to the user explicitly because they are already aware.`,
+          content: translate(process.env.CLAUDE_CODE_LANGUAGE, 'meta.dateChanged', {
+            date: attachment.newDate,
+          }),
           isMeta: true,
         }),
       ])

@@ -12,34 +12,37 @@ import { getCurrentSessionTitle } from '../../utils/sessionStorage.js';
 import { buildAccountProperties, buildAPIProviderProperties, buildIDEProperties, buildInstallationDiagnostics, buildInstallationHealthDiagnostics, buildMcpProperties, buildMemoryDiagnostics, buildSandboxProperties, buildSettingSourcesProperties, type Diagnostic, getModelDisplayLabel, type Property } from '../../utils/status.js';
 import type { ThemeName } from '../../utils/theme.js';
 import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
+import { translate } from '../../i18n/index.js';
 type Props = {
   context: LocalJSXCommandContext;
   diagnosticsPromise: Promise<Diagnostic[]>;
 };
-function buildPrimarySection(): Property[] {
+function buildPrimarySection(uiLanguage: string | undefined): Property[] {
   const sessionId = getSessionId();
   const customTitle = getCurrentSessionTitle(sessionId);
-  const nameValue = customTitle ?? <Text dimColor>/rename to add a name</Text>;
+  const nameValue = customTitle ?? <Text dimColor>{translate(uiLanguage, 'settings.renameToAddName')}</Text>;
   return [{
-    label: 'Version',
+    label: translate(uiLanguage, 'settings.statusVersionLabel'),
     value: MACRO.VERSION
   }, {
-    label: 'Session name',
+    label: translate(uiLanguage, 'settings.statusSessionNameLabel'),
     value: nameValue
   }, {
-    label: 'Session ID',
+    label: translate(uiLanguage, 'settings.statusSessionIdLabel'),
     value: sessionId
   }, {
-    label: 'cwd',
+    label: translate(uiLanguage, 'settings.statusCwdLabel'),
     value: getCwd()
   }, ...buildAccountProperties(), ...buildAPIProviderProperties()];
 }
 function buildSecondarySection({
+  uiLanguage,
   mainLoopModel,
   mcp,
   theme,
   context
 }: {
+  uiLanguage: string | undefined;
   mainLoopModel: AppState['mainLoopModel'];
   mcp: AppState['mcp'];
   theme: ThemeName;
@@ -47,7 +50,7 @@ function buildSecondarySection({
 }): Property[] {
   const modelLabel = getModelDisplayLabel(mainLoopModel);
   return [{
-    label: 'Model',
+    label: translate(uiLanguage, 'settings.statusModelLabel'),
     value: modelLabel
   }, ...buildIDEProperties(mcp.clients, context.options.ideInstallationStatus, theme), ...buildMcpProperties(mcp.clients, theme), ...buildSandboxProperties(), ...buildSettingSourcesProperties()];
 }
@@ -105,83 +108,90 @@ export function Status(t0) {
     context,
     diagnosticsPromise
   } = t0;
+  const uiLanguage = useAppState(s => s.settings.language);
   const mainLoopModel = useAppState(_temp);
   const mcp = useAppState(_temp2);
   const [theme] = useTheme();
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = buildPrimarySection();
-    $[0] = t1;
+  if ($[0] !== uiLanguage) {
+    t1 = buildPrimarySection(uiLanguage);
+    $[0] = uiLanguage;
+    $[1] = t1;
   } else {
-    t1 = $[0];
+    t1 = $[1];
   }
   let t2;
-  if ($[1] !== context || $[2] !== mainLoopModel || $[3] !== mcp || $[4] !== theme) {
+  if ($[2] !== context || $[3] !== mainLoopModel || $[4] !== mcp || $[5] !== theme || $[6] !== uiLanguage) {
     t2 = buildSecondarySection({
+      uiLanguage,
       mainLoopModel,
       mcp,
       theme,
       context
     });
-    $[1] = context;
-    $[2] = mainLoopModel;
-    $[3] = mcp;
-    $[4] = theme;
-    $[5] = t2;
+    $[2] = context;
+    $[3] = mainLoopModel;
+    $[4] = mcp;
+    $[5] = theme;
+    $[6] = uiLanguage;
+    $[7] = t2;
   } else {
-    t2 = $[5];
+    t2 = $[7];
   }
   let t3;
-  if ($[6] !== t2) {
+  if ($[8] !== t1 || $[9] !== t2) {
     t3 = [t1, t2];
-    $[6] = t2;
-    $[7] = t3;
+    $[8] = t1;
+    $[9] = t2;
+    $[10] = t3;
   } else {
-    t3 = $[7];
+    t3 = $[10];
   }
   const sections = t3;
   const grow = useIsInsideModal() ? 1 : undefined;
   let t4;
-  if ($[8] !== sections) {
+  if ($[11] !== sections) {
     t4 = sections.map(_temp4);
-    $[8] = sections;
-    $[9] = t4;
+    $[11] = sections;
+    $[12] = t4;
   } else {
-    t4 = $[9];
+    t4 = $[12];
   }
   let t5;
-  if ($[10] !== diagnosticsPromise) {
+  if ($[13] !== diagnosticsPromise) {
     t5 = <Suspense fallback={null}><Diagnostics promise={diagnosticsPromise} /></Suspense>;
-    $[10] = diagnosticsPromise;
-    $[11] = t5;
+    $[13] = diagnosticsPromise;
+    $[14] = t5;
   } else {
-    t5 = $[11];
+    t5 = $[14];
   }
   let t6;
-  if ($[12] !== grow || $[13] !== t4 || $[14] !== t5) {
+  if ($[15] !== grow || $[16] !== t4 || $[17] !== t5) {
     t6 = <Box flexDirection="column" gap={1} flexGrow={grow}>{t4}{t5}</Box>;
-    $[12] = grow;
-    $[13] = t4;
-    $[14] = t5;
-    $[15] = t6;
+    $[15] = grow;
+    $[16] = t4;
+    $[17] = t5;
+    $[18] = t6;
   } else {
-    t6 = $[15];
+    t6 = $[18];
   }
   let t7;
-  if ($[16] === Symbol.for("react.memo_cache_sentinel")) {
-    t7 = <Text dimColor={true}><ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" /></Text>;
-    $[16] = t7;
+  if ($[19] !== uiLanguage) {
+    t7 = <Text dimColor={true}><ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description={translate(uiLanguage, 'settings.cancelAction')} /></Text>;
+    $[19] = uiLanguage;
+    $[20] = t7;
   } else {
-    t7 = $[16];
+    t7 = $[20];
   }
   let t8;
-  if ($[17] !== grow || $[18] !== t6) {
+  if ($[21] !== grow || $[22] !== t6 || $[23] !== t7) {
     t8 = <Box flexDirection="column" flexGrow={grow}>{t6}{t7}</Box>;
-    $[17] = grow;
-    $[18] = t6;
-    $[19] = t8;
+    $[21] = grow;
+    $[22] = t6;
+    $[23] = t7;
+    $[24] = t8;
   } else {
-    t8 = $[19];
+    t8 = $[24];
   }
   return t8;
 }
@@ -203,6 +213,7 @@ function _temp(s) {
 }
 function Diagnostics(t0) {
   const $ = _c(5);
+  const uiLanguage = useAppState(s => s.settings.language);
   const {
     promise
   } = t0;
@@ -211,27 +222,29 @@ function Diagnostics(t0) {
     return null;
   }
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <Text bold={true}>System Diagnostics</Text>;
-    $[0] = t1;
+  if ($[0] !== uiLanguage) {
+    t1 = <Text bold={true}>{translate(uiLanguage, 'settings.systemDiagnosticsTitle')}</Text>;
+    $[0] = uiLanguage;
+    $[1] = t1;
   } else {
-    t1 = $[0];
+    t1 = $[1];
   }
   let t2;
-  if ($[1] !== diagnostics) {
+  if ($[2] !== diagnostics) {
     t2 = diagnostics.map(_temp5);
-    $[1] = diagnostics;
-    $[2] = t2;
+    $[2] = diagnostics;
+    $[3] = t2;
   } else {
-    t2 = $[2];
+    t2 = $[3];
   }
   let t3;
-  if ($[3] !== t2) {
+  if ($[4] !== t1 || $[5] !== t2) {
     t3 = <Box flexDirection="column" paddingBottom={1}>{t1}{t2}</Box>;
-    $[3] = t2;
-    $[4] = t3;
+    $[4] = t1;
+    $[5] = t2;
+    $[6] = t3;
   } else {
-    t3 = $[4];
+    t3 = $[6];
   }
   return t3;
 }

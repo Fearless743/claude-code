@@ -4,6 +4,8 @@ import * as React from 'react';
 import type { KeyboardEvent } from '../../ink/events/keyboard-event.js';
 import { Box, Text } from '../../ink.js';
 import { useKeybinding } from '../../keybindings/useKeybinding.js';
+import { translate } from '../../i18n/index.js';
+import { useAppState } from '../../state/AppState.js';
 import type { Tools } from '../../Tool.js';
 import { getAgentColor } from '../../tools/AgentTool/agentColorManager.js';
 import { getMemoryScopeDisplay } from '../../tools/AgentTool/agentMemory.js';
@@ -25,6 +27,7 @@ export function AgentDetail(t0) {
     tools,
     onBack
   } = t0;
+  const uiLanguage = useAppState(s => s.settings.language);
   const resolvedTools = resolveAgentTools(agent, tools, false);
   let t1;
   if ($[0] !== agent) {
@@ -70,12 +73,12 @@ export function AgentDetail(t0) {
   const handleKeyDown = t4;
   const renderToolsList = function renderToolsList() {
     if (resolvedTools.hasWildcard) {
-      return <Text>All tools</Text>;
+      return <Text>{translate(uiLanguage, 'agents.allTools')}</Text>;
     }
     if (!agent.tools || agent.tools.length === 0) {
-      return <Text>None</Text>;
+      return <Text>{translate(uiLanguage, 'agents.none')}</Text>;
     }
-    return <>{resolvedTools.validTools.length > 0 && <Text>{resolvedTools.validTools.join(", ")}</Text>}{resolvedTools.invalidTools.length > 0 && <Text color="warning">{figures.warning} Unrecognized:{" "}{resolvedTools.invalidTools.join(", ")}</Text>}</>;
+    return <>{resolvedTools.validTools.length > 0 && <Text>{resolvedTools.validTools.join(", ")}</Text>}{resolvedTools.invalidTools.length > 0 && <Text color="warning">{figures.warning} {translate(uiLanguage, 'agents.unrecognizedTools', { tools: resolvedTools.invalidTools.join(", ") })}</Text>}</>;
   };
   const T0 = Box;
   const t5 = "column";
@@ -92,7 +95,7 @@ export function AgentDetail(t0) {
   }
   let t10;
   if ($[9] === Symbol.for("react.memo_cache_sentinel")) {
-    t10 = <Text><Text bold={true}>Description</Text> (tells Claude when to use this agent):</Text>;
+    t10 = <Text><Text bold={true}>{translate(uiLanguage, 'agents.descriptionLabel')}</Text> ({translate(uiLanguage, 'agents.descriptionHelp')}):</Text>;
     $[9] = t10;
   } else {
     t10 = $[9];
@@ -108,7 +111,7 @@ export function AgentDetail(t0) {
   const T1 = Box;
   let t12;
   if ($[12] === Symbol.for("react.memo_cache_sentinel")) {
-    t12 = <Text><Text bold={true}>Tools</Text>:{" "}</Text>;
+    t12 = <Text><Text bold={true}>{translate(uiLanguage, 'agents.toolsLabel')}</Text>:{" "}</Text>;
     $[12] = t12;
   } else {
     t12 = $[12];
@@ -126,7 +129,7 @@ export function AgentDetail(t0) {
   }
   let t15;
   if ($[17] === Symbol.for("react.memo_cache_sentinel")) {
-    t15 = <Text bold={true}>Model</Text>;
+    t15 = <Text bold={true}>{translate(uiLanguage, 'agents.modelLabel')}</Text>;
     $[17] = t15;
   } else {
     t15 = $[17];
@@ -149,7 +152,7 @@ export function AgentDetail(t0) {
   }
   let t18;
   if ($[22] !== agent.permissionMode) {
-    t18 = agent.permissionMode && <Text><Text bold={true}>Permission mode</Text>: {agent.permissionMode}</Text>;
+    t18 = agent.permissionMode && <Text><Text bold={true}>{translate(uiLanguage, 'agents.permissionModeLabel')}</Text>: {agent.permissionMode}</Text>;
     $[22] = agent.permissionMode;
     $[23] = t18;
   } else {

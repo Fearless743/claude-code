@@ -151,7 +151,7 @@ import chrome from './commands/chrome/index.js'
 import stickers from './commands/stickers/index.js'
 import advisor from './commands/advisor.js'
 import { logError } from './utils/log.js'
-import { toError } from './utils/errors.js'
+import { translate } from './i18n/index.js'
 import { logForDebugging } from './utils/debug.js'
 import {
   getSkillDirCommands,
@@ -210,6 +210,77 @@ import {
 } from './types/command.js'
 
 // Re-export types from the centralized location
+function localizeCommandDescription(command: Command): Command {
+  const descriptionKeyMap: Partial<Record<string, string>> = {
+    'add-dir': 'commandDescriptions.addDir',
+    agents: 'commandDescriptions.agents',
+    branch: 'commandDescriptions.branch',
+    btw: 'commandDescriptions.btw',
+    chrome: 'commandDescriptions.chrome',
+    clear: 'commandDescriptions.clear',
+    color: 'commandDescriptions.color',
+    compact: 'commandDescriptions.compact',
+    config: 'commandDescriptions.config',
+    context: 'commandDescriptions.context',
+    cost: 'commandDescriptions.cost',
+    desktop: 'commandDescriptions.desktop',
+    diff: 'commandDescriptions.diff',
+    doctor: 'commandDescriptions.doctor',
+    effort: 'commandDescriptions.effort',
+    exit: 'commandDescriptions.exit',
+    export: 'commandDescriptions.export',
+    'extra-usage': 'commandDescriptions.extraUsage',
+    files: 'commandDescriptions.files',
+    heapdump: 'commandDescriptions.heapdump',
+    help: 'commandDescriptions.help',
+    hooks: 'commandDescriptions.hooks',
+    ide: 'commandDescriptions.ide',
+    'install-github-app': 'commandDescriptions.installGitHubApp',
+    'install-slack-app': 'commandDescriptions.installSlackApp',
+    keybindings: 'commandDescriptions.keybindings',
+    logout: 'commandDescriptions.logout',
+    mcp: 'commandDescriptions.mcp',
+    memory: 'commandDescriptions.memory',
+    mobile: 'commandDescriptions.mobile',
+    'output-style': 'commandDescriptions.outputStyle',
+    permissions: 'commandDescriptions.permissions',
+    plan: 'commandDescriptions.plan',
+    plugin: 'commandDescriptions.plugin',
+    pr_comments: 'commandDescriptions.prComments',
+    'privacy-settings': 'commandDescriptions.privacySettings',
+    'rate-limit-options': 'commandDescriptions.rateLimitOptions',
+    'release-notes': 'commandDescriptions.releaseNotes',
+    'reload-plugins': 'commandDescriptions.reloadPlugins',
+    'remote-control': 'commandDescriptions.remoteControl',
+    'remote-env': 'commandDescriptions.remoteEnv',
+    'web-setup': 'commandDescriptions.remoteSetup',
+    rename: 'commandDescriptions.rename',
+    resume: 'commandDescriptions.resume',
+    session: 'commandDescriptions.session',
+    skills: 'commandDescriptions.skills',
+    stats: 'commandDescriptions.stats',
+    status: 'commandDescriptions.status',
+    stickers: 'commandDescriptions.stickers',
+    tag: 'commandDescriptions.tag',
+    tasks: 'commandDescriptions.tasks',
+    theme: 'commandDescriptions.theme',
+    thinkback: 'commandDescriptions.thinkback',
+    'thinkback-play': 'commandDescriptions.thinkbackPlay',
+    upgrade: 'commandDescriptions.upgrade',
+    usage: 'commandDescriptions.usage',
+    voice: 'commandDescriptions.voice',
+    vim: 'commandDescriptions.vim',
+  }
+
+  const key = descriptionKeyMap[command.name]
+  if (!key) return command
+
+  return {
+    ...command,
+    description: translate(process.env.CLAUDE_CODE_LANGUAGE, key as never),
+  }
+}
+
 export type {
   Command,
   CommandBase,
@@ -480,9 +551,9 @@ export async function getCommands(cwd: string): Promise<Command[]> {
   const dynamicSkills = getDynamicSkills()
 
   // Build base commands without dynamic skills
-  const baseCommands = allCommands.filter(
-    _ => meetsAvailabilityRequirement(_) && isCommandEnabled(_),
-  )
+  const baseCommands = allCommands
+    .filter(_ => meetsAvailabilityRequirement(_) && isCommandEnabled(_))
+    .map(localizeCommandDescription)
 
   if (dynamicSkills.length === 0) {
     return baseCommands
@@ -726,29 +797,34 @@ export function getCommand(commandName: string, commands: Command[]): Command {
  * For model-facing prompts (like SkillTool), use cmd.description directly.
  */
 export function formatDescriptionWithSource(cmd: Command): string {
-  if (cmd.type !== 'prompt') {
-    return cmd.description
+  const localizedCommand = localizeCommandDescription(cmd)
+
+  if (localizedCommand.type !== 'prompt') {
+    return localizedCommand.description
   }
 
-  if (cmd.kind === 'workflow') {
-    return `${cmd.description} (workflow)`
+  if (localizedCommand.kind === 'workflow') {
+    return `${localizedCommand.description} (workflow)`
   }
 
-  if (cmd.source === 'plugin') {
-    const pluginName = cmd.pluginInfo?.pluginManifest.name
+  if (localizedCommand.source === 'plugin') {
+    const pluginName = localizedCommand.pluginInfo?.pluginManifest.name
     if (pluginName) {
-      return `(${pluginName}) ${cmd.description}`
+      return `(${pluginName}) ${localizedCommand.description}`
     }
-    return `${cmd.description} (plugin)`
+    return `${localizedCommand.description} (plugin)`
   }
 
-  if (cmd.source === 'builtin' || cmd.source === 'mcp') {
-    return cmd.description
+  if (
+    localizedCommand.source === 'builtin' ||
+    localizedCommand.source === 'mcp'
+  ) {
+    return localizedCommand.description
   }
 
-  if (cmd.source === 'bundled') {
-    return `${cmd.description} (bundled)`
+  if (localizedCommand.source === 'bundled') {
+    return `${localizedCommand.description} (bundled)`
   }
 
-  return `${cmd.description} (${getSettingSourceName(cmd.source)})`
+  return `${localizedCommand.description} (${getSettingSourceName(localizedCommand.source)})`
 }

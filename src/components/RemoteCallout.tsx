@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { isBridgeEnabled } from '../bridge/bridgeEnabled.js';
 import { Box, Text } from '../ink.js';
-import { getClaudeAIOAuthTokens } from '../utils/auth.js';
+import { translate } from '../i18n/index.js';
 import { getGlobalConfig, saveGlobalConfig } from '../utils/config.js';
 import type { OptionWithDescription } from './CustomSelect/select.js';
 import { Select } from './CustomSelect/select.js';
@@ -33,26 +33,23 @@ export function RemoteCallout({
     onDoneRef.current(value);
   }, []);
   const options: OptionWithDescription<RemoteCalloutSelection>[] = [{
-    label: 'Enable Remote Control for this session',
-    description: 'Opens a secure connection to claude.ai.',
+    label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteCalloutEnable'),
+    description: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteCalloutEnableDescription'),
     value: 'enable'
   }, {
-    label: 'Never mind',
-    description: 'You can always enable it later with /remote-control.',
+    label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteCalloutDismiss'),
+    description: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteCalloutDismissDescription'),
     value: 'dismiss'
   }];
-  return <PermissionDialog title="Remote Control">
+  return <PermissionDialog title={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteCalloutTitle')}>
       <Box flexDirection="column" paddingX={2} paddingY={1}>
         <Box marginBottom={1} flexDirection="column">
           <Text>
-            Remote Control lets you access this CLI session from the web
-            (claude.ai/code) or the Claude app, so you can pick up where you
-            left off on any device.
+            {translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteCalloutIntro')}
           </Text>
           <Text> </Text>
           <Text>
-            You can disconnect remote access anytime by running /remote-control
-            again.
+            {translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteCalloutOutro')}
           </Text>
         </Box>
         <Box>

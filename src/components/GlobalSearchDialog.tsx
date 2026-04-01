@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useRegisterOverlay } from '../context/overlayContext.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
-import { Text } from '../ink.js';
+import { translate } from '../i18n/index.js';
 import { logEvent } from '../services/analytics/index.js';
 import { getCwd } from '../utils/cwd.js';
 import { openFileInExternalEditor } from '../utils/editor.js';
@@ -107,7 +107,7 @@ export function GlobalSearchDialog(t0) {
         setPreview({
           file: focused.file,
           line: focused.line,
-          content: "(preview unavailable)"
+          content: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.previewUnavailable')
         });
       });
       return () => controller.abort();

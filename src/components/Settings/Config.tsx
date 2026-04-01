@@ -36,7 +36,7 @@ import {
   logEvent,
   type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
 } from 'src/services/analytics/index.js';
-import { isBridgeEnabled } from '../../bridge/bridgeEnabled.js';
+import { translate } from '../../i18n/index.js';
 import { ThemePicker } from '../ThemePicker.js';
 import { useAppState, useSetAppState, useAppStateStore } from '../../state/AppState.js';
 import { ModelPicker } from '../ModelPicker.js';
@@ -152,6 +152,7 @@ export function Config({
   onIsSearchModeChange,
   contentHeight,
 }: Props): React.ReactNode {
+  const uiLanguage = useAppState(s => s.settings.language);
   const { headerFocused, focusHeader } = useTabHeaderFocus();
   const insideModal = useIsInsideModal();
   const [, setTheme] = useTheme();
@@ -269,7 +270,7 @@ export function Config({
   const autoUpdaterDisabledReason = getAutoUpdaterDisabledReason();
   const providers = getProviders();
   const activeProvider = getActiveProvider();
-  const [focusedProviderAction, setFocusedProviderAction] = useState<string>('action:add-openai');
+  const themeLabels = React.useMemo(() => getThemeLabels(uiLanguage), [uiLanguage]);
   const [focusedProviderDetailAction, setFocusedProviderDetailAction] = useState<string>('detail:name');
   const [providerDetailDraft, setProviderDetailDraft] = useState<LLMProvider | null>(null);
   const [providerDetailInputMode, setProviderDetailInputMode] = useState(false);
@@ -298,11 +299,11 @@ export function Config({
     return [
       {
         type: 'input' as const,
-        label: 'Name',
-        description: 'Provider display name',
+        label: translate(uiLanguage, 'settings.providerFieldName'),
+        description: translate(uiLanguage, 'settings.providerFieldNameDescription'),
         value: 'detail:name',
         initialValue: providerDetailDraft.name,
-        placeholder: 'OpenAI',
+        placeholder: translate(uiLanguage, 'settings.providerPlaceholderName'),
         onChange: (value: string) => {
           setProviderDetailDraft(current => (current ? { ...current, name: value } : current));
           setProviderDetailInputMode(false);
@@ -310,8 +311,8 @@ export function Config({
       },
       {
         type: 'input' as const,
-        label: 'API key',
-        description: 'Provider API key',
+        label: translate(uiLanguage, 'settings.providerFieldApiKey'),
+        description: translate(uiLanguage, 'settings.providerFieldApiKeyDescription'),
         value: 'detail:apiKey',
         initialValue: providerDetailDraft.apiKey ?? '',
         placeholder: 'sk-...',
@@ -323,19 +324,19 @@ export function Config({
       },
       {
         type: 'input' as const,
-        label: 'Base URL',
-        description: 'Provider base URL',
+        label: translate(uiLanguage, 'settings.providerFieldBaseUrl'),
+        description: translate(uiLanguage, 'settings.providerFieldBaseUrlDescription'),
         value: 'detail:baseUrl',
         initialValue: providerDetailDraft.baseUrl ?? '',
-        placeholder: 'https://api.openai.com',
+        placeholder: translate(uiLanguage, 'settings.providerPlaceholderBaseUrl'),
         onChange: (value: string) => {
           setProviderDetailDraft(current => (current ? { ...current, baseUrl: value } : current));
           setProviderDetailInputMode(false);
         },
       },
       {
-        label: `Type: ${providerDetailDraft.type}`,
-        description: 'Press Space to cycle type',
+        label: translate(uiLanguage, 'settings.providerTypeLabel', { type: providerDetailDraft.type }),
+        description: translate(uiLanguage, 'settings.providerTypeCycleHint'),
         value: 'detail:cycleType',
       },
     ];
@@ -401,14 +402,14 @@ export function Config({
     // Global settings
     {
       id: 'providers',
-      label: 'Providers',
-      value: activeProvider ? `${activeProvider.name} (${providers.length})` : `${providers.length} configured`,
+      label: translate(uiLanguage, 'settings.providersLabel'),
+      value: activeProvider ? `${activeProvider.name} (${providers.length})` : translate(uiLanguage, 'settings.providersConfiguredCount', { count: providers.length }),
       type: 'managedEnum' as const,
       onChange() {},
     },
     {
       id: 'autoCompactEnabled',
-      label: 'Auto-compact',
+      label: translate(uiLanguage, 'settings.autoCompactLabel'),
       value: globalConfig.autoCompactEnabled,
       type: 'boolean' as const,
       onChange(autoCompactEnabled: boolean) {
@@ -427,7 +428,7 @@ export function Config({
     },
     {
       id: 'spinnerTipsEnabled',
-      label: 'Show tips',
+      label: translate(uiLanguage, 'settings.showTipsLabel'),
       value: settingsData?.spinnerTipsEnabled ?? true,
       type: 'boolean' as const,
       onChange(spinnerTipsEnabled: boolean) {
@@ -446,7 +447,7 @@ export function Config({
     },
     {
       id: 'prefersReducedMotion',
-      label: 'Reduce motion',
+      label: translate(uiLanguage, 'settings.reduceMotionLabel'),
       value: settingsData?.prefersReducedMotion ?? false,
       type: 'boolean' as const,
       onChange(prefersReducedMotion: boolean) {
@@ -472,7 +473,7 @@ export function Config({
     },
     {
       id: 'thinkingEnabled',
-      label: 'Thinking mode',
+      label: translate(uiLanguage, 'settings.thinkingModeLabel'),
       value: thinkingEnabled ?? true,
       type: 'boolean' as const,
       onChange(enabled: boolean) {
@@ -493,7 +494,7 @@ export function Config({
       ? [
           {
             id: 'fastMode',
-            label: `Fast mode (${FAST_MODE_MODEL_DISPLAY} only)`,
+            label: translate(uiLanguage, 'settings.fastModeLabel', { model: FAST_MODE_MODEL_DISPLAY }),
             value: !!isFastMode,
             type: 'boolean' as const,
             onChange(enabled_0: boolean) {
@@ -511,7 +512,7 @@ export function Config({
                 setChanges(prev_8 => ({
                   ...prev_8,
                   model: getFastModeModel(),
-                  'Fast mode': 'ON',
+                  'Fast mode': translate(uiLanguage, 'settings.enabledStateLabel'),
                 }));
               } else {
                 setAppState(prev_9 => ({
@@ -520,7 +521,7 @@ export function Config({
                 }));
                 setChanges(prev_10 => ({
                   ...prev_10,
-                  'Fast mode': 'OFF',
+                  'Fast mode': translate(uiLanguage, 'settings.disabledStateLabel'),
                 }));
               }
             },
@@ -531,7 +532,7 @@ export function Config({
       ? [
           {
             id: 'promptSuggestionEnabled',
-            label: 'Prompt suggestions',
+            label: translate(uiLanguage, 'settings.promptSuggestionsLabel'),
             value: promptSuggestionEnabled,
             type: 'boolean' as const,
             onChange(enabled_1: boolean) {
@@ -551,7 +552,7 @@ export function Config({
       ? [
           {
             id: 'speculationEnabled',
-            label: 'Speculative execution',
+            label: translate(uiLanguage, 'settings.speculativeExecutionLabel'),
             value: globalConfig.speculationEnabled ?? true,
             type: 'boolean' as const,
             onChange(enabled_2: boolean) {
@@ -577,7 +578,7 @@ export function Config({
       ? [
           {
             id: 'fileCheckpointingEnabled',
-            label: 'Rewind code (checkpoints)',
+            label: translate(uiLanguage, 'settings.rewindCodeLabel'),
             value: globalConfig.fileCheckpointingEnabled,
             type: 'boolean' as const,
             onChange(enabled_3: boolean) {
@@ -598,14 +599,14 @@ export function Config({
       : []),
     {
       id: 'verbose',
-      label: 'Verbose output',
+      label: translate(uiLanguage, 'settings.verboseOutputLabel'),
       value: verbose,
       type: 'boolean',
       onChange: onChangeVerbose,
     },
     {
       id: 'terminalProgressBarEnabled',
-      label: 'Terminal progress bar',
+      label: translate(uiLanguage, 'settings.terminalProgressBarLabel'),
       value: globalConfig.terminalProgressBarEnabled,
       type: 'boolean' as const,
       onChange(terminalProgressBarEnabled: boolean) {
@@ -626,7 +627,7 @@ export function Config({
       ? [
           {
             id: 'showStatusInTerminalTab',
-            label: 'Show status in terminal tab',
+            label: translate(uiLanguage, 'settings.showStatusInTerminalTabLabel'),
             value: globalConfig.showStatusInTerminalTab ?? false,
             type: 'boolean' as const,
             onChange(showStatusInTerminalTab: boolean) {
@@ -647,7 +648,7 @@ export function Config({
       : []),
     {
       id: 'showTurnDuration',
-      label: 'Show turn duration',
+      label: translate(uiLanguage, 'settings.showTurnDurationLabel'),
       value: globalConfig.showTurnDuration,
       type: 'boolean' as const,
       onChange(showTurnDuration: boolean) {
@@ -666,7 +667,7 @@ export function Config({
     },
     {
       id: 'defaultPermissionMode',
-      label: 'Default permission mode',
+      label: translate(uiLanguage, 'settings.defaultPermissionModeLabel'),
       value: settingsData?.permissions?.defaultMode || 'default',
       options: (() => {
         const priorityOrder: PermissionMode[] = ['default', 'plan'];
@@ -721,7 +722,7 @@ export function Config({
       ? [
           {
             id: 'useAutoModeDuringPlan',
-            label: 'Use auto mode during plan',
+            label: translate(uiLanguage, 'settings.useAutoModeDuringPlanLabel'),
             value:
               (
                 settingsData as
@@ -760,7 +761,7 @@ export function Config({
       : []),
     {
       id: 'respectGitignore',
-      label: 'Respect .gitignore in file picker',
+      label: translate(uiLanguage, 'settings.respectGitignoreLabel'),
       value: globalConfig.respectGitignore,
       type: 'boolean' as const,
       onChange(respectGitignore: boolean) {
@@ -779,7 +780,7 @@ export function Config({
     },
     {
       id: 'copyFullResponse',
-      label: 'Always copy full response (skip /copy picker)',
+      label: translate(uiLanguage, 'settings.copyFullResponseLabel'),
       value: globalConfig.copyFullResponse,
       type: 'boolean' as const,
       onChange(copyFullResponse: boolean) {
@@ -803,7 +804,7 @@ export function Config({
       ? [
           {
             id: 'copyOnSelect',
-            label: 'Copy on select',
+            label: translate(uiLanguage, 'settings.copyOnSelectLabel'),
             value: globalConfig.copyOnSelect ?? true,
             type: 'boolean' as const,
             onChange(copyOnSelect: boolean) {
@@ -827,14 +828,14 @@ export function Config({
     autoUpdaterDisabledReason
       ? {
           id: 'autoUpdatesChannel',
-          label: 'Auto-update channel',
-          value: 'disabled',
+          label: translate(uiLanguage, 'settings.autoUpdateChannelLabel'),
+          value: translate(uiLanguage, 'settings.disabledStatus'),
           type: 'managedEnum' as const,
           onChange() {},
         }
       : {
           id: 'autoUpdatesChannel',
-          label: 'Auto-update channel',
+          label: translate(uiLanguage, 'settings.autoUpdateChannelLabel'),
           value: settingsData?.autoUpdatesChannel ?? 'latest',
           type: 'managedEnum' as const,
           onChange() {
@@ -843,14 +844,14 @@ export function Config({
         },
     {
       id: 'theme',
-      label: 'Theme',
+      label: translate(uiLanguage, 'settings.themeTitle'),
       value: themeSetting,
       type: 'managedEnum',
       onChange: setTheme,
     },
     {
       id: 'notifChannel',
-      label: feature('KAIROS') || feature('KAIROS_PUSH_NOTIFICATION') ? 'Local notifications' : 'Notifications',
+      label: feature('KAIROS') || feature('KAIROS_PUSH_NOTIFICATION') ? translate(uiLanguage, 'settings.localNotificationsLabel') : translate(uiLanguage, 'settings.notificationsLabel'),
       value: globalConfig.preferredNotifChannel,
       options: ['auto', 'iterm2', 'terminal_bell', 'iterm2_with_bell', 'kitty', 'ghostty', 'notifications_disabled'],
       type: 'enum',
@@ -869,7 +870,7 @@ export function Config({
       ? [
           {
             id: 'taskCompleteNotifEnabled',
-            label: 'Push when idle',
+            label: translate(uiLanguage, 'settings.pushWhenIdleLabel'),
             value: globalConfig.taskCompleteNotifEnabled ?? false,
             type: 'boolean' as const,
             onChange(taskCompleteNotifEnabled: boolean) {
@@ -885,7 +886,7 @@ export function Config({
           },
           {
             id: 'inputNeededNotifEnabled',
-            label: 'Push when input needed',
+            label: translate(uiLanguage, 'settings.pushWhenInputNeededLabel'),
             value: globalConfig.inputNeededNotifEnabled ?? false,
             type: 'boolean' as const,
             onChange(inputNeededNotifEnabled: boolean) {
@@ -901,7 +902,7 @@ export function Config({
           },
           {
             id: 'agentPushNotifEnabled',
-            label: 'Push when Claude decides',
+            label: translate(uiLanguage, 'settings.pushWhenClaudeDecidesLabel'),
             value: globalConfig.agentPushNotifEnabled ?? false,
             type: 'boolean' as const,
             onChange(agentPushNotifEnabled: boolean) {
@@ -919,7 +920,7 @@ export function Config({
       : []),
     {
       id: 'outputStyle',
-      label: 'Output style',
+      label: translate(uiLanguage, 'settings.outputStyleLabel'),
       value: currentOutputStyle,
       type: 'managedEnum' as const,
       onChange: () => {}, // handled by OutputStylePicker submenu
@@ -928,7 +929,7 @@ export function Config({
       ? [
           {
             id: 'defaultView',
-            label: 'What you see by default',
+            label: translate(uiLanguage, 'settings.defaultViewLabel'),
             // 'default' means the setting is unset — currently resolves to
             // transcript (main.tsx falls through when defaultView !== 'chat').
             // String() narrows the conditional-schema-spread union to string.
@@ -970,14 +971,14 @@ export function Config({
       : []),
     {
       id: 'language',
-      label: 'Language',
-      value: currentLanguage ?? 'Default (English)',
+      label: translate(uiLanguage, 'settings.languageLabel'),
+      value: currentLanguage ?? translate(uiLanguage, 'settings.defaultEnglish'),
       type: 'managedEnum' as const,
       onChange: () => {}, // handled by LanguagePicker submenu
     },
     {
       id: 'editorMode',
-      label: 'Editor mode',
+      label: translate(uiLanguage, 'settings.editorModeLabel'),
       // Convert 'emacs' to 'normal' for backward compatibility
       value: globalConfig.editorMode === 'emacs' ? 'normal' : globalConfig.editorMode || 'normal',
       options: ['normal', 'vim'],
@@ -999,7 +1000,7 @@ export function Config({
     },
     {
       id: 'prStatusFooterEnabled',
-      label: 'Show PR status footer',
+      label: translate(uiLanguage, 'settings.showPrStatusFooterLabel'),
       value: globalConfig.prStatusFooterEnabled ?? true,
       type: 'boolean' as const,
       onChange(enabled_4: boolean) {
@@ -1021,7 +1022,7 @@ export function Config({
     },
     {
       id: 'model',
-      label: 'Model',
+      label: translate(uiLanguage, 'settings.modelLabel'),
       value: mainLoopModel === null ? 'Default (recommended)' : mainLoopModel,
       type: 'managedEnum' as const,
       onChange: onChangeMainModelConfig,
@@ -1030,7 +1031,7 @@ export function Config({
       ? [
           {
             id: 'diffTool',
-            label: 'Diff tool',
+            label: translate(uiLanguage, 'settings.diffToolLabel'),
             value: globalConfig.diffTool ?? 'auto',
             options: ['terminal', 'auto'],
             type: 'enum' as const,
@@ -1055,7 +1056,7 @@ export function Config({
       ? [
           {
             id: 'autoConnectIde',
-            label: 'Auto-connect to IDE (external terminal)',
+            label: translate(uiLanguage, 'settings.autoConnectIdeLabel'),
             value: globalConfig.autoConnectIde ?? false,
             type: 'boolean' as const,
             onChange(autoConnectIde: boolean) {
@@ -1079,7 +1080,7 @@ export function Config({
       ? [
           {
             id: 'autoInstallIdeExtension',
-            label: 'Auto-install IDE extension',
+            label: translate(uiLanguage, 'settings.autoInstallIdeExtensionLabel'),
             value: globalConfig.autoInstallIdeExtension ?? true,
             type: 'boolean' as const,
             onChange(autoInstallIdeExtension: boolean) {
@@ -1101,7 +1102,7 @@ export function Config({
       : []),
     {
       id: 'claudeInChromeDefaultEnabled',
-      label: 'Claude in Chrome enabled by default',
+      label: translate(uiLanguage, 'settings.claudeInChromeDefaultEnabledLabel'),
       value: globalConfig.claudeInChromeDefaultEnabled ?? true,
       type: 'boolean' as const,
       onChange(enabled_5: boolean) {
@@ -1122,7 +1123,7 @@ export function Config({
     ...(isAgentSwarmsEnabled()
       ? (() => {
           const cliOverride = getCliTeammateModeOverride();
-          const label = cliOverride ? `Teammate mode [overridden: ${cliOverride}]` : 'Teammate mode';
+          const label = cliOverride ? translate(uiLanguage, 'settings.teammateModeOverriddenLabel', { mode: cliOverride }) : translate(uiLanguage, 'settings.teammateModeLabel');
           return [
             {
               id: 'teammateMode',
@@ -1151,8 +1152,8 @@ export function Config({
             },
             {
               id: 'teammateDefaultModel',
-              label: 'Default teammate model',
-              value: teammateModelDisplayString(globalConfig.teammateDefaultModel),
+              label: translate(uiLanguage, 'settings.defaultTeammateModelLabel'),
+              value: teammateModelDisplayString(globalConfig.teammateDefaultModel, uiLanguage),
               type: 'managedEnum' as const,
               onChange() {},
             },
@@ -1164,7 +1165,7 @@ export function Config({
       ? [
           {
             id: 'remoteControlAtStartup',
-            label: 'Enable Remote Control for all sessions',
+            label: translate(uiLanguage, 'settings.enableRemoteControlForAllSessionsLabel'),
             value:
               globalConfig.remoteControlAtStartup === undefined
                 ? 'default'
@@ -1218,13 +1219,13 @@ export function Config({
       ? [
           {
             id: 'showExternalIncludesDialog',
-            label: 'External CLAUDE.md includes',
+            label: translate(uiLanguage, 'settings.externalClaudeMdIncludesLabel'),
             value: (() => {
               const projectConfig = getCurrentProjectConfig();
               if (projectConfig.hasClaudeMdExternalIncludesApproved) {
-                return 'true';
+                return translate(uiLanguage, 'settings.enabledBooleanString');
               } else {
-                return 'false';
+                return translate(uiLanguage, 'settings.disabledBooleanString');
               }
             })(),
             type: 'managedEnum' as const,
@@ -1240,10 +1241,10 @@ export function Config({
             id: 'apiKey',
             label: (
               <Text>
-                Use custom API key: <Text bold>{normalizeApiKeyForConfig(process.env.ANTHROPIC_API_KEY)}</Text>
+                {translate(uiLanguage, 'settings.useCustomApiKeyLabel', { key: normalizeApiKeyForConfig(process.env.ANTHROPIC_API_KEY) })}
               </Text>
             ),
-            searchText: 'Use custom API key',
+            searchText: translate(uiLanguage, 'settings.useCustomApiKeySearchText'),
             value: Boolean(
               process.env.ANTHROPIC_API_KEY &&
                 globalConfig.customApiKeyResponses?.approved?.includes(
@@ -1361,7 +1362,7 @@ export function Config({
         key: key as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
         value: value_2 as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
       });
-      return `Set ${key} to ${chalk.bold(value_2)}`;
+      return `${translate(uiLanguage, 'settings.setToPrefix', { key })} ${chalk.bold(value_2)}`;
     });
     // Check for API key changes
     // On homespace, ANTHROPIC_API_KEY is preserved in process.env for child
@@ -1376,77 +1377,109 @@ export function Config({
         globalConfig.customApiKeyResponses?.approved?.includes(normalizeApiKeyForConfig(effectiveApiKey)),
     );
     if (initialUsingCustomKey !== currentUsingCustomKey) {
-      formattedChanges.push(`${currentUsingCustomKey ? 'Enabled' : 'Disabled'} custom API key`);
+      formattedChanges.push(`${currentUsingCustomKey ? translate(uiLanguage, 'settings.enabledAction') : translate(uiLanguage, 'settings.disabledAction')} ${translate(uiLanguage, 'settings.customApiKeyLabel')}`);
       logEvent('tengu_config_changed', {
         key: 'env.ANTHROPIC_API_KEY' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
         value: currentUsingCustomKey as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
       });
     }
     if (globalConfig.theme !== initialConfig.current.theme) {
-      formattedChanges.push(`Set theme to ${chalk.bold(globalConfig.theme)}`);
+      formattedChanges.push(translate(uiLanguage, 'settings.setThemeTo', { value: chalk.bold(globalConfig.theme) }));
     }
     if (globalConfig.preferredNotifChannel !== initialConfig.current.preferredNotifChannel) {
-      formattedChanges.push(`Set notifications to ${chalk.bold(globalConfig.preferredNotifChannel)}`);
+      formattedChanges.push(translate(uiLanguage, 'settings.setNotificationsTo', { value: chalk.bold(globalConfig.preferredNotifChannel) }));
     }
     if (currentOutputStyle !== initialOutputStyle.current) {
-      formattedChanges.push(`Set output style to ${chalk.bold(currentOutputStyle)}`);
+      formattedChanges.push(translate(uiLanguage, 'settings.setOutputStyleTo', { value: chalk.bold(currentOutputStyle) }));
     }
     if (currentLanguage !== initialLanguage.current) {
-      formattedChanges.push(`Set response language to ${chalk.bold(currentLanguage ?? 'Default (English)')}`);
+      formattedChanges.push(translate(uiLanguage, 'settings.setResponseLanguageTo', { value: chalk.bold(currentLanguage ?? translate(uiLanguage, 'settings.defaultEnglish')) }));
     }
     if (globalConfig.editorMode !== initialConfig.current.editorMode) {
-      formattedChanges.push(`Set editor mode to ${chalk.bold(globalConfig.editorMode || 'emacs')}`);
+      formattedChanges.push(translate(uiLanguage, 'settings.setEditorModeTo', { value: chalk.bold(globalConfig.editorMode || 'emacs') }));
     }
     if (globalConfig.diffTool !== initialConfig.current.diffTool) {
-      formattedChanges.push(`Set diff tool to ${chalk.bold(globalConfig.diffTool)}`);
+      formattedChanges.push(translate(uiLanguage, 'settings.setDiffToolTo', { value: chalk.bold(globalConfig.diffTool) }));
     }
     if (globalConfig.autoConnectIde !== initialConfig.current.autoConnectIde) {
-      formattedChanges.push(`${globalConfig.autoConnectIde ? 'Enabled' : 'Disabled'} auto-connect to IDE`);
+      formattedChanges.push(
+        translate(uiLanguage, 'settings.toggleAutoConnectIde', {
+          state: globalConfig.autoConnectIde ? translate(uiLanguage, 'settings.enabledAction') : translate(uiLanguage, 'settings.disabledAction'),
+        }),
+      );
     }
     if (globalConfig.autoInstallIdeExtension !== initialConfig.current.autoInstallIdeExtension) {
       formattedChanges.push(
-        `${globalConfig.autoInstallIdeExtension ? 'Enabled' : 'Disabled'} auto-install IDE extension`,
+        translate(uiLanguage, 'settings.toggleAutoInstallIdeExtension', {
+          state: globalConfig.autoInstallIdeExtension ? translate(uiLanguage, 'settings.enabledAction') : translate(uiLanguage, 'settings.disabledAction'),
+        }),
       );
     }
     if (globalConfig.autoCompactEnabled !== initialConfig.current.autoCompactEnabled) {
-      formattedChanges.push(`${globalConfig.autoCompactEnabled ? 'Enabled' : 'Disabled'} auto-compact`);
+      formattedChanges.push(
+        translate(uiLanguage, 'settings.toggleAutoCompact', {
+          state: globalConfig.autoCompactEnabled ? translate(uiLanguage, 'settings.enabledAction') : translate(uiLanguage, 'settings.disabledAction'),
+        }),
+      );
     }
     if (globalConfig.respectGitignore !== initialConfig.current.respectGitignore) {
       formattedChanges.push(
-        `${globalConfig.respectGitignore ? 'Enabled' : 'Disabled'} respect .gitignore in file picker`,
+        translate(uiLanguage, 'settings.toggleRespectGitignore', {
+          state: globalConfig.respectGitignore ? translate(uiLanguage, 'settings.enabledAction') : translate(uiLanguage, 'settings.disabledAction'),
+        }),
       );
     }
     if (globalConfig.copyFullResponse !== initialConfig.current.copyFullResponse) {
-      formattedChanges.push(`${globalConfig.copyFullResponse ? 'Enabled' : 'Disabled'} always copy full response`);
+      formattedChanges.push(
+        translate(uiLanguage, 'settings.toggleCopyFullResponse', {
+          state: globalConfig.copyFullResponse ? translate(uiLanguage, 'settings.enabledAction') : translate(uiLanguage, 'settings.disabledAction'),
+        }),
+      );
     }
     if (globalConfig.copyOnSelect !== initialConfig.current.copyOnSelect) {
-      formattedChanges.push(`${globalConfig.copyOnSelect ? 'Enabled' : 'Disabled'} copy on select`);
+      formattedChanges.push(
+        translate(uiLanguage, 'settings.toggleCopyOnSelect', {
+          state: globalConfig.copyOnSelect ? translate(uiLanguage, 'settings.enabledAction') : translate(uiLanguage, 'settings.disabledAction'),
+        }),
+      );
     }
     if (globalConfig.terminalProgressBarEnabled !== initialConfig.current.terminalProgressBarEnabled) {
       formattedChanges.push(
-        `${globalConfig.terminalProgressBarEnabled ? 'Enabled' : 'Disabled'} terminal progress bar`,
+        translate(uiLanguage, 'settings.toggleTerminalProgressBar', {
+          state: globalConfig.terminalProgressBarEnabled ? translate(uiLanguage, 'settings.enabledAction') : translate(uiLanguage, 'settings.disabledAction'),
+        }),
       );
     }
     if (globalConfig.showStatusInTerminalTab !== initialConfig.current.showStatusInTerminalTab) {
-      formattedChanges.push(`${globalConfig.showStatusInTerminalTab ? 'Enabled' : 'Disabled'} terminal tab status`);
+      formattedChanges.push(
+        translate(uiLanguage, 'settings.toggleTerminalTabStatus', {
+          state: globalConfig.showStatusInTerminalTab ? translate(uiLanguage, 'settings.enabledAction') : translate(uiLanguage, 'settings.disabledAction'),
+        }),
+      );
     }
     if (globalConfig.showTurnDuration !== initialConfig.current.showTurnDuration) {
-      formattedChanges.push(`${globalConfig.showTurnDuration ? 'Enabled' : 'Disabled'} turn duration`);
+      formattedChanges.push(
+        translate(uiLanguage, 'settings.toggleTurnDuration', {
+          state: globalConfig.showTurnDuration ? translate(uiLanguage, 'settings.enabledAction') : translate(uiLanguage, 'settings.disabledAction'),
+        }),
+      );
     }
     if (globalConfig.remoteControlAtStartup !== initialConfig.current.remoteControlAtStartup) {
       const remoteLabel =
         globalConfig.remoteControlAtStartup === undefined
-          ? 'Reset Remote Control to default'
-          : `${globalConfig.remoteControlAtStartup ? 'Enabled' : 'Disabled'} Remote Control for all sessions`;
+          ? translate(uiLanguage, 'settings.resetRemoteControlToDefault')
+          : translate(uiLanguage, 'settings.toggleRemoteControlForAllSessions', {
+              state: globalConfig.remoteControlAtStartup ? translate(uiLanguage, 'settings.enabledAction') : translate(uiLanguage, 'settings.disabledAction'),
+            });
       formattedChanges.push(remoteLabel);
     }
     if (settingsData?.autoUpdatesChannel !== initialSettingsData.current?.autoUpdatesChannel) {
-      formattedChanges.push(`Set auto-update channel to ${chalk.bold(settingsData?.autoUpdatesChannel ?? 'latest')}`);
+      formattedChanges.push(translate(uiLanguage, 'settings.setAutoUpdateChannelTo', { value: settingsData?.autoUpdatesChannel ?? 'latest' }));
     }
     if (formattedChanges.length > 0) {
       onClose(formattedChanges.join('\n'));
     } else {
-      onClose('Config dialog dismissed', {
+      onClose(translate(uiLanguage, 'settings.configDialogDismissed'), {
         display: 'system',
       });
     }
@@ -1896,7 +1929,7 @@ export function Config({
                   action="confirm:no"
                   context="Confirmation"
                   fallback="Esc"
-                  description="cancel"
+                  description={translate(uiLanguage, 'settings.cancelAction')}
                 />
               </Byline>
             </Text>
@@ -1929,7 +1962,7 @@ export function Config({
                 action="confirm:no"
                 context="Confirmation"
                 fallback="Esc"
-                description="cancel"
+                description={translate(uiLanguage, 'settings.cancelAction')}
               />
             </Byline>
           </Text>
@@ -1964,7 +1997,7 @@ export function Config({
               });
               setChanges(prev_25 => ({
                 ...prev_25,
-                teammateDefaultModel: teammateModelDisplayString(model_1),
+                teammateDefaultModel: teammateModelDisplayString(model_1, uiLanguage),
               }));
               logEvent('tengu_teammate_default_model_changed', {
                 model: model_1 as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
@@ -1982,7 +2015,7 @@ export function Config({
                 action="confirm:no"
                 context="Confirmation"
                 fallback="Esc"
-                description="cancel"
+                description={translate(uiLanguage, 'settings.cancelAction')}
               />
             </Byline>
           </Text>
@@ -2003,7 +2036,7 @@ export function Config({
                 action="confirm:no"
                 context="Confirmation"
                 fallback="Esc"
-                description="disable external includes"
+                description={translate(uiLanguage, 'settings.removeAction')}
               />
             </Byline>
           </Text>
@@ -2041,7 +2074,7 @@ export function Config({
                 action="confirm:no"
                 context="Confirmation"
                 fallback="Esc"
-                description="cancel"
+                description={translate(uiLanguage, 'settings.cancelAction')}
               />
             </Byline>
           </Text>
@@ -2053,6 +2086,17 @@ export function Config({
             onComplete={language => {
               isDirty.current = true;
               setCurrentLanguage(language);
+              setSettingsData(prev => ({
+                ...prev,
+                language,
+              }));
+              setAppState(prev => ({
+                ...prev,
+                settings: {
+                  ...prev.settings,
+                  language,
+                },
+              }));
               setShowSubmenu(null);
               setTabsHidden(false);
 
@@ -2073,13 +2117,13 @@ export function Config({
           <Text dimColor>
             <Byline>
               <KeyboardShortcutHint shortcut="Enter" action="confirm" />
-              <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
+              <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description={translate(uiLanguage, 'settings.cancelAction')} />
             </Byline>
           </Text>
         </>
       ) : showSubmenu === 'Providers' ? (
         <Dialog
-          title="Providers"
+          title={translate(uiLanguage, 'settings.providersLabel')}
           onCancel={() => {
             setShowSubmenu(null);
             setTabsHidden(false);
@@ -2088,7 +2132,7 @@ export function Config({
           hideInputGuide
         >
           <Box flexDirection="column" gap={1}>
-            <Text dimColor>Current provider is marked with *.</Text>
+            <Text dimColor>{translate(uiLanguage, 'settings.providersCurrentMarked')}</Text>
             <Select
               options={providerMenuOptions}
               onFocus={(value: string) => {
@@ -2114,18 +2158,18 @@ export function Config({
             />
             <Text dimColor>
               <Byline>
-                <KeyboardShortcutHint shortcut="Enter" action="select" />
-                <KeyboardShortcutHint shortcut="Space" action="open details" />
-                <KeyboardShortcutHint shortcut="Del" action="remove" />
-                <KeyboardShortcutHint shortcut="a" action="add" />
-                <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="close" />
+                <KeyboardShortcutHint shortcut="Enter" action={translate(uiLanguage, 'settings.selectAction')} />
+                <KeyboardShortcutHint shortcut="Space" action={translate(uiLanguage, 'settings.openDetailsAction')} />
+                <KeyboardShortcutHint shortcut="Del" action={translate(uiLanguage, 'settings.removeAction')} />
+                <KeyboardShortcutHint shortcut="a" action={translate(uiLanguage, 'settings.addAction')} />
+                <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description={translate(uiLanguage, 'settings.closeAction')} />
               </Byline>
             </Text>
           </Box>
         </Dialog>
       ) : showSubmenu === 'ProviderDetails' ? (
         <Dialog
-          title={selectedProvider ? `Provider: ${selectedProvider.name}` : 'Provider details'}
+          title={selectedProvider ? translate(uiLanguage, 'settings.providerTitle', { name: selectedProvider.name }) : translate(uiLanguage, 'settings.providerDetailsTitle')}
           onCancel={() => {
             setProviderDetailDraft(selectedProvider ? { ...selectedProvider } : null);
             setShowSubmenu('Providers');
@@ -2134,7 +2178,7 @@ export function Config({
           hideInputGuide
         >
           <Box flexDirection="column" gap={1}>
-            <Text dimColor>Edit the selected provider. Tab enters field editing for text inputs.</Text>
+            <Text dimColor>{translate(uiLanguage, 'settings.providerEditHint')}</Text>
             <Select
               options={providerDetailsOptions}
               disableSelection
@@ -2157,14 +2201,14 @@ export function Config({
             />
             <Text dimColor>
               <Byline>
-                <KeyboardShortcutHint shortcut="Space" action="cycle type" />
-                <KeyboardShortcutHint shortcut="Tab" action="edit field" />
-                <KeyboardShortcutHint shortcut="Enter" action="save and exit" />
+                <KeyboardShortcutHint shortcut="Space" action={translate(uiLanguage, 'settings.cycleTypeAction')} />
+                <KeyboardShortcutHint shortcut="Tab" action={translate(uiLanguage, 'settings.editFieldAction')} />
+                <KeyboardShortcutHint shortcut="Enter" action={translate(uiLanguage, 'settings.saveAndExitAction')} />
                 <ConfigurableShortcutHint
                   action="confirm:no"
                   context="Settings"
                   fallback="Esc"
-                  description="exit without saving"
+                  description={translate(uiLanguage, 'settings.exitWithoutSavingAction')}
                 />
               </Byline>
             </Text>
@@ -2172,7 +2216,7 @@ export function Config({
         </Dialog>
       ) : showSubmenu === 'EnableAutoUpdates' ? (
         <Dialog
-          title="Enable Auto-Updates"
+          title={translate(uiLanguage, 'settings.enableAutoUpdatesTitle')}
           onCancel={() => {
             setShowSubmenu(null);
             setTabsHidden(false);
@@ -2184,22 +2228,22 @@ export function Config({
             <>
               <Text>
                 {autoUpdaterDisabledReason?.type === 'env'
-                  ? 'Auto-updates are controlled by an environment variable and cannot be changed here.'
-                  : 'Auto-updates are disabled in development builds.'}
+                  ? translate(uiLanguage, 'settings.autoUpdatesControlledByEnv')
+                  : translate(uiLanguage, 'settings.autoUpdatesDisabledInDev')}
               </Text>
               {autoUpdaterDisabledReason?.type === 'env' && (
-                <Text dimColor>Unset {autoUpdaterDisabledReason.envVar} to re-enable auto-updates.</Text>
+                <Text dimColor>{translate(uiLanguage, 'settings.autoUpdatesUnsetEnv', { envVar: autoUpdaterDisabledReason.envVar })}</Text>
               )}
             </>
           ) : (
             <Select
               options={[
                 {
-                  label: 'Enable with latest channel',
+                  label: translate(uiLanguage, 'settings.autoUpdatesLatest'),
                   value: 'latest',
                 },
                 {
-                  label: 'Enable with stable channel',
+                  label: translate(uiLanguage, 'settings.autoUpdatesStable'),
                   value: 'stable',
                 },
               ]}
@@ -2271,18 +2315,18 @@ export function Config({
             isFocused={isSearchMode && !headerFocused}
             isTerminalFocused={isTerminalFocused}
             cursorOffset={searchCursorOffset}
-            placeholder="Search settings…"
+            placeholder={translate(uiLanguage, 'settings.searchPlaceholder')}
           />
           <Box flexDirection="column">
             {filteredSettingsItems.length === 0 ? (
               <Text dimColor italic>
-                No settings match &quot;{searchQuery}&quot;
+                {translate(uiLanguage, 'settings.noSearchResults', { query: searchQuery })}
               </Text>
             ) : (
               <>
                 {scrollOffset > 0 && (
                   <Text dimColor>
-                    {figures.arrowUp} {scrollOffset} more above
+                    {figures.arrowUp} {translate(uiLanguage, 'settings.moreAbove', { count: scrollOffset })}
                   </Text>
                 )}
                 {filteredSettingsItems.slice(scrollOffset, scrollOffset + maxVisible).map((setting_2, i) => {
@@ -2303,13 +2347,13 @@ export function Config({
                               {showThinkingWarning && setting_2.id === 'thinkingEnabled' && (
                                 <Text color="warning">
                                   {' '}
-                                  Changing thinking mode mid-conversation will increase latency and may reduce quality.
+                                  {translate(uiLanguage, 'settings.thinkingModeWarning')}
                                 </Text>
                               )}
                             </>
                           ) : setting_2.id === 'theme' ? (
                             <Text color={isSelected ? 'suggestion' : undefined}>
-                              {THEME_LABELS[setting_2.value.toString()] ?? setting_2.value.toString()}
+                              {themeLabels[setting_2.value.toString()] ?? setting_2.value.toString()}
                             </Text>
                           ) : setting_2.id === 'notifChannel' ? (
                             <Text color={isSelected ? 'suggestion' : undefined}>
@@ -2321,7 +2365,7 @@ export function Config({
                             </Text>
                           ) : setting_2.id === 'autoUpdatesChannel' && autoUpdaterDisabledReason ? (
                             <Box flexDirection="column">
-                              <Text color={isSelected ? 'suggestion' : undefined}>disabled</Text>
+                              <Text color={isSelected ? 'suggestion' : undefined}>{translate(uiLanguage, 'settings.disabledStatus')}</Text>
                               <Text dimColor>({formatAutoUpdaterDisabledReason(autoUpdaterDisabledReason)})</Text>
                             </Box>
                           ) : (
@@ -2338,7 +2382,7 @@ export function Config({
                 })}
                 {scrollOffset + maxVisible < filteredSettingsItems.length && (
                   <Text dimColor>
-                    {figures.arrowDown} {filteredSettingsItems.length - scrollOffset - maxVisible} more below
+                    {figures.arrowDown} {translate(uiLanguage, 'settings.moreBelow', { count: filteredSettingsItems.length - scrollOffset - maxVisible })}
                   </Text>
                 )}
               </>
@@ -2347,18 +2391,18 @@ export function Config({
           {headerFocused ? (
             <Text dimColor>
               <Byline>
-                <KeyboardShortcutHint shortcut="←/→ tab" action="switch" />
-                <KeyboardShortcutHint shortcut="↓" action="return" />
-                <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="close" />
+                <KeyboardShortcutHint shortcut="←/→ tab" action={translate(uiLanguage, 'settings.switchAction')} />
+                <KeyboardShortcutHint shortcut="↓" action={translate(uiLanguage, 'settings.returnAction')} />
+                <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description={translate(uiLanguage, 'settings.closeAction')} />
               </Byline>
             </Text>
           ) : isSearchMode ? (
             <Text dimColor>
               <Byline>
-                <Text>Type to filter</Text>
-                <KeyboardShortcutHint shortcut="Enter/↓" action="select" />
-                <KeyboardShortcutHint shortcut="↑" action="tabs" />
-                <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="clear" />
+                <Text>{translate(uiLanguage, 'settings.typeToFilter')}</Text>
+                <KeyboardShortcutHint shortcut="Enter/↓" action={translate(uiLanguage, 'settings.selectAction')} />
+                <KeyboardShortcutHint shortcut="↑" action={translate(uiLanguage, 'settings.tabsAction')} />
+                <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description={translate(uiLanguage, 'settings.clearAction')} />
               </Byline>
             </Text>
           ) : (
@@ -2368,21 +2412,21 @@ export function Config({
                   action="select:accept"
                   context="Settings"
                   fallback="Space"
-                  description="change"
+                  description={translate(uiLanguage, 'settings.changeAction')}
                 />
                 <ConfigurableShortcutHint
                   action="settings:close"
                   context="Settings"
                   fallback="Enter"
-                  description="save"
+                  description={translate(uiLanguage, 'settings.saveAction')}
                 />
                 <ConfigurableShortcutHint
                   action="settings:search"
                   context="Settings"
                   fallback="/"
-                  description="search"
+                  description={translate(uiLanguage, 'settings.searchAction')}
                 />
-                <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
+                <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description={translate(uiLanguage, 'settings.cancelAction')} />
               </Byline>
             </Text>
           )}
@@ -2391,35 +2435,41 @@ export function Config({
     </Box>
   );
 }
-function teammateModelDisplayString(value: string | null | undefined): string {
+function teammateModelDisplayString(
+  value: string | null | undefined,
+  uiLanguage: string | undefined,
+): string {
   if (value === undefined) {
     return modelDisplayString(getHardcodedTeammateModelFallback());
   }
-  if (value === null) return "Default (leader's model)";
+  if (value === null) return translate(uiLanguage, 'settings.defaultLeaderModel');
   return modelDisplayString(value);
 }
-const THEME_LABELS: Record<string, string> = {
-  auto: 'Auto (match terminal)',
-  dark: 'Dark mode',
-  light: 'Light mode',
-  'dark-daltonized': 'Dark mode (colorblind-friendly)',
-  'light-daltonized': 'Light mode (colorblind-friendly)',
-  'dark-ansi': 'Dark mode (ANSI colors only)',
-  'light-ansi': 'Light mode (ANSI colors only)',
-};
+function getThemeLabels(uiLanguage: string | undefined): Record<string, string> {
+  return {
+    auto: translate(uiLanguage, 'settings.themeAuto'),
+    dark: translate(uiLanguage, 'settings.themeDark'),
+    light: translate(uiLanguage, 'settings.themeLight'),
+    'dark-daltonized': translate(uiLanguage, 'settings.themeDarkDaltonized'),
+    'light-daltonized': translate(uiLanguage, 'settings.themeLightDaltonized'),
+    'dark-ansi': translate(uiLanguage, 'settings.themeDarkAnsi'),
+    'light-ansi': translate(uiLanguage, 'settings.themeLightAnsi'),
+  };
+}
 function NotifChannelLabel(t0) {
   const $ = _c(4);
+  const uiLanguage = useAppState(s => s.settings.language);
   const { value } = t0;
   switch (value) {
     case 'auto': {
-      return 'Auto';
+      return translate(uiLanguage, 'settings.notificationAuto');
     }
     case 'iterm2': {
       let t1;
       if ($[0] === Symbol.for('react.memo_cache_sentinel')) {
         t1 = (
           <Text>
-            iTerm2 <Text dimColor={true}>(OSC 9)</Text>
+            iTerm2 <Text dimColor={true}>{translate(uiLanguage, 'settings.notificationOsc9')}</Text>
           </Text>
         );
         $[0] = t1;
@@ -2433,7 +2483,7 @@ function NotifChannelLabel(t0) {
       if ($[1] === Symbol.for('react.memo_cache_sentinel')) {
         t1 = (
           <Text>
-            Terminal Bell <Text dimColor={true}>(\a)</Text>
+            {translate(uiLanguage, 'settings.terminalBell')} <Text dimColor={true}>{translate(uiLanguage, 'settings.notificationBellCode')}</Text>
           </Text>
         );
         $[1] = t1;
@@ -2447,7 +2497,7 @@ function NotifChannelLabel(t0) {
       if ($[2] === Symbol.for('react.memo_cache_sentinel')) {
         t1 = (
           <Text>
-            Kitty <Text dimColor={true}>(OSC 99)</Text>
+            Kitty <Text dimColor={true}>{translate(uiLanguage, 'settings.notificationOsc99')}</Text>
           </Text>
         );
         $[2] = t1;
@@ -2461,7 +2511,7 @@ function NotifChannelLabel(t0) {
       if ($[3] === Symbol.for('react.memo_cache_sentinel')) {
         t1 = (
           <Text>
-            Ghostty <Text dimColor={true}>(OSC 777)</Text>
+            Ghostty <Text dimColor={true}>{translate(uiLanguage, 'settings.notificationOsc777')}</Text>
           </Text>
         );
         $[3] = t1;
@@ -2471,10 +2521,10 @@ function NotifChannelLabel(t0) {
       return t1;
     }
     case 'iterm2_with_bell': {
-      return 'iTerm2 w/ Bell';
+      return translate(uiLanguage, 'settings.notificationItermBell');
     }
     case 'notifications_disabled': {
-      return 'Disabled';
+      return translate(uiLanguage, 'settings.disabledStatus');
     }
     default: {
       return value;

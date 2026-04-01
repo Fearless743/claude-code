@@ -15,6 +15,8 @@ import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
 import { Byline } from '../design-system/Byline.js';
 import { ProgressBar } from '../design-system/ProgressBar.js';
 import { isEligibleForOverageCreditGrant, OverageCreditUpsell } from '../LogoV2/OverageCreditUpsell.js';
+import { useAppState } from '../../state/AppState.js';
+import { translate } from '../../i18n/index.js';
 type LimitBarProps = {
   title: string;
   limit: RateLimit;
@@ -24,6 +26,7 @@ type LimitBarProps = {
 };
 function LimitBar(t0) {
   const $ = _c(34);
+  const uiLanguage = useAppState(s => s.settings.language);
   const {
     title,
     limit,
@@ -39,7 +42,9 @@ function LimitBar(t0) {
   if (utilization === null) {
     return null;
   }
-  const usedText = `${Math.floor(utilization)}% used`;
+  const usedText = translate(uiLanguage, 'settings.usagePercentUsed', {
+    percent: Math.floor(utilization),
+  });
   let subtext;
   if (resets_at) {
     let t2;
@@ -51,7 +56,7 @@ function LimitBar(t0) {
     } else {
       t2 = $[2];
     }
-    subtext = `Resets ${t2}`;
+    subtext = translate(uiLanguage, 'settings.usageResets', { value: t2 });
   }
   if (extraSubtext) {
     if (subtext) {
@@ -172,6 +177,7 @@ function LimitBar(t0) {
   }
 }
 export function Usage(): React.ReactNode {
+  const uiLanguage = useAppState(s => s.settings.language);
   const [utilization, setUtilization] = useState<Utilization | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -194,7 +200,7 @@ export function Usage(): React.ReactNode {
         };
       };
       const responseBody = axiosError.response?.data ? jsonStringify(axiosError.response.data) : undefined;
-      setError(responseBody ? `Failed to load usage data: ${responseBody}` : 'Failed to load usage data');
+      setError(responseBody ? translate(uiLanguage, 'settings.failedToLoadUsageDataWithBody', { body: responseBody }) : translate(uiLanguage, 'settings.failedToLoadUsageData'));
     } finally {
       setIsLoading(false);
     }
@@ -210,20 +216,20 @@ export function Usage(): React.ReactNode {
   });
   if (error) {
     return <Box flexDirection="column" gap={1}>
-        <Text color="error">Error: {error}</Text>
+        <Text color="error">{translate(uiLanguage, 'settings.errorPrefix')}: {error}</Text>
         <Text dimColor>
           <Byline>
-            <ConfigurableShortcutHint action="settings:retry" context="Settings" fallback="r" description="retry" />
-            <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
+            <ConfigurableShortcutHint action="settings:retry" context="Settings" fallback="r" description={translate(uiLanguage, 'settings.retryAction')} />
+            <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description={translate(uiLanguage, 'settings.cancelAction')} />
           </Byline>
         </Text>
       </Box>;
   }
   if (!utilization) {
     return <Box flexDirection="column" gap={1}>
-        <Text dimColor>Loading usage data…</Text>
+        <Text dimColor>{translate(uiLanguage, 'settings.loadingUsageData')}</Text>
         <Text dimColor>
-          <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
+          <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description={translate(uiLanguage, 'settings.cancelAction')} />
         </Text>
       </Box>;
   }
@@ -235,19 +241,19 @@ export function Usage(): React.ReactNode {
   const subscriptionType = getSubscriptionType();
   const showSonnetBar = subscriptionType === 'max' || subscriptionType === 'team' || subscriptionType === null;
   const limits = [{
-    title: 'Current session',
+    title: translate(uiLanguage, 'settings.currentSessionTitle'),
     limit: utilization.five_hour
   }, {
-    title: 'Current week (all models)',
+    title: translate(uiLanguage, 'settings.currentWeekAllModelsTitle'),
     limit: utilization.seven_day
   }, ...(showSonnetBar ? [{
-    title: 'Current week (Sonnet only)',
+    title: translate(uiLanguage, 'settings.currentWeekSonnetTitle'),
     limit: utilization.seven_day_sonnet
   }] : [])];
   return <Box flexDirection="column" gap={1} width="100%">
       {limits.some(({
       limit
-    }) => limit) || <Text dimColor>/usage is only available for subscription plans.</Text>}
+    }) => limit) || <Text dimColor>{translate(uiLanguage, 'settings.usageSubscriptionOnly')}</Text>}
 
       {limits.map(({
       title,
@@ -259,7 +265,7 @@ export function Usage(): React.ReactNode {
       {isEligibleForOverageCreditGrant() && <OverageCreditUpsell maxWidth={maxWidth} />}
 
       <Text dimColor>
-        <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description="cancel" />
+        <ConfigurableShortcutHint action="confirm:no" context="Settings" fallback="Esc" description={translate(uiLanguage, 'settings.cancelAction')} />
       </Text>
     </Box>;
 }
@@ -267,9 +273,9 @@ type ExtraUsageSectionProps = {
   extraUsage: ExtraUsage;
   maxWidth: number;
 };
-const EXTRA_USAGE_SECTION_TITLE = 'Extra usage';
 function ExtraUsageSection(t0) {
   const $ = _c(20);
+  const uiLanguage = useAppState(s => s.settings.language);
   const {
     extraUsage,
     maxWidth
@@ -283,7 +289,7 @@ function ExtraUsageSection(t0) {
     if (extraUsageCommand.isEnabled()) {
       let t1;
       if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = <Box flexDirection="column"><Text bold={true}>{EXTRA_USAGE_SECTION_TITLE}</Text><Text dimColor={true}>Extra usage not enabled · /extra-usage to enable</Text></Box>;
+        t1 = <Box flexDirection="column"><Text bold={true}>{translate(uiLanguage, 'settings.extraUsageTitle')}</Text><Text dimColor={true}>{translate(uiLanguage, 'settings.extraUsageNotEnabled')}</Text></Box>;
         $[0] = t1;
       } else {
         t1 = $[0];
@@ -295,7 +301,7 @@ function ExtraUsageSection(t0) {
   if (extraUsage.monthly_limit === null) {
     let t1;
     if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = <Box flexDirection="column"><Text bold={true}>{EXTRA_USAGE_SECTION_TITLE}</Text><Text dimColor={true}>Unlimited</Text></Box>;
+      t1 = <Box flexDirection="column"><Text bold={true}>{translate(uiLanguage, 'settings.extraUsageTitle')}</Text><Text dimColor={true}>{translate(uiLanguage, 'settings.unlimitedLabel')}</Text></Box>;
       $[1] = t1;
     } else {
       t1 = $[1];
@@ -333,7 +339,7 @@ function ExtraUsageSection(t0) {
     const now = new Date();
     const oneMonthReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     T0 = LimitBar;
-    t7 = EXTRA_USAGE_SECTION_TITLE;
+    t7 = translate(uiLanguage, 'settings.extraUsageTitle');
     t5 = extraUsage.utilization;
     t6 = oneMonthReset.toISOString();
     $[6] = extraUsage.utilization;
@@ -359,7 +365,10 @@ function ExtraUsageSection(t0) {
   } else {
     t8 = $[13];
   }
-  const t9 = `${formattedUsedCredits} / ${formattedMonthlyLimit} spent`;
+  const t9 = translate(uiLanguage, 'settings.extraUsageSpent', {
+    used: formattedUsedCredits,
+    limit: formattedMonthlyLimit,
+  });
   let t10;
   if ($[14] !== T0 || $[15] !== maxWidth || $[16] !== t7 || $[17] !== t8 || $[18] !== t9) {
     t10 = <T0 title={t7} limit={t8} showTimeInReset={false} extraSubtext={t9} maxWidth={maxWidth} />;

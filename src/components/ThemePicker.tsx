@@ -16,6 +16,7 @@ import { Byline } from './design-system/Byline.js';
 import { KeyboardShortcutHint } from './design-system/KeyboardShortcutHint.js';
 import { getColorModuleUnavailableReason, getSyntaxTheme } from './StructuredDiff/colorDiff.js';
 import { StructuredDiff } from './StructuredDiff.js';
+import { translate } from '../i18n/index.js';
 export type ThemePickerProps = {
   onThemeSelect: (setting: ThemeSetting) => void;
   showIntroText?: boolean;
@@ -44,6 +45,7 @@ export function ThemePicker(t0) {
   const hideEscToCancel = t4 === undefined ? false : t4;
   const skipExitHandling = t5 === undefined ? false : t5;
   const [theme] = useTheme();
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
   const themeSetting = useThemeSetting();
   const {
     columns
@@ -111,25 +113,25 @@ export function ThemePicker(t0) {
   let t10;
   if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
     t10 = [...(feature("AUTO_THEME") ? [{
-      label: "Auto (match terminal)",
+      label: translate(uiLanguage, 'settings.themeAuto'),
       value: "auto" as const
     }] : []), {
-      label: "Dark mode",
+      label: translate(uiLanguage, 'settings.themeDark'),
       value: "dark"
     }, {
-      label: "Light mode",
+      label: translate(uiLanguage, 'settings.themeLight'),
       value: "light"
     }, {
-      label: "Dark mode (colorblind-friendly)",
+      label: translate(uiLanguage, 'settings.themeDarkDaltonized'),
       value: "dark-daltonized"
     }, {
-      label: "Light mode (colorblind-friendly)",
+      label: translate(uiLanguage, 'settings.themeLightDaltonized'),
       value: "light-daltonized"
     }, {
-      label: "Dark mode (ANSI colors only)",
+      label: translate(uiLanguage, 'settings.themeDarkAnsi'),
       value: "dark-ansi"
     }, {
-      label: "Light mode (ANSI colors only)",
+      label: translate(uiLanguage, 'settings.themeLightAnsi'),
       value: "light-ansi"
     }];
     $[7] = t10;
@@ -139,7 +141,7 @@ export function ThemePicker(t0) {
   const themeOptions = t10;
   let t11;
   if ($[8] !== showIntroText) {
-    t11 = showIntroText ? <Text>Let's get started.</Text> : <Text bold={true} color="permission">Theme</Text>;
+    t11 = showIntroText ? <Text>{translate(uiLanguage, 'settings.themeIntro')}</Text> : <Text bold={true} color="permission">{translate(uiLanguage, 'settings.themeTitle')}</Text>;
     $[8] = showIntroText;
     $[9] = t11;
   } else {
@@ -147,7 +149,7 @@ export function ThemePicker(t0) {
   }
   let t12;
   if ($[10] === Symbol.for("react.memo_cache_sentinel")) {
-    t12 = <Text bold={true}>Choose the text style that looks best with your terminal</Text>;
+    t12 = <Text bold={true}>{translate(uiLanguage, 'settings.themeDescription')}</Text>;
     $[10] = t12;
   } else {
     t12 = $[10];
@@ -249,7 +251,17 @@ export function ThemePicker(t0) {
   } else {
     t21 = $[36];
   }
-  const t22 = colorModuleUnavailableReason === "env" ? `Syntax highlighting disabled (via CLAUDE_CODE_SYNTAX_HIGHLIGHT=${process.env.CLAUDE_CODE_SYNTAX_HIGHLIGHT})` : syntaxHighlightingDisabled ? `Syntax highlighting disabled (${syntaxToggleShortcut} to enable)` : syntaxTheme ? `Syntax theme: ${syntaxTheme.theme}${syntaxTheme.source ? ` (from ${syntaxTheme.source})` : ""} (${syntaxToggleShortcut} to disable)` : `Syntax highlighting enabled (${syntaxToggleShortcut} to disable)`;
+  const t22 = colorModuleUnavailableReason === "env" ? translate(uiLanguage, 'settings.syntaxHighlightingDisabledViaEnv', {
+    value: process.env.CLAUDE_CODE_SYNTAX_HIGHLIGHT ?? ''
+  }) : syntaxHighlightingDisabled ? translate(uiLanguage, 'settings.syntaxHighlightingDisabledEnable', {
+    shortcut: syntaxToggleShortcut
+  }) : syntaxTheme ? translate(uiLanguage, 'settings.syntaxThemeLabel', {
+    theme: syntaxTheme.theme,
+    source: syntaxTheme.source ? translate(uiLanguage, 'settings.syntaxThemeFromSource', { source: syntaxTheme.source }) : '',
+    shortcut: syntaxToggleShortcut
+  }) : translate(uiLanguage, 'settings.syntaxHighlightingEnabledDisable', {
+    shortcut: syntaxToggleShortcut
+  });
   let t23;
   if ($[37] !== t22) {
     t23 = <Text dimColor={true}>{" "}{t22}</Text>;
@@ -297,7 +309,7 @@ export function ThemePicker(t0) {
     }
     let t28;
     if ($[50] !== exitState || $[51] !== hideEscToCancel) {
-      t28 = !hideEscToCancel && <Box><Text dimColor={true} italic={true}>{exitState.pending ? <>Press {exitState.keyName} again to exit</> : <Byline><KeyboardShortcutHint shortcut="Enter" action="select" /><KeyboardShortcutHint shortcut="Esc" action="cancel" /></Byline>}</Text></Box>;
+      t28 = !hideEscToCancel && <Box><Text dimColor={true} italic={true}>{exitState.pending ? <>{translate(uiLanguage, 'settings.pressAgainToExit', { key: exitState.keyName })}</> : <Byline><KeyboardShortcutHint shortcut="Enter" action={translate(uiLanguage, 'settings.selectAction')} /><KeyboardShortcutHint shortcut="Esc" action={translate(uiLanguage, 'settings.cancelAction')} /></Byline>}</Text></Box>;
       $[50] = exitState;
       $[51] = hideEscToCancel;
       $[52] = t28;

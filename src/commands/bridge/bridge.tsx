@@ -17,7 +17,7 @@ import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEve
 import { useAppState, useSetAppState } from '../../state/AppState.js';
 import type { ToolUseContext } from '../../Tool.js';
 import type { LocalJSXCommandContext, LocalJSXCommandOnDone } from '../../types/command.js';
-import { logForDebugging } from '../../utils/debug.js';
+import { translate } from '../../i18n/index.js';
 type Props = {
   onDone: LocalJSXCommandOnDone;
   name?: string;
@@ -288,7 +288,7 @@ function BridgeDisconnectDialog(t0) {
   if ($[17] !== displayUrl || $[18] !== handleContinue || $[19] !== qrText || $[20] !== showQR) {
     const qrLines = qrText ? qrText.split("\n").filter(_temp1) : [];
     T1 = Dialog;
-    t14 = "Remote Control";
+    t14 = translate(process.env.CLAUDE_CODE_LANGUAGE, 'remoteControl.title');
     t15 = handleContinue;
     t16 = true;
     T0 = Box;
@@ -296,7 +296,7 @@ function BridgeDisconnectDialog(t0) {
     t11 = 1;
     const t17 = displayUrl ? ` at ${displayUrl}` : "";
     if ($[30] !== t17) {
-      t12 = <Text>This session is available via Remote Control{t17}.</Text>;
+      t12 = <Text>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'remoteControl.sessionAvailable', { suffix: t17 })}</Text>;
       $[30] = t17;
       $[31] = t12;
     } else {
@@ -330,7 +330,7 @@ function BridgeDisconnectDialog(t0) {
   const t17 = focusIndex === 0;
   let t18;
   if ($[32] === Symbol.for("react.memo_cache_sentinel")) {
-    t18 = <Text>Disconnect this session</Text>;
+    t18 = <Text>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'remoteControl.disconnect')}</Text>;
     $[32] = t18;
   } else {
     t18 = $[32];
@@ -344,7 +344,7 @@ function BridgeDisconnectDialog(t0) {
     t19 = $[34];
   }
   const t20 = focusIndex === 1;
-  const t21 = showQR ? "Hide QR code" : "Show QR code";
+  const t21 = showQR ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'remoteControl.hideQr') : translate(process.env.CLAUDE_CODE_LANGUAGE, 'remoteControl.showQr');
   let t22;
   if ($[35] !== t21) {
     t22 = <Text>{t21}</Text>;
@@ -365,7 +365,7 @@ function BridgeDisconnectDialog(t0) {
   const t24 = focusIndex === 2;
   let t25;
   if ($[40] === Symbol.for("react.memo_cache_sentinel")) {
-    t25 = <Text>Continue</Text>;
+    t25 = <Text>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'remoteControl.continue')}</Text>;
     $[40] = t25;
   } else {
     t25 = $[40];
@@ -390,7 +390,7 @@ function BridgeDisconnectDialog(t0) {
   }
   let t28;
   if ($[47] === Symbol.for("react.memo_cache_sentinel")) {
-    t28 = <Text dimColor={true}>Enter to select · Esc to continue</Text>;
+    t28 = <Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'remoteControl.inputHint')}</Text>;
     $[47] = t28;
   } else {
     t28 = $[47];

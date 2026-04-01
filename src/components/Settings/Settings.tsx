@@ -11,6 +11,8 @@ import { Tabs, Tab } from '../design-system/Tabs.js';
 import { Status, buildDiagnostics } from './Status.js';
 import { Config } from './Config.js';
 import { Usage } from './Usage.js';
+import { useAppState } from '../../state/AppState.js';
+import { translate } from '../../i18n/index.js';
 import type { LocalJSXCommandContext, CommandResultDisplay } from '../../commands.js';
 type Props = {
   onClose: (result?: string, options?: {
@@ -26,6 +28,7 @@ export function Settings(t0) {
     context,
     defaultTab
   } = t0;
+  const uiLanguage = useAppState(s => s.settings.language);
   const [selectedTab, setSelectedTab] = useState(defaultTab);
   const [tabsHidden, setTabsHidden] = useState(false);
   const [configOwnsEsc, setConfigOwnsEsc] = useState(false);
@@ -43,7 +46,7 @@ export function Settings(t0) {
       if (tabsHidden) {
         return;
       }
-      onClose("Status dialog dismissed", {
+      onClose(translate(uiLanguage, 'settings.statusDialogDismissed'), {
         display: "system"
       });
     };
@@ -68,63 +71,67 @@ export function Settings(t0) {
   }
   useKeybinding("confirm:no", handleEscape, t3);
   let t4;
-  if ($[5] !== context || $[6] !== diagnosticsPromise) {
-    t4 = <Tab key="status" title="Status"><Status context={context} diagnosticsPromise={diagnosticsPromise} /></Tab>;
+  if ($[5] !== context || $[6] !== diagnosticsPromise || $[7] !== uiLanguage) {
+    t4 = <Tab key="status" id="Status" title={translate(uiLanguage, 'settings.tabStatus')}><Status context={context} diagnosticsPromise={diagnosticsPromise} /></Tab>;
     $[5] = context;
     $[6] = diagnosticsPromise;
-    $[7] = t4;
+    $[7] = uiLanguage;
+    $[8] = t4;
   } else {
-    t4 = $[7];
+    t4 = $[8];
   }
   let t5;
-  if ($[8] !== contentHeight || $[9] !== context || $[10] !== onClose) {
-    t5 = <Tab key="config" title="Config"><Suspense fallback={null}><Config context={context} onClose={onClose} setTabsHidden={setTabsHidden} onIsSearchModeChange={setConfigOwnsEsc} contentHeight={contentHeight} /></Suspense></Tab>;
-    $[8] = contentHeight;
-    $[9] = context;
-    $[10] = onClose;
-    $[11] = t5;
+  if ($[9] !== contentHeight || $[10] !== context || $[11] !== onClose || $[12] !== uiLanguage) {
+    t5 = <Tab key="config" id="Config" title={translate(uiLanguage, 'settings.tabConfig')}><Suspense fallback={null}><Config context={context} onClose={onClose} setTabsHidden={setTabsHidden} onIsSearchModeChange={setConfigOwnsEsc} contentHeight={contentHeight} /></Suspense></Tab>;
+    $[9] = contentHeight;
+    $[10] = context;
+    $[11] = onClose;
+    $[12] = uiLanguage;
+    $[13] = t5;
   } else {
-    t5 = $[11];
+    t5 = $[13];
   }
   let t6;
-  if ($[12] === Symbol.for("react.memo_cache_sentinel")) {
-    t6 = <Tab key="usage" title="Usage"><Usage /></Tab>;
-    $[12] = t6;
+  if ($[14] !== uiLanguage) {
+    t6 = <Tab key="usage" id="Usage" title={translate(uiLanguage, 'settings.tabUsage')}><Usage /></Tab>;
+    $[14] = uiLanguage;
+    $[15] = t6;
   } else {
-    t6 = $[12];
+    t6 = $[15];
   }
   let t7;
-  if ($[13] !== contentHeight) {
+  if ($[16] !== contentHeight) {
     t7 = [];
-    $[13] = contentHeight;
-    $[14] = t7;
+    $[16] = contentHeight;
+    $[17] = t7;
   } else {
-    t7 = $[14];
+    t7 = $[17];
   }
   let t8;
-  if ($[15] !== t4 || $[16] !== t5 || $[17] !== t7) {
+  if ($[18] !== t4 || $[19] !== t5 || $[20] !== t6 || $[21] !== t7) {
     t8 = [t4, t5, t6, ...t7];
-    $[15] = t4;
-    $[16] = t5;
-    $[17] = t7;
-    $[18] = t8;
+    $[18] = t4;
+    $[19] = t5;
+    $[20] = t6;
+    $[21] = t7;
+    $[22] = t8;
   } else {
-    t8 = $[18];
+    t8 = $[22];
   }
   const tabs = t8;
   const t9 = defaultTab !== "Config" && defaultTab !== "Gates";
   const t10 = tabsHidden || insideModal ? undefined : contentHeight;
   let t11;
-  if ($[19] !== selectedTab || $[20] !== t10 || $[21] !== t9 || $[22] !== tabs || $[23] !== tabsHidden) {
+  if ($[23] !== selectedTab || $[24] !== t10 || $[25] !== t9 || $[26] !== tabs || $[27] !== tabsHidden) {
     t11 = <Pane color="permission"><Tabs color="permission" selectedTab={selectedTab} onTabChange={setSelectedTab} hidden={tabsHidden} initialHeaderFocused={t9} contentHeight={t10}>{tabs}</Tabs></Pane>;
-    $[19] = selectedTab;
-    $[20] = t10;
-    $[21] = t9;
-    $[22] = tabs;
-    $[23] = tabsHidden;
-    $[24] = t11;
+    $[23] = selectedTab;
+    $[24] = t10;
+    $[25] = t9;
+    $[26] = tabs;
+    $[27] = tabsHidden;
+    $[28] = t11;
   } else {
-    t11 = $[24];
+    t11 = $[28];
   }
   return t11;
 }
