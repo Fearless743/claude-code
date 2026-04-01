@@ -148,6 +148,37 @@ export async function getLatestVersion(
   return getLatestVersionFromBinaryRepo(channel, GCS_BUCKET_URL)
 }
 
+export async function getNpmDistTags(): Promise<{
+  latest: string | null
+  stable: string | null
+}> {
+  try {
+    return {
+      latest: await getLatestVersionFromArtifactory('latest'),
+      stable: await getLatestVersionFromArtifactory('stable'),
+    }
+  } catch (error) {
+    logForDebugging(`Failed to fetch native npm dist-tags: ${error}`)
+    return { latest: null, stable: null }
+  }
+}
+
+export async function getGcsDistTags(): Promise<{
+  latest: string | null
+  stable: string | null
+}> {
+  try {
+    const [latest, stable] = await Promise.all([
+      getLatestVersionFromBinaryRepo('latest', GCS_BUCKET_URL),
+      getLatestVersionFromBinaryRepo('stable', GCS_BUCKET_URL),
+    ])
+    return { latest, stable }
+  } catch (error) {
+    logForDebugging(`Failed to fetch native GCS dist-tags: ${error}`)
+    return { latest: null, stable: null }
+  }
+}
+
 export async function downloadVersionFromArtifactory(
   version: string,
   stagingPath: string,

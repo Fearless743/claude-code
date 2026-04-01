@@ -199,9 +199,6 @@ export type GlobalConfig = {
   projects?: Record<string, ProjectConfig>
   numStartups: number
   installMethod?: InstallMethod
-  autoUpdates?: boolean
-  // Flag to distinguish protection-based disabling from user preference
-  autoUpdatesProtectedForNative?: boolean
   // Session count when Doctor was last shown
   doctorShownAtSession?: number
   userID?: string
@@ -605,7 +602,6 @@ function createDefaultGlobalConfig(): GlobalConfig {
   return {
     numStartups: 0,
     installMethod: undefined,
-    autoUpdates: undefined,
     theme: 'dark',
     preferredNotifChannel: 'auto',
     verbose: false,
@@ -647,8 +643,6 @@ export const DEFAULT_GLOBAL_CONFIG: GlobalConfig = createDefaultGlobalConfig()
 export const GLOBAL_CONFIG_KEYS = [
   'apiKeyHelper',
   'installMethod',
-  'autoUpdates',
-  'autoUpdatesProtectedForNative',
   'theme',
   'verbose',
   'preferredNotifChannel',
@@ -785,7 +779,6 @@ export function isPathTrusted(dir: string): boolean {
 // We have to put this test code here because Jest doesn't support mocking ES modules :O
 const TEST_GLOBAL_CONFIG_FOR_TESTING: GlobalConfig = {
   ...DEFAULT_GLOBAL_CONFIG,
-  autoUpdates: false,
 }
 const TEST_PROJECT_CONFIG_FOR_TESTING: ProjectConfig = {
   ...DEFAULT_PROJECT_CONFIG,
@@ -928,7 +921,6 @@ registerCleanup(async () => {
 })
 
 /**
- * Migrates old autoUpdaterStatus to new installMethod and autoUpdates fields
  * @internal
  */
 function migrateConfigFields(config: GlobalConfig): GlobalConfig {
@@ -985,9 +977,7 @@ function migrateConfigFields(config: GlobalConfig): GlobalConfig {
       | 'not_configured'
   }
 
-  // Determine install method and auto-update preference from old field
   let installMethod: InstallMethod = 'unknown'
-  let autoUpdates = config.autoUpdates ?? true // Default to enabled unless explicitly disabled
 
   switch (legacy.autoUpdaterStatus) {
     case 'migrated':
@@ -996,18 +986,13 @@ function migrateConfigFields(config: GlobalConfig): GlobalConfig {
     case 'installed':
       installMethod = 'native'
       break
-    case 'disabled':
-      // When disabled, we don't know the install method
-      autoUpdates = false
-      break
     case 'enabled':
     case 'no_permissions':
     case 'not_configured':
-      // These imply global installation
       installMethod = 'global'
       break
+    case 'disabled':
     case undefined:
-      // No old status, keep defaults
       break
   }
 
@@ -1015,7 +1000,6 @@ function migrateConfigFields(config: GlobalConfig): GlobalConfig {
     ...config,
     ...providerMigration,
     installMethod,
-    autoUpdates,
   }
 }
 

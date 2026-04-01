@@ -9,6 +9,7 @@ import { useAppState } from 'src/state/AppState.js';
 import { type DiffStats, fileHistoryCanRestore, fileHistoryEnabled, fileHistoryGetDiffStats } from 'src/utils/fileHistory.js';
 import { logError } from 'src/utils/log.js';
 import { useExitOnCtrlCDWithKeybindings } from '../hooks/useExitOnCtrlCDWithKeybindings.js';
+import { translate } from '../i18n/index.js';
 import { Box, Text } from '../ink.js';
 import { useKeybinding, useKeybindings } from '../keybindings/useKeybinding.js';
 import type { Message, PartialCompactDirection, UserMessage } from '../types/message.js';
@@ -53,6 +54,7 @@ export function MessageSelector({
   preselectedMessage
 }: Props): React.ReactNode {
   const fileHistory = useAppState(s => s.fileHistory);
+  const uiLanguage = useAppState(s => s.settings.language);
   const [error, setError] = useState<string | undefined>(undefined);
   const isFileHistoryEnabled = fileHistoryEnabled();
 
@@ -93,20 +95,20 @@ export function MessageSelector({
   function getRestoreOptions(canRestoreCode: boolean): OptionWithDescription<RestoreOption>[] {
     const baseOptions: OptionWithDescription<RestoreOption>[] = canRestoreCode ? [{
       value: 'both',
-      label: 'Restore code and conversation'
+      label: translate(uiLanguage, 'messageSelector.restoreCodeAndConversation')
     }, {
       value: 'conversation',
-      label: 'Restore conversation'
+      label: translate(uiLanguage, 'messageSelector.restoreConversation')
     }, {
       value: 'code',
-      label: 'Restore code'
+      label: translate(uiLanguage, 'messageSelector.restoreCode')
     }] : [{
       value: 'conversation',
-      label: 'Restore conversation'
+      label: translate(uiLanguage, 'messageSelector.restoreConversation')
     }];
     const summarizeInputProps = {
       type: 'input' as const,
-      placeholder: 'add context (optional)',
+      placeholder: translate(uiLanguage, 'messageSelector.addContextOptional'),
       initialValue: '',
       allowEmptySubmitToCancel: true,
       showLabelWithValue: true,
@@ -114,21 +116,21 @@ export function MessageSelector({
     };
     baseOptions.push({
       value: 'summarize',
-      label: 'Summarize from here',
+      label: translate(uiLanguage, 'messageSelector.summarizeFromHere'),
       ...summarizeInputProps,
       onChange: setSummarizeFromFeedback
     });
     if (("external" as string) === 'ant') {
       baseOptions.push({
         value: 'summarize_up_to',
-        label: 'Summarize up to here',
+        label: translate(uiLanguage, 'messageSelector.summarizeUpToHere'),
         ...summarizeInputProps,
         onChange: setSummarizeUpToFeedback
       });
     }
     baseOptions.push({
       value: 'nevermind',
-      label: 'Never mind'
+      label: translate(uiLanguage, 'messageSelector.neverMind')
     });
     return baseOptions;
   }
@@ -149,7 +151,9 @@ export function MessageSelector({
     } catch (error_0) {
       logError(error_0 as Error);
       setIsRestoring(false);
-      setError(`Failed to restore the conversation:\n${error_0}`);
+      setError(translate(uiLanguage, 'messageSelector.failedToRestoreConversation', {
+        error: `${error_0}`,
+      }));
     }
   }
   async function handleSelect(message_0: UserMessage) {
@@ -179,7 +183,7 @@ export function MessageSelector({
       option: option as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS
     });
     if (!messageToRestore) {
-      setError('Message not found.');
+      setError(translate(uiLanguage, 'messageSelector.messageNotFound'));
       return;
     }
     if (option === 'nevermind') {
@@ -204,7 +208,9 @@ export function MessageSelector({
         setIsRestoring(false);
         setRestoringOption(null);
         setMessageToRestore(undefined);
-        setError(`Failed to summarize:\n${error_1}`);
+        setError(translate(uiLanguage, 'messageSelector.failedToSummarize', {
+          error: `${error_1}`,
+        }));
       }
       return;
     }
@@ -234,11 +240,18 @@ export function MessageSelector({
 
     // Handle errors
     if (conversationError && codeError) {
-      setError(`Failed to restore the conversation and code:\n${conversationError}\n${codeError}`);
+      setError(translate(uiLanguage, 'messageSelector.failedToRestoreConversationAndCode', {
+        conversationError: `${conversationError}`,
+        codeError: `${codeError}`,
+      }));
     } else if (conversationError) {
-      setError(`Failed to restore the conversation:\n${conversationError}`);
+      setError(translate(uiLanguage, 'messageSelector.failedToRestoreConversation', {
+        error: `${conversationError}`,
+      }));
     } else if (codeError) {
-      setError(`Failed to restore the code:\n${codeError}`);
+      setError(translate(uiLanguage, 'messageSelector.failedToRestoreCode', {
+        error: `${codeError}`,
+      }));
     } else {
       // Success - close the selector
       onClose();
@@ -316,20 +329,19 @@ export function MessageSelector({
       <Divider color="suggestion" />
       <Box flexDirection="column" marginX={1} gap={1}>
         <Text bold color="suggestion">
-          Rewind
+          {translate(uiLanguage, 'messageSelector.title')}
         </Text>
 
         {error && <>
-            <Text color="error">Error: {error}</Text>
+            <Text color="error">{translate(uiLanguage, 'messageSelector.errorPrefix')} {error}</Text>
           </>}
         {!hasMessagesToSelect && <>
-            <Text>Nothing to rewind to yet.</Text>
+            <Text>{translate(uiLanguage, 'messageSelector.nothingToRewind')}</Text>
           </>}
         {!error && messageToRestore && hasMessagesToSelect && <>
             <Text>
-              Confirm you want to restore{' '}
-              {!diffStatsForRestore && 'the conversation '}to the point before
-              you sent this message:
+              {translate(uiLanguage, !diffStatsForRestore ? 'messageSelector.confirmRestoreConversationOnly' : 'messageSelector.confirmRestore', {
+              })}
             </Text>
             <Box flexDirection="column" paddingLeft={1} borderStyle="single" borderRight={false} borderTop={false} borderBottom={false} borderLeft={true} borderLeftDimColor>
               <UserMessageOption userMessage={messageToRestore} color="text" isCurrent={false} />
@@ -340,20 +352,19 @@ export function MessageSelector({
             <RestoreOptionDescription selectedRestoreOption={selectedRestoreOption} canRestoreCode={!!canRestoreCode_0} diffStatsForRestore={diffStatsForRestore} />
             {isRestoring && isSummarizeOption(restoringOption) ? <Box flexDirection="row" gap={1}>
                 <Spinner />
-                <Text>Summarizing…</Text>
+                <Text>{translate(uiLanguage, 'messageSelector.summarizing')}</Text>
               </Box> : <Select isDisabled={isRestoring} options={getRestoreOptions(!!canRestoreCode_0)} defaultFocusValue={canRestoreCode_0 ? 'both' : 'conversation'} onFocus={value => setSelectedRestoreOption(value as RestoreOption)} onChange={value_0 => onSelectRestoreOption(value_0 as RestoreOption)} onCancel={() => preselectedMessage ? onClose() : setMessageToRestore(undefined)} />}
             {canRestoreCode_0 && <Box marginBottom={1}>
                 <Text dimColor>
-                  {figures.warning} Rewinding does not affect files edited
-                  manually or via bash.
+                  {figures.warning} {translate(uiLanguage, 'messageSelector.manualOrBashWarning')}
                 </Text>
               </Box>}
           </>}
         {showPickList && <>
             {isFileHistoryEnabled ? <Text>
-                Restore the code and/or conversation to the point before…
+                {translate(uiLanguage, 'messageSelector.restoreCodeOrConversationPrompt')}
               </Text> : <Text>
-                Restore and fork the conversation to the point before…
+                {translate(uiLanguage, 'messageSelector.restoreAndForkPrompt')}
               </Text>}
             <Box width="100%" flexDirection="column">
               {messageOptions.slice(firstVisibleIndex, firstVisibleIndex + MAX_VISIBLE_MESSAGES).map((msg, visibleOptionIndex) => {
@@ -377,12 +388,14 @@ export function MessageSelector({
                             {metadata ? <>
                                 <Text dimColor={!isSelected} color="inactive">
                                   {numFilesChanged ? <>
-                                      {numFilesChanged === 1 && metadata.filesChanged![0] ? `${path.basename(metadata.filesChanged![0])} ` : `${numFilesChanged} files changed `}
+                                      {numFilesChanged === 1 && metadata.filesChanged![0] ? `${path.basename(metadata.filesChanged![0])} ` : translate(uiLanguage, 'messageSelector.filesChangedSuffix', {
+                                        count: numFilesChanged
+                                      })}
                                       <DiffStatsText diffStats={metadata} />
-                                    </> : <>No code changes</>}
+                                    </> : <>{translate(uiLanguage, 'messageSelector.noCodeChanges')}</>}
                                 </Text>
                               </> : <Text dimColor color="warning">
-                                {figures.warning} No code restore
+                                {figures.warning} {translate(uiLanguage, 'messageSelector.noCodeRestore')}
                               </Text>}
                           </Box>}
                       </Box>
@@ -391,26 +404,25 @@ export function MessageSelector({
             </Box>
           </>}
         {!messageToRestore && <Text dimColor italic>
-            {exitState.pending ? <>Press {exitState.keyName} again to exit</> : <>
-                {!error && hasMessagesToSelect && 'Enter to continue · '}Esc to
-                exit
+            {exitState.pending ? <>{translate(uiLanguage, 'messageSelector.pressAgainToExit', { key: exitState.keyName })}</> : <>
+                {!error && hasMessagesToSelect && `${translate(uiLanguage, 'messageSelector.enterToContinue')} · `}{translate(uiLanguage, 'messageSelector.escToExit')}
               </>}
           </Text>}
       </Box>
     </Box>;
 }
-function getRestoreOptionConversationText(option: RestoreOption): string {
+function getRestoreOptionConversationText(option: RestoreOption, uiLanguage: string | undefined): string {
   switch (option) {
     case 'summarize':
-      return 'Messages after this point will be summarized.';
+      return translate(uiLanguage, 'messageSelector.messagesAfterWillBeSummarized');
     case 'summarize_up_to':
-      return 'Preceding messages will be summarized. This and subsequent messages will remain unchanged — you will stay at the end of the conversation.';
+      return translate(uiLanguage, 'messageSelector.precedingWillBeSummarized');
     case 'both':
     case 'conversation':
-      return 'The conversation will be forked.';
+      return translate(uiLanguage, 'messageSelector.conversationWillBeForked');
     case 'code':
     case 'nevermind':
-      return 'The conversation will be unchanged.';
+      return translate(uiLanguage, 'messageSelector.conversationWillBeUnchanged');
   }
 }
 function RestoreOptionDescription(t0) {
@@ -420,41 +432,43 @@ function RestoreOptionDescription(t0) {
     canRestoreCode,
     diffStatsForRestore
   } = t0;
+  const uiLanguage = useAppState(s => s.settings.language);
   const showCodeRestore = canRestoreCode && (selectedRestoreOption === "both" || selectedRestoreOption === "code");
   let t1;
-  if ($[0] !== selectedRestoreOption) {
-    t1 = getRestoreOptionConversationText(selectedRestoreOption);
+  if ($[0] !== selectedRestoreOption || $[1] !== uiLanguage) {
+    t1 = getRestoreOptionConversationText(selectedRestoreOption, uiLanguage);
     $[0] = selectedRestoreOption;
-    $[1] = t1;
+    $[1] = uiLanguage;
+    $[2] = t1;
   } else {
-    t1 = $[1];
+    t1 = $[2];
   }
   let t2;
-  if ($[2] !== t1) {
+  if ($[3] !== t1) {
     t2 = <Text dimColor={true}>{t1}</Text>;
-    $[2] = t1;
-    $[3] = t2;
+    $[3] = t1;
+    $[4] = t2;
   } else {
-    t2 = $[3];
+    t2 = $[4];
   }
   let t3;
-  if ($[4] !== diffStatsForRestore || $[5] !== selectedRestoreOption || $[6] !== showCodeRestore) {
-    t3 = !isSummarizeOption(selectedRestoreOption) && (showCodeRestore ? <RestoreCodeConfirmation diffStatsForRestore={diffStatsForRestore} /> : <Text dimColor={true}>The code will be unchanged.</Text>);
-    $[4] = diffStatsForRestore;
-    $[5] = selectedRestoreOption;
-    $[6] = showCodeRestore;
-    $[7] = t3;
+  if ($[5] !== diffStatsForRestore || $[6] !== selectedRestoreOption || $[7] !== showCodeRestore) {
+    t3 = !isSummarizeOption(selectedRestoreOption) && (showCodeRestore ? <RestoreCodeConfirmation diffStatsForRestore={diffStatsForRestore} /> : <Text dimColor={true}>{translate(uiLanguage, 'messageSelector.codeWillBeUnchanged')}</Text>);
+    $[5] = diffStatsForRestore;
+    $[6] = selectedRestoreOption;
+    $[7] = showCodeRestore;
+    $[8] = t3;
   } else {
-    t3 = $[7];
+    t3 = $[8];
   }
   let t4;
-  if ($[8] !== t2 || $[9] !== t3) {
+  if ($[9] !== t2 || $[10] !== t3) {
     t4 = <Box flexDirection="column">{t2}{t3}</Box>;
-    $[8] = t2;
-    $[9] = t3;
-    $[10] = t4;
+    $[9] = t2;
+    $[10] = t3;
+    $[11] = t4;
   } else {
-    t4 = $[10];
+    t4 = $[11];
   }
   return t4;
 }
@@ -463,16 +477,18 @@ function RestoreCodeConfirmation(t0) {
   const {
     diffStatsForRestore
   } = t0;
+  const uiLanguage = useAppState(s => s.settings.language);
   if (diffStatsForRestore === undefined) {
     return;
   }
   if (!diffStatsForRestore.filesChanged || !diffStatsForRestore.filesChanged[0]) {
     let t1;
-    if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = <Text dimColor={true}>The code has not changed (nothing will be restored).</Text>;
-      $[0] = t1;
+    if ($[0] !== uiLanguage) {
+      t1 = <Text dimColor={true}>{translate(uiLanguage, 'messageSelector.codeHasNotChanged')}</Text>;
+      $[0] = uiLanguage;
+      $[1] = t1;
     } else {
-      t1 = $[0];
+      t1 = $[1];
     }
     return t1;
   }
@@ -508,7 +524,7 @@ function RestoreCodeConfirmation(t0) {
         t2 = $[6];
       }
       const file2 = t2;
-      fileLabel = `${file1} and ${file2}`;
+      fileLabel = `${file1} ${translate(uiLanguage, 'messageSelector.and')} ${file2}`;
     } else {
       let t1;
       if ($[7] !== diffStatsForRestore.filesChanged[0]) {
@@ -519,7 +535,10 @@ function RestoreCodeConfirmation(t0) {
         t1 = $[8];
       }
       const file1_0 = t1;
-      fileLabel = `${file1_0} and ${diffStatsForRestore.filesChanged.length - 1} other files`;
+      fileLabel = translate(uiLanguage, 'messageSelector.fileAndOtherFiles', {
+        file: file1_0,
+        count: diffStatsForRestore.filesChanged.length - 1,
+      });
     }
   }
   let t1;
@@ -531,13 +550,16 @@ function RestoreCodeConfirmation(t0) {
     t1 = $[10];
   }
   let t2;
-  if ($[11] !== fileLabel || $[12] !== t1) {
-    t2 = <><Text dimColor={true}>The code will be restored{" "}{t1} in {fileLabel}.</Text></>;
+  if ($[11] !== fileLabel || $[12] !== t1 || $[13] !== uiLanguage) {
+    t2 = <><Text dimColor={true}>{translate(uiLanguage, 'messageSelector.codeWillBeRestoredInFiles', {
+      fileLabel,
+    })}{" "}{t1}</Text></>;
     $[11] = fileLabel;
     $[12] = t1;
-    $[13] = t2;
+    $[13] = uiLanguage;
+    $[14] = t2;
   } else {
-    t2 = $[13];
+    t2 = $[14];
   }
   return t2;
 }
@@ -588,10 +610,11 @@ function UserMessageOption(t0) {
   const {
     columns
   } = useTerminalSize();
+  const uiLanguage = useAppState(s => s.settings.language);
   if (isCurrent) {
     let t1;
     if ($[0] !== color || $[1] !== dimColor) {
-      t1 = <Box width="100%"><Text italic={true} color={color} dimColor={dimColor}>(current)</Text></Box>;
+      t1 = <Box width="100%"><Text italic={true} color={color} dimColor={dimColor}>{translate(uiLanguage, 'messageSelector.currentMessage')}</Text></Box>;
       $[0] = color;
       $[1] = dimColor;
       $[2] = t1;
@@ -610,15 +633,15 @@ function UserMessageOption(t0) {
   let t4;
   let t5;
   let t6;
-  if ($[3] !== color || $[4] !== columns || $[5] !== content || $[6] !== dimColor || $[7] !== lastBlock || $[8] !== paddingRight) {
+  if ($[3] !== color || $[4] !== columns || $[5] !== content || $[6] !== dimColor || $[7] !== lastBlock || $[8] !== paddingRight || $[31] !== uiLanguage) {
     t6 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      const rawMessageText = typeof content === "string" ? content.trim() : lastBlock && isTextBlock(lastBlock) ? lastBlock.text.trim() : "(no prompt)";
+      const rawMessageText = typeof content === "string" ? content.trim() : lastBlock && isTextBlock(lastBlock) ? lastBlock.text.trim() : translate(uiLanguage, 'messageSelector.noPrompt');
       const messageText = stripDisplayTags(rawMessageText);
       if (isEmptyMessageText(messageText)) {
         let t7;
         if ($[17] !== color || $[18] !== dimColor) {
-          t7 = <Box flexDirection="row" width="100%"><Text italic={true} color={color} dimColor={dimColor}>((empty message))</Text></Box>;
+          t7 = <Box flexDirection="row" width="100%"><Text italic={true} color={color} dimColor={dimColor}>{translate(uiLanguage, 'messageSelector.emptyMessage')}</Text></Box>;
           $[17] = color;
           $[18] = dimColor;
           $[19] = t7;
@@ -648,7 +671,9 @@ function UserMessageOption(t0) {
         const isSkillFormat = extractTag(messageText, "skill-format") === "true";
         if (commandMessage) {
           if (isSkillFormat) {
-            t6 = <Box flexDirection="row" width="100%"><Text color={color} dimColor={dimColor}>Skill({commandMessage})</Text></Box>;
+            t6 = <Box flexDirection="row" width="100%"><Text color={color} dimColor={dimColor}>{translate(uiLanguage, 'messageSelector.skillLabel', {
+              command: commandMessage
+            })}</Text></Box>;
             break bb0;
           } else {
             t6 = <Box flexDirection="row" width="100%"><Text color={color} dimColor={dimColor}>/{commandMessage} {args}</Text></Box>;
@@ -678,6 +703,7 @@ function UserMessageOption(t0) {
     $[14] = t4;
     $[15] = t5;
     $[16] = t6;
+    $[31] = uiLanguage;
   } else {
     T0 = $[9];
     T1 = $[10];

@@ -10,6 +10,7 @@ import { useRegisterOverlay } from '../context/overlayContext.js';
 // eslint-disable-next-line custom-rules/prefer-use-keybindings -- raw 'd' key for disconnect, not a configurable keybinding action
 import { Box, Text, useInput } from '../ink.js';
 import { useKeybindings } from '../keybindings/useKeybinding.js';
+import { translate } from '../i18n/index.js';
 import { useAppState, useSetAppState } from '../state/AppState.js';
 import { saveGlobalConfig } from '../utils/config.js';
 import { getBranch } from '../utils/git.js';
@@ -18,7 +19,7 @@ type Props = {
   onDone: () => void;
 };
 export function BridgeDialog(t0) {
-  const $ = _c(87);
+  const $ = _c(90);
   const {
     onDone
   } = t0;
@@ -33,6 +34,7 @@ export function BridgeDialog(t0) {
   const environmentId = useAppState(_temp8);
   const sessionId = useAppState(_temp9);
   const verbose = useAppState(_temp0);
+  const uiLanguage = useAppState(s => s.settings.language);
   const setAppState = useSetAppState();
   const [showQR, setShowQR] = useState(false);
   const [qrText, setQrText] = useState("");
@@ -164,7 +166,7 @@ export function BridgeDialog(t0) {
   let t15;
   let t16;
   let t17;
-  if ($[20] !== branchName || $[21] !== displayUrl || $[22] !== environmentId || $[23] !== error || $[24] !== indicator || $[25] !== onDone || $[26] !== qrText || $[27] !== sessionActive || $[28] !== sessionId || $[29] !== showQR || $[30] !== statusColor || $[31] !== statusLabel || $[32] !== verbose) {
+  if ($[20] !== branchName || $[21] !== displayUrl || $[22] !== environmentId || $[23] !== error || $[24] !== indicator || $[25] !== onDone || $[26] !== qrText || $[27] !== sessionActive || $[28] !== sessionId || $[29] !== showQR || $[30] !== statusColor || $[31] !== statusLabel || $[32] !== uiLanguage || $[33] !== verbose) {
     const qrLines = qrText ? qrText.split("\n").filter(_temp13) : [];
     let contextParts;
     if ($[43] !== branchName) {
@@ -193,7 +195,7 @@ export function BridgeDialog(t0) {
     }
     footerText = t18;
     T1 = Dialog;
-    t15 = "Remote Control";
+    t15 = translate(uiLanguage, 'bridgeDialog.title');
     t16 = onDone;
     t17 = true;
     T0 = Box;
@@ -235,32 +237,38 @@ export function BridgeDialog(t0) {
       t22 = $[59];
     }
     let t23;
-    if ($[60] !== environmentId || $[61] !== verbose) {
-      t23 = verbose && environmentId && <Text dimColor={true}>Environment: {environmentId}</Text>;
+    if ($[60] !== environmentId || $[61] !== uiLanguage || $[62] !== verbose) {
+      t23 = verbose && environmentId && <Text dimColor={true}>{translate(uiLanguage, 'bridgeDialog.environment', {
+        id: environmentId
+      })}</Text>;
       $[60] = environmentId;
-      $[61] = verbose;
-      $[62] = t23;
+      $[61] = uiLanguage;
+      $[62] = verbose;
+      $[63] = t23;
     } else {
-      t23 = $[62];
+      t23 = $[63];
     }
     let t24;
-    if ($[63] !== sessionId || $[64] !== verbose) {
-      t24 = verbose && sessionId && <Text dimColor={true}>Session: {sessionId}</Text>;
-      $[63] = sessionId;
-      $[64] = verbose;
-      $[65] = t24;
+    if ($[64] !== sessionId || $[65] !== uiLanguage || $[66] !== verbose) {
+      t24 = verbose && sessionId && <Text dimColor={true}>{translate(uiLanguage, 'bridgeDialog.session', {
+        id: sessionId
+      })}</Text>;
+      $[64] = sessionId;
+      $[65] = uiLanguage;
+      $[66] = verbose;
+      $[67] = t24;
     } else {
-      t24 = $[65];
+      t24 = $[67];
     }
-    if ($[66] !== t21 || $[67] !== t22 || $[68] !== t23 || $[69] !== t24) {
+    if ($[68] !== t21 || $[69] !== t22 || $[70] !== t23 || $[71] !== t24) {
       t13 = <Box flexDirection="column">{t21}{t22}{t23}{t24}</Box>;
-      $[66] = t21;
-      $[67] = t22;
-      $[68] = t23;
-      $[69] = t24;
-      $[70] = t13;
+      $[68] = t21;
+      $[69] = t22;
+      $[70] = t23;
+      $[71] = t24;
+      $[72] = t13;
     } else {
-      t13 = $[70];
+      t13 = $[72];
     }
     t14 = showQR && qrLines.length > 0 && <Box flexDirection="column">{qrLines.map(_temp14)}</Box>;
     $[20] = branchName;
@@ -275,68 +283,70 @@ export function BridgeDialog(t0) {
     $[29] = showQR;
     $[30] = statusColor;
     $[31] = statusLabel;
-    $[32] = verbose;
-    $[33] = T0;
-    $[34] = T1;
-    $[35] = footerText;
-    $[36] = t11;
-    $[37] = t12;
-    $[38] = t13;
-    $[39] = t14;
-    $[40] = t15;
-    $[41] = t16;
-    $[42] = t17;
+    $[32] = uiLanguage;
+    $[33] = verbose;
+    $[73] = T0;
+    $[74] = T1;
+    $[75] = footerText;
+    $[76] = t11;
+    $[77] = t12;
+    $[78] = t13;
+    $[79] = t14;
+    $[80] = t15;
+    $[81] = t16;
+    $[82] = t17;
   } else {
-    T0 = $[33];
-    T1 = $[34];
-    footerText = $[35];
-    t11 = $[36];
-    t12 = $[37];
-    t13 = $[38];
-    t14 = $[39];
-    t15 = $[40];
-    t16 = $[41];
-    t17 = $[42];
+    T0 = $[73];
+    T1 = $[74];
+    footerText = $[75];
+    t11 = $[76];
+    t12 = $[77];
+    t13 = $[78];
+    t14 = $[79];
+    t15 = $[80];
+    t16 = $[81];
+    t17 = $[82];
   }
   let t18;
-  if ($[71] !== footerText) {
+  if ($[83] !== footerText) {
     t18 = footerText && <Text dimColor={true}>{footerText}</Text>;
-    $[71] = footerText;
-    $[72] = t18;
+    $[83] = footerText;
+    $[84] = t18;
   } else {
-    t18 = $[72];
+    t18 = $[84];
   }
   let t19;
-  if ($[73] === Symbol.for("react.memo_cache_sentinel")) {
-    t19 = <Text dimColor={true}>d to disconnect · space for QR code · Enter/Esc to close</Text>;
-    $[73] = t19;
+  if ($[85] !== uiLanguage) {
+    t19 = <Text dimColor={true}>{translate(uiLanguage, 'bridgeDialog.controls')}</Text>;
+    $[85] = uiLanguage;
+    $[86] = t19;
   } else {
-    t19 = $[73];
+    t19 = $[86];
   }
   let t20;
-  if ($[74] !== T0 || $[75] !== t11 || $[76] !== t12 || $[77] !== t13 || $[78] !== t14 || $[79] !== t18) {
+  if ($[87] !== T0 || $[88] !== t11 || $[89] !== t12 || $[90] !== t13 || $[91] !== t14 || $[92] !== t18) {
     t20 = <T0 flexDirection={t11} gap={t12}>{t13}{t14}{t18}{t19}</T0>;
-    $[74] = T0;
-    $[75] = t11;
-    $[76] = t12;
-    $[77] = t13;
-    $[78] = t14;
-    $[79] = t18;
-    $[80] = t20;
+    $[87] = T0;
+    $[88] = t11;
+    $[89] = t12;
+    $[90] = t13;
+    $[91] = t14;
+    $[92] = t18;
+    $[93] = t20;
   } else {
-    t20 = $[80];
+    t20 = $[93];
   }
   let t21;
-  if ($[81] !== T1 || $[82] !== t15 || $[83] !== t16 || $[84] !== t17 || $[85] !== t20) {
+  if ($[94] !== T1 || $[95] !== t15 || $[96] !== t16 || $[97] !== t17 || $[98] !== t20) {
     t21 = <T1 title={t15} onCancel={t16} hideInputGuide={t17}>{t20}</T1>;
-    $[81] = T1;
-    $[82] = t15;
-    $[83] = t16;
-    $[84] = t17;
-    $[85] = t20;
-    $[86] = t21;
+    $[94] = T1;
+    $[95] = t15;
+    $[96] = t16;
+    $[97] = t17;
+    $[98] = t20;
+    $[99] = t21;
   } else {
-    t21 = $[86];
+    t21 = $[99];
   }
   return t21;
 }

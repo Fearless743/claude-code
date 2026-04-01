@@ -10,7 +10,6 @@ import { logForDebugging } from '../utils/debug.js';
 import { env } from '../utils/env.js';
 import { errorMessage } from '../utils/errors.js';
 import { checkInstall, cleanupNpmInstallations, cleanupShellAliases, installLatest } from '../utils/nativeInstaller/index.js';
-import { getInitialSettings, updateSettingsForSource } from '../utils/settings/settings.js';
 interface InstallProps {
   onDone: (result: string, options?: {
     display?: CommandResultDisplay;
@@ -100,7 +99,7 @@ function Install({
         logForDebugging(`Install: Starting installation process (force=${force}, target=${target})`);
 
         // Install native build first
-        const channelOrVersion = target || getInitialSettings()?.autoUpdatesChannel || 'latest';
+        const channelOrVersion = target || 'latest';
         setState({
           type: 'installing',
           version: channelOrVersion
@@ -163,13 +162,6 @@ function Install({
           forced: force ? 1 : 0
         });
 
-        // If user explicitly specified a channel, save it to settings
-        if (target === 'latest' || target === 'stable') {
-          updateSettingsForSource('userSettings', {
-            autoUpdatesChannel: target
-          });
-          logForDebugging(`Install: Saved autoUpdatesChannel=${target} to user settings`);
-        }
 
         // Combine all warning/info messages (convert SetupMessage to string)
         const allWarnings = [...warnings, ...aliasMessages.map(m_0 => m_0.message)];

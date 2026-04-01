@@ -189,13 +189,6 @@ export const en = {
     providerPlaceholderBaseUrl: 'https://api.example.com',
     providerTypeLabel: 'Type: {type}',
     providerTypeCycleHint: 'Press Enter to cycle provider type.',
-    enableAutoUpdatesTitle: 'Enable Auto-Updates',
-    autoUpdatesControlledByEnv:
-      'Auto-updates are controlled by an environment variable and cannot be changed here.',
-    autoUpdatesDisabledInDev: 'Auto-updates are disabled in development builds.',
-    autoUpdatesUnsetEnv: 'Unset {envVar} to re-enable auto-updates.',
-    autoUpdatesLatest: 'Enable with latest channel',
-    autoUpdatesStable: 'Enable with stable channel',
   },
   agents: {
     title: 'Agents',
@@ -254,6 +247,66 @@ export const en = {
     editModel: 'Edit model',
     editColor: 'Edit color',
   },
+  messageSelector: {
+    title: 'Rewind',
+    errorPrefix: 'Error:',
+    nothingToRewind: 'Nothing to rewind to yet.',
+    restoreCodeAndConversation: 'Restore code and conversation',
+    restoreConversation: 'Restore conversation',
+    restoreCode: 'Restore code',
+    addContextOptional: 'add context (optional)',
+    summarizeFromHere: 'Summarize from here',
+    summarizeUpToHere: 'Summarize up to here',
+    neverMind: 'Never mind',
+    failedToRestoreConversation: 'Failed to restore the conversation:\n{error}',
+    failedToSummarize: 'Failed to summarize:\n{error}',
+    failedToRestoreConversationAndCode:
+      'Failed to restore the conversation and code:\n{conversationError}\n{codeError}',
+    failedToRestoreCode: 'Failed to restore the code:\n{error}',
+    messageNotFound: 'Message not found.',
+    confirmRestore:
+      'Confirm you want to restore to the point before you sent this message:',
+    confirmRestoreConversationOnly:
+      'Confirm you want to restore the conversation to the point before you sent this message:',
+    summarizing: 'Summarizing…',
+    manualOrBashWarning:
+      'Rewinding does not affect files edited manually or via bash.',
+    restoreCodeOrConversationPrompt:
+      'Restore the code and/or conversation to the point before…',
+    restoreAndForkPrompt:
+      'Restore and fork the conversation to the point before…',
+    noCodeChanges: 'No code changes',
+    noCodeRestore: 'No code restore',
+    pressAgainToExit: 'Press {key} again to exit',
+    enterToContinue: 'Enter to continue',
+    escToExit: 'Esc to exit',
+    messagesAfterWillBeSummarized:
+      'Messages after this point will be summarized.',
+    precedingWillBeSummarized:
+      'Preceding messages will be summarized. This and subsequent messages will remain unchanged — you will stay at the end of the conversation.',
+    conversationWillBeForked: 'The conversation will be forked.',
+    conversationWillBeUnchanged: 'The conversation will be unchanged.',
+    codeWillBeUnchanged: 'The code will be unchanged.',
+    codeHasNotChanged: 'The code has not changed (nothing will be restored).',
+    and: 'and',
+    fileAndOtherFiles: '{file} and {count} other files',
+    codeWillBeRestoredInFiles: 'The code will be restored in {fileLabel}',
+    currentMessage: '(current)',
+    noPrompt: '(no prompt)',
+    emptyMessage: '((empty message))',
+    skillLabel: 'Skill({command})',
+    filesChangedSuffix: '{count} files changed ',
+  },
+  compactSummary: {
+    summarizedConversation: 'Summarized conversation',
+    summarizedMessages: 'Summarized {count} messages {range}',
+    upToThisPoint: 'up to this point',
+    fromThisPoint: 'from this point',
+    context: 'Context: “{context}”',
+    expandHistory: 'expand history',
+    expand: 'expand',
+    title: 'Compact summary',
+  },
   remoteControl: {
     title: 'Remote Control',
     sessionAvailable: 'This session is available via Remote Control{suffix}.',
@@ -262,6 +315,12 @@ export const en = {
     hideQr: 'Hide QR code',
     continue: 'Continue',
     inputHint: 'Enter to select · Esc to continue',
+  },
+  bridgeDialog: {
+    title: 'Remote Control',
+    environment: 'Environment: {id}',
+    session: 'Session: {id}',
+    controls: 'd to disconnect · space for QR code · Enter/Esc to close',
   },
   chrome: {
     title: 'Claude in Chrome (Beta)',

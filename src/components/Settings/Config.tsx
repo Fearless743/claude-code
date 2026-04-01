@@ -11,8 +11,6 @@ import { type GlobalConfig, saveGlobalConfig, getCurrentProjectConfig, type Outp
 import { normalizeApiKeyForConfig } from '../../utils/authPortable.js';
 import {
   getGlobalConfig,
-  getAutoUpdaterDisabledReason,
-  formatAutoUpdaterDisabledReason,
   getRemoteControlAtStartup,
 } from '../../utils/config.js';
 import chalk from 'chalk';
@@ -43,7 +41,6 @@ import { ModelPicker } from '../ModelPicker.js';
 import { modelDisplayString, isOpus1mMergeEnabled } from '../../utils/model/model.js';
 import { isBilledAsExtraUsage } from '../../utils/extraUsage.js';
 import { ClaudeMdExternalIncludesDialog } from '../ClaudeMdExternalIncludesDialog.js';
-import { ChannelDowngradeDialog, type ChannelDowngradeChoice } from '../ChannelDowngradeDialog.js';
 import { Dialog } from '../design-system/Dialog.js';
 import { Select } from '../CustomSelect/index.js';
 import { OutputStylePicker } from '../OutputStylePicker.js';
@@ -140,9 +137,7 @@ type SubMenu =
   | 'TeammateModel'
   | 'ExternalIncludes'
   | 'OutputStyle'
-  | 'ChannelDowngrade'
   | 'Language'
-  | 'EnableAutoUpdates'
   | 'Providers'
   | 'ProviderDetails';
 export function Config({
@@ -267,10 +262,10 @@ export function Config({
   const isFileCheckpointingAvailable = !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_FILE_CHECKPOINTING);
   const memoryFiles = React.use(getMemoryFiles(true)) as MemoryFileInfo[];
   const shouldShowExternalIncludesToggle = hasExternalClaudeMdIncludes(memoryFiles);
-  const autoUpdaterDisabledReason = getAutoUpdaterDisabledReason();
   const providers = getProviders();
   const activeProvider = getActiveProvider();
   const themeLabels = React.useMemo(() => getThemeLabels(uiLanguage), [uiLanguage]);
+  const [focusedProviderAction, setFocusedProviderAction] = useState<string>('action:add-openai');
   const [focusedProviderDetailAction, setFocusedProviderDetailAction] = useState<string>('detail:name');
   const [providerDetailDraft, setProviderDetailDraft] = useState<LLMProvider | null>(null);
   const [providerDetailInputMode, setProviderDetailInputMode] = useState(false);
@@ -824,24 +819,6 @@ export function Config({
           },
         ]
       : []),
-    // autoUpdates setting is hidden - use DISABLE_AUTOUPDATER env var to control
-    autoUpdaterDisabledReason
-      ? {
-          id: 'autoUpdatesChannel',
-          label: translate(uiLanguage, 'settings.autoUpdateChannelLabel'),
-          value: translate(uiLanguage, 'settings.disabledStatus'),
-          type: 'managedEnum' as const,
-          onChange() {},
-        }
-      : {
-          id: 'autoUpdatesChannel',
-          label: translate(uiLanguage, 'settings.autoUpdateChannelLabel'),
-          value: settingsData?.autoUpdatesChannel ?? 'latest',
-          type: 'managedEnum' as const,
-          onChange() {
-            // Handled via toggleSetting -> 'ChannelDowngrade'
-          },
-        },
     {
       id: 'theme',
       label: translate(uiLanguage, 'settings.themeTitle'),
@@ -1473,9 +1450,6 @@ export function Config({
             });
       formattedChanges.push(remoteLabel);
     }
-    if (settingsData?.autoUpdatesChannel !== initialSettingsData.current?.autoUpdatesChannel) {
-      formattedChanges.push(translate(uiLanguage, 'settings.setAutoUpdateChannelTo', { value: settingsData?.autoUpdatesChannel ?? 'latest' }));
-    }
     if (formattedChanges.length > 0) {
       onClose(formattedChanges.join('\n'));
     } else {
@@ -1490,8 +1464,6 @@ export function Config({
     mainLoopModel,
     currentOutputStyle,
     currentLanguage,
-    settingsData?.autoUpdatesChannel,
-    isFastModeEnabled() ? (settingsData as Record<string, unknown> | undefined)?.fastMode : undefined,
     onClose,
   ]);
 
@@ -1523,8 +1495,6 @@ export function Config({
       alwaysThinkingEnabled: iu?.alwaysThinkingEnabled,
       fastMode: iu?.fastMode,
       promptSuggestionEnabled: iu?.promptSuggestionEnabled,
-      autoUpdatesChannel: iu?.autoUpdatesChannel,
-      minimumVersion: iu?.minimumVersion,
       language: iu?.language,
       ...(feature('TRANSCRIPT_CLASSIFIER')
         ? {
@@ -1678,36 +1648,6 @@ export function Config({
           return;
       }
     }
-    if (setting_0.id === 'autoUpdatesChannel') {
-      if (autoUpdaterDisabledReason) {
-        // Auto-updates are disabled - show enable dialog instead
-        setShowSubmenu('EnableAutoUpdates');
-        setTabsHidden(true);
-        return;
-      }
-      const currentChannel = settingsData?.autoUpdatesChannel ?? 'latest';
-      if (currentChannel === 'latest') {
-        // Switching to stable - show downgrade dialog
-        setShowSubmenu('ChannelDowngrade');
-        setTabsHidden(true);
-      } else {
-        // Switching to latest - just do it and clear minimumVersion
-        isDirty.current = true;
-        updateSettingsForSource('userSettings', {
-          autoUpdatesChannel: 'latest',
-          minimumVersion: undefined,
-        });
-        setSettingsData(prev_24 => ({
-          ...prev_24,
-          autoUpdatesChannel: 'latest',
-          minimumVersion: undefined,
-        }));
-        logEvent('tengu_autoupdate_channel_changed', {
-          channel: 'latest' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-        });
-      }
-      return;
-    }
     if (setting_0.type === 'enum') {
       isDirty.current = true;
       const currentIndex = setting_0.options.indexOf(setting_0.value);
@@ -1716,10 +1656,8 @@ export function Config({
       return;
     }
   }, [
-    autoUpdaterDisabledReason,
     filteredSettingsItems,
     selectedIndex,
-    settingsData?.autoUpdatesChannel,
     setTabsHidden,
   ]);
   const moveSelection = (delta: -1 | 1): void => {
@@ -2214,100 +2152,6 @@ export function Config({
             </Text>
           </Box>
         </Dialog>
-      ) : showSubmenu === 'EnableAutoUpdates' ? (
-        <Dialog
-          title={translate(uiLanguage, 'settings.enableAutoUpdatesTitle')}
-          onCancel={() => {
-            setShowSubmenu(null);
-            setTabsHidden(false);
-          }}
-          hideBorder
-          hideInputGuide
-        >
-          {autoUpdaterDisabledReason?.type !== 'config' ? (
-            <>
-              <Text>
-                {autoUpdaterDisabledReason?.type === 'env'
-                  ? translate(uiLanguage, 'settings.autoUpdatesControlledByEnv')
-                  : translate(uiLanguage, 'settings.autoUpdatesDisabledInDev')}
-              </Text>
-              {autoUpdaterDisabledReason?.type === 'env' && (
-                <Text dimColor>{translate(uiLanguage, 'settings.autoUpdatesUnsetEnv', { envVar: autoUpdaterDisabledReason.envVar })}</Text>
-              )}
-            </>
-          ) : (
-            <Select
-              options={[
-                {
-                  label: translate(uiLanguage, 'settings.autoUpdatesLatest'),
-                  value: 'latest',
-                },
-                {
-                  label: translate(uiLanguage, 'settings.autoUpdatesStable'),
-                  value: 'stable',
-                },
-              ]}
-              onChange={(channel: string) => {
-                isDirty.current = true;
-                setShowSubmenu(null);
-                setTabsHidden(false);
-                saveGlobalConfig(current_24 => ({
-                  ...current_24,
-                  autoUpdates: true,
-                }));
-                setGlobalConfig({
-                  ...getGlobalConfig(),
-                  autoUpdates: true,
-                });
-                updateSettingsForSource('userSettings', {
-                  autoUpdatesChannel: channel as 'latest' | 'stable',
-                  minimumVersion: undefined,
-                });
-                setSettingsData(prev_26 => ({
-                  ...prev_26,
-                  autoUpdatesChannel: channel as 'latest' | 'stable',
-                  minimumVersion: undefined,
-                }));
-                logEvent('tengu_autoupdate_enabled', {
-                  channel: channel as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-                });
-              }}
-            />
-          )}
-        </Dialog>
-      ) : showSubmenu === 'ChannelDowngrade' ? (
-        <ChannelDowngradeDialog
-          currentVersion={MACRO.VERSION}
-          onChoice={(choice: ChannelDowngradeChoice) => {
-            setShowSubmenu(null);
-            setTabsHidden(false);
-            if (choice === 'cancel') {
-              // User cancelled - don't change anything
-              return;
-            }
-            isDirty.current = true;
-            // Switch to stable channel
-            const newSettings: {
-              autoUpdatesChannel: 'stable';
-              minimumVersion?: string;
-            } = {
-              autoUpdatesChannel: 'stable',
-            };
-            if (choice === 'stay') {
-              // User wants to stay on current version until stable catches up
-              newSettings.minimumVersion = MACRO.VERSION;
-            }
-            updateSettingsForSource('userSettings', newSettings);
-            setSettingsData(prev_27 => ({
-              ...prev_27,
-              ...newSettings,
-            }));
-            logEvent('tengu_autoupdate_channel_changed', {
-              channel: 'stable' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
-              minimum_version_set: choice === 'stay',
-            });
-          }}
-        />
       ) : (
         <Box flexDirection="column" gap={1} marginY={insideModal ? undefined : 1}>
           <SearchBox
@@ -2363,11 +2207,6 @@ export function Config({
                             <Text color={isSelected ? 'suggestion' : undefined}>
                               {permissionModeTitle(setting_2.value as PermissionMode)}
                             </Text>
-                          ) : setting_2.id === 'autoUpdatesChannel' && autoUpdaterDisabledReason ? (
-                            <Box flexDirection="column">
-                              <Text color={isSelected ? 'suggestion' : undefined}>{translate(uiLanguage, 'settings.disabledStatus')}</Text>
-                              <Text dimColor>({formatAutoUpdaterDisabledReason(autoUpdaterDisabledReason)})</Text>
-                            </Box>
                           ) : (
                             <Text color={isSelected ? 'suggestion' : undefined}>
                               {'sensitive' in setting_2 && setting_2.sensitive && setting_2.value

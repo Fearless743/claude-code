@@ -5,7 +5,7 @@ import { color, Text } from '../ink.js';
 import type { MCPServerConnection } from '../services/mcp/types.js';
 import { getAccountInformation, isClaudeAISubscriber } from './auth.js';
 import { getLargeMemoryFiles, getMemoryFiles, MAX_MEMORY_CHARACTER_COUNT } from './claudemd.js';
-import { getDoctorDiagnostic } from './doctorDiagnostic.js';
+
 import { getAWSRegion, getDefaultVertexRegion, isEnvTruthy } from './envUtils.js';
 import { getDisplayPath } from './file.js';
 import { formatNumber } from './format.js';
@@ -176,27 +176,7 @@ export async function buildInstallationDiagnostics(): Promise<Diagnostic[]> {
   const installWarnings = await checkInstall();
   return installWarnings.map(warning => warning.message);
 }
-export async function buildInstallationHealthDiagnostics(): Promise<Diagnostic[]> {
-  const diagnostic = await getDoctorDiagnostic();
-  const items: Diagnostic[] = [];
-  const {
-    errors: validationErrors
-  } = getSettingsWithAllErrors();
-  if (validationErrors.length > 0) {
-    const invalidFiles = Array.from(new Set(validationErrors.map(error => error.file)));
-    const fileList = invalidFiles.join(', ');
-    items.push(`Found invalid settings files: ${fileList}. They will be ignored.`);
-  }
 
-  // Add warnings from doctor diagnostic (includes leftover installations, config mismatches, etc.)
-  diagnostic.warnings.forEach(warning => {
-    items.push(warning.issue);
-  });
-  if (diagnostic.hasUpdatePermissions === false) {
-    items.push('No write permissions for auto-updates (requires sudo)');
-  }
-  return items;
-}
 export function buildAccountProperties(): Property[] {
   const accountInfo = getAccountInformation();
   if (!accountInfo) {

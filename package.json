@@ -1,16 +1,16 @@
 {
-  "name": "claude-js",
+  "name": "claude",
   "version": "1.0.3",
   "description": "Reverse-engineered Anthropic Claude Code CLI — interactive AI coding assistant in the terminal",
   "type": "module",
-  "author": "claude-code-best <claude-code-best@proton.me>",
+  "author": "Anthropic & Fearless743",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/claude-code-best/claude-code.git"
+    "url": "git+https://github.com/Fearless743/claude-code.git"
   },
-  "homepage": "https://github.com/claude-code-best/claude-code#readme",
+  "homepage": "https://github.com/Fearless743/claude-code#readme",
   "bugs": {
-    "url": "https://github.com/claude-code-best/claude-code/issues"
+    "url": "https://github.com/Fearless743/claude-code/issues"
   },
   "keywords": [
     "claude",
@@ -25,7 +25,7 @@
     "bun": ">=1.2.0"
   },
   "bin": {
-    "claude-js": "dist/cli.js"
+    "claude": "dist/cli.js"
   },
   "workspaces": [
     "packages/*",

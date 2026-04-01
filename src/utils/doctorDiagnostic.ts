@@ -2,14 +2,8 @@ import { execa } from 'execa'
 import { readFile, realpath } from 'fs/promises'
 import { homedir } from 'os'
 import { delimiter, join, posix, win32 } from 'path'
-import { checkGlobalInstallPermissions } from './autoUpdater.js'
 import { isInBundledMode } from './bundledMode.js'
-import {
-  formatAutoUpdaterDisabledReason,
-  getAutoUpdaterDisabledReason,
-  getGlobalConfig,
-  type InstallMethod,
-} from './config.js'
+import { getGlobalConfig, type InstallMethod } from './config.js'
 import { getCwd } from './cwd.js'
 import { isEnvTruthy } from './envUtils.js'
 import { execFileNoThrow } from './execFileNoThrow.js'
@@ -57,7 +51,6 @@ export type DiagnosticInfo = {
   installationPath: string
   invokedBinary: string
   configInstallMethod: InstallMethod | 'not set'
-  autoUpdates: string
   hasUpdatePermissions: boolean | null
   multipleInstallations: Array<{ type: string; path: string }>
   warnings: Array<{ issue: string; fix: string }>
@@ -573,13 +566,28 @@ export async function getDoctorDiagnostic(): Promise<DiagnosticInfo> {
   // Check permissions for global installations
   let hasUpdatePermissions: boolean | null = null
   if (installationType === 'npm-global') {
-    const permCheck = await checkGlobalInstallPermissions()
-    hasUpdatePermissions = permCheck.hasPermissions
+    try {
+      const npmConfigResult = await execa('npm config get prefix', {
+        shell: true,
+        reject: false,
+      })
+      const prefix =
+        npmConfigResult.exitCode === 0 ? npmConfigResult.stdout.trim() : null
+      if (prefix) {
+        try {
+          await getFsImplementation().access(prefix, fsConstants.W_OK)
+          hasUpdatePermissions = true
+        } catch {
+          hasUpdatePermissions = false
+        }
+      }
+    } catch {
+      hasUpdatePermissions = false
+    }
 
-    // Add warning if no permissions
-    if (!hasUpdatePermissions && !getAutoUpdaterDisabledReason()) {
+    if (!hasUpdatePermissions) {
       warnings.push({
-        issue: 'Insufficient permissions for auto-updates',
+        issue: 'Insufficient permissions for global installation updates',
         fix: 'Do one of: (1) Re-install node without sudo, or (2) Use `claude install` for native installation',
       })
     }
@@ -608,12 +616,6 @@ export async function getDoctorDiagnostic(): Promise<DiagnosticInfo> {
     installationPath,
     invokedBinary,
     configInstallMethod,
-    autoUpdates: (() => {
-      const reason = getAutoUpdaterDisabledReason()
-      return reason
-        ? `disabled (${formatAutoUpdaterDisabledReason(reason)})`
-        : 'enabled'
-    })(),
     hasUpdatePermissions,
     multipleInstallations,
     warnings,
