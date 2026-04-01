@@ -32,6 +32,7 @@ import {
 } from './model.js'
 import { has1mContext } from '../context.js'
 import { getGlobalConfig } from '../config.js'
+import { getActiveProviderByType } from '../providers.js'
 
 // @[MODEL LAUNCH]: Update all the available and default model option strings below.
 
@@ -266,9 +267,46 @@ function getOpusPlanOption(): ModelOption {
   }
 }
 
+/**
+ * Get OpenAI models from cache (populated at startup via /v1/models).
+ * Returns ModelOption[] for injection into the model picker.
+ */
+export function getOpenAIModelOptions(): ModelOption[] {
+  const activeProvider = getActiveProviderByType('openai')
+  // Only show OpenAI models when OpenAI provider is active or API key is configured
+  const isOpenAIConfigured =
+    getAPIProvider() === 'openai' ||
+    process.env.OPENAI_API_KEY ||
+    activeProvider?.apiKey ||
+    getGlobalConfig().openaiApiKey
+
+  return getOpenAIModelOptionsFromCache({
+    isOpenAIConfigured: !!isOpenAIConfigured,
+    cachedModels: activeProvider?.models ?? getGlobalConfig().openaiModels,
+  })
+}
+
+export function getOpenAIModelOptionsFromCache(params: {
+  isOpenAIConfigured: boolean
+  cachedModels?: string[]
+}): ModelOption[] {
+  if (!params.isOpenAIConfigured) return []
+  if (!params.cachedModels || params.cachedModels.length === 0) return []
+
+  return params.cachedModels.map(modelId => ({
+    value: modelId,
+    label: modelId,
+    description: `OpenAI model (${modelId})`,
+  }))
+}
+
 // @[MODEL LAUNCH]: Update the model picker lists below to include/reorder options for the new model.
 // Each user tier (ant, Max/Team Premium, Pro/Team Standard/Enterprise, PAYG 1P, PAYG 3P) has its own list.
 function getModelOptionsBase(fastMode = false): ModelOption[] {
+  if (getAPIProvider() === 'openai') {
+    return [getDefaultOptionForUser(fastMode), ...getOpenAIModelOptions()]
+  }
+
   if (process.env.USER_TYPE === 'ant') {
     // Build options from antModels config
     const antModelOptions: ModelOption[] = getAntModels().map(m => ({
@@ -460,6 +498,16 @@ function getKnownModelOption(model: string): ModelOption | null {
 
 export function getModelOptions(fastMode = false): ModelOption[] {
   const options = getModelOptionsBase(fastMode)
+
+  // Add OpenAI models if OpenAI provider is configured or API key is set
+  const openaiModels = getOpenAIModelOptions()
+  if (getAPIProvider() !== 'openai' && openaiModels.length > 0) {
+    for (const opt of openaiModels) {
+      if (!options.some(existing => existing.value === opt.value)) {
+        options.push(opt)
+      }
+    }
+  }
 
   // Add the custom model from the ANTHROPIC_CUSTOM_MODEL_OPTION env var
   const envCustomModel = process.env.ANTHROPIC_CUSTOM_MODEL_OPTION

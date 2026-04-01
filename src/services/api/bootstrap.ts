@@ -8,11 +8,13 @@ import {
 import { z } from 'zod'
 import { getOauthConfig, OAUTH_BETA_HEADER } from '../../constants/oauth.js'
 import { getGlobalConfig, saveGlobalConfig } from '../../utils/config.js'
+import { getActiveProviderByType } from '../../utils/providers.js'
 import { logForDebugging } from '../../utils/debug.js'
 import { withOAuth401Retry } from '../../utils/http.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import { logError } from '../../utils/log.js'
 import { getAPIProvider } from '../../utils/model/providers.js'
+import { fetchOpenAIModels } from './openai.js'
 import { isEssentialTrafficOnly } from '../../utils/privacyLevel.js'
 import { getClaudeCodeUserAgent } from '../../utils/userAgent.js'
 
@@ -109,9 +111,61 @@ async function fetchBootstrapAPI(): Promise<BootstrapResponse | null> {
 }
 
 /**
+ * Fetch OpenAI models from the configured OpenAI-compatible endpoint
+ * and persist to disk cache. Called at startup when OpenAI is configured.
+ */
+async function fetchOpenAIModelsData(): Promise<void> {
+  const isOpenAIConfigured =
+    getAPIProvider() === 'openai' ||
+    process.env.OPENAI_API_KEY ||
+    getActiveProviderByType('openai')?.apiKey ||
+    getGlobalConfig().openaiApiKey
+
+  if (!isOpenAIConfigured) return
+  if (isEssentialTrafficOnly()) return
+
+  try {
+    const models = await fetchOpenAIModels()
+    const modelIds = models.map(m => m.id)
+
+    const activeProvider = getActiveProviderByType('openai')
+    const currentModels =
+      activeProvider?.models ?? getGlobalConfig().openaiModels
+    if (isEqual(currentModels, modelIds)) {
+      logForDebugging('[OpenAI Models] Cache unchanged, skipping write')
+      return
+    }
+
+    logForDebugging(
+      `[OpenAI Models] Fetched ${modelIds.length} models, persisting to disk`,
+    )
+    saveGlobalConfig(current => ({
+      ...current,
+      openaiModels: modelIds,
+      llmProviders: (current.llmProviders ?? []).map(provider =>
+        provider.id === activeProvider?.id
+          ? {
+              ...provider,
+              models: modelIds,
+            }
+          : provider,
+      ),
+    }))
+  } catch (error) {
+    logForDebugging(
+      `[OpenAI Models] Fetch failed: ${error instanceof Error ? error.message : 'unknown'}`,
+    )
+  }
+}
+
+/**
  * Fetch bootstrap data from the API and persist to disk cache.
+ * Also fetches OpenAI models if OpenAI provider is configured.
  */
 export async function fetchBootstrapData(): Promise<void> {
+  // Fire OpenAI model fetch in parallel (non-blocking)
+  void fetchOpenAIModelsData()
+
   try {
     const response = await fetchBootstrapAPI()
     if (!response) return

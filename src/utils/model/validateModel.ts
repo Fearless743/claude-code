@@ -10,9 +10,45 @@ import {
   AuthenticationError,
 } from '@anthropic-ai/sdk'
 import { getModelStrings } from './modelStrings.js'
+import { getGlobalConfig } from '../config.js'
+import { getActiveProviderByType } from '../providers.js'
 
 // Cache valid models to avoid repeated API calls
 const validModelCache = new Map<string, boolean>()
+
+/**
+ * Check if a model looks like an OpenAI model ID.
+ */
+function isOpenAIModel(model: string): boolean {
+  const lower = model.toLowerCase()
+  // Common OpenAI model patterns
+  const openaiPrefixes = [
+    'gpt-',
+    'o1',
+    'o3',
+    'o4',
+    'text-',
+    'whisper',
+    'tts',
+    'dall-e',
+    'babbage',
+    'davinci',
+    'ft:',
+  ]
+  return openaiPrefixes.some(prefix => lower.startsWith(prefix))
+}
+
+/**
+ * Check if a model is in the cached OpenAI models list.
+ */
+function isCachedOpenAIModel(model: string): boolean {
+  const cachedModels =
+    getActiveProviderByType('openai')?.models ?? getGlobalConfig().openaiModels
+  if (!cachedModels) return false
+  return cachedModels.some(
+    m => m === model || m.toLowerCase() === model.toLowerCase(),
+  )
+}
 
 /**
  * Validates a model by attempting an actual API call.
@@ -46,11 +82,22 @@ export async function validateModel(
     return { valid: true }
   }
 
+  // OpenAI models: validate against cached model list
+  if (isOpenAIModel(normalizedModel) || isCachedOpenAIModel(normalizedModel)) {
+    if (isCachedOpenAIModel(normalizedModel)) {
+      validModelCache.set(normalizedModel, true)
+      return { valid: true }
+    }
+    // If not in cache but looks like OpenAI model, allow it (user may have typed a valid model not yet cached)
+    if (isOpenAIModel(normalizedModel)) {
+      return { valid: true }
+    }
+  }
+
   // Check cache first
   if (validModelCache.has(normalizedModel)) {
     return { valid: true }
   }
-
 
   // Try to make an actual API call with minimal parameters
   try {

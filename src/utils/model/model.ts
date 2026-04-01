@@ -6,6 +6,8 @@
  * during dead code elimination
  */
 import { getMainLoopModelOverride } from '../../bootstrap/state.js'
+import { getGlobalConfig } from '../config.js'
+import { getActiveProviderByType } from '../providers.js'
 import {
   getSubscriptionType,
   isClaudeAISubscriber,
@@ -117,6 +119,12 @@ export function getDefaultOpusModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Sonnet model (3P providers may lag so keep defaults unchanged).
 export function getDefaultSonnetModel(): ModelName {
+  if (getAPIProvider() === 'openai') {
+    const openaiModels =
+      getActiveProviderByType('openai')?.models ??
+      getGlobalConfig().openaiModels
+    return openaiModels?.[0] || 'gpt-4o'
+  }
   if (process.env.ANTHROPIC_DEFAULT_SONNET_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_SONNET_MODEL
   }
@@ -129,6 +137,16 @@ export function getDefaultSonnetModel(): ModelName {
 
 // @[MODEL LAUNCH]: Update the default Haiku model (3P providers may lag so keep defaults unchanged).
 export function getDefaultHaikuModel(): ModelName {
+  if (getAPIProvider() === 'openai') {
+    const openaiModels =
+      getActiveProviderByType('openai')?.models ??
+      getGlobalConfig().openaiModels
+    return (
+      openaiModels?.find(m => m.includes('mini')) ||
+      openaiModels?.[0] ||
+      'gpt-4o-mini'
+    )
+  }
   if (process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL) {
     return process.env.ANTHROPIC_DEFAULT_HAIKU_MODEL
   }
@@ -176,6 +194,9 @@ export function getRuntimeMainLoopModel(params: {
  * @returns The default model setting to use
  */
 export function getDefaultMainLoopModelSetting(): ModelName | ModelAlias {
+  if (getAPIProvider() === 'openai') {
+    return getDefaultSonnetModel()
+  }
   // Ants default to defaultModel from flag config, or Opus 1M if not configured
   if (process.env.USER_TYPE === 'ant') {
     return (
@@ -447,6 +468,29 @@ export function parseUserSpecifiedModel(
 ): ModelName {
   const modelInputTrimmed = modelInput.trim()
   const normalizedModel = modelInputTrimmed.toLowerCase()
+
+  // Pass through OpenAI model names without modification
+  const isOpenAIModel = () => {
+    const openaiPrefixes = [
+      'gpt-',
+      'o1',
+      'o3',
+      'o4',
+      'text-',
+      'whisper',
+      'tts',
+      'dall-e',
+      'babbage',
+      'davinci',
+      'ft:',
+    ]
+    return openaiPrefixes.some(prefix => normalizedModel.startsWith(prefix))
+  }
+
+  if (isOpenAIModel()) {
+    // Preserve original case and [1m] suffix for OpenAI models
+    return modelInputTrimmed
+  }
 
   const has1mTag = has1mContext(normalizedModel)
   const modelString = has1mTag

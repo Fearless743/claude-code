@@ -1,7 +1,10 @@
 import { getSettings_DEPRECATED } from '../settings/settings.js'
+import { getAPIProvider } from './providers.js'
 import { isModelAlias, isModelFamilyAlias } from './aliases.js'
 import { parseUserSpecifiedModel } from './model.js'
 import { resolveOverriddenModel } from './modelStrings.js'
+import { getGlobalConfig } from '../config.js'
+import { getActiveProviderByType } from '../providers.js'
 
 /**
  * Check if a model belongs to a given family by checking if its name
@@ -100,7 +103,38 @@ function familyHasSpecificEntries(
 export function isModelAllowed(model: string): boolean {
   const settings = getSettings_DEPRECATED() || {}
   const { availableModels } = settings
+  const isOpenAIConfigured =
+    getAPIProvider() === 'openai' ||
+    process.env.OPENAI_API_KEY ||
+    getActiveProviderByType('openai')?.apiKey ||
+    getGlobalConfig().openaiApiKey
+
   if (!availableModels) {
+    if (isOpenAIConfigured) {
+      const lowerModel = model.toLowerCase()
+      const openaiPrefixes = [
+        'gpt-',
+        'o1',
+        'o3',
+        'o4',
+        'text-',
+        'whisper',
+        'tts',
+        'dall-e',
+        'babbage',
+        'davinci',
+        'ft:',
+      ]
+      const cachedModels =
+        getActiveProviderByType('openai')?.models ??
+        getGlobalConfig().openaiModels
+      if (
+        openaiPrefixes.some(prefix => lowerModel.startsWith(prefix)) ||
+        cachedModels?.some(m => m === model || m.toLowerCase() === lowerModel)
+      ) {
+        return true
+      }
+    }
     return true // No restrictions
   }
   if (availableModels.length === 0) {

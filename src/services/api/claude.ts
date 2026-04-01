@@ -74,6 +74,7 @@ import { errorMessage } from '../../utils/errors.js'
 import { computeFingerprintFromMessages } from '../../utils/fingerprint.js'
 import { captureAPIRequest, logError } from '../../utils/log.js'
 import {
+  createAssistantMessage,
   createAssistantAPIErrorMessage,
   createUserMessage,
   ensureToolResultPairing,
@@ -249,6 +250,14 @@ import {
   checkResponseForCacheBreak,
   recordPromptState,
 } from './promptCacheBreakDetection.js'
+import {
+  chunkToAnthropicStyleEvents,
+  createChatCompletion,
+  createStreamingChatCompletion,
+  openAIToolChoiceFromAnthropic,
+  openAIToolsFromAnthropicTools,
+  toOpenAIChatMessages,
+} from './openai.js'
 import {
   CannotRetryError,
   FallbackTriggeredError,
@@ -453,7 +462,7 @@ function configureEffortParams(
     betas.push(EFFORT_BETA_HEADER)
   } else if (typeof effortValue === 'string') {
     // Send string effort level as is
-    outputConfig.effort = effortValue as "high" | "medium" | "low" | "max"
+    outputConfig.effort = effortValue as 'high' | 'medium' | 'low' | 'max'
     betas.push(EFFORT_BETA_HEADER)
   } else if (process.env.USER_TYPE === 'ant') {
     // Numeric effort override - ant-only (uses anthropic_internal)
@@ -1503,15 +1512,314 @@ async function* queryModel(
     isFastMode,
   )
 
+  if (getAPIProvider() === 'openai') {
+    try {
+      const startIncludingRetries = Date.now()
+      const openAIMessages = toOpenAIChatMessages({
+        system: system as { text?: string }[],
+        messages: messagesForAPI as unknown as {
+          message?: { role?: string; content?: unknown }
+        }[],
+      })
+      const maxOutputTokens =
+        options.maxOutputTokensOverride ||
+        getModelMaxOutputTokens(options.model).default
+
+      const request = {
+        model: normalizeModelStringForAPI(options.model),
+        messages: openAIMessages,
+        max_tokens: maxOutputTokens,
+        ...(allTools.length > 0 && {
+          tools: openAIToolsFromAnthropicTools(
+            allTools as Array<{
+              name: string
+              description?: string
+              input_schema?: Record<string, unknown>
+            }>,
+          ),
+        }),
+        ...(options.toolChoice && {
+          tool_choice: openAIToolChoiceFromAnthropic(
+            options.toolChoice as
+              | { type: 'auto' }
+              | { type: 'tool'; name: string },
+          ),
+        }),
+        ...(options.temperatureOverride !== undefined && {
+          temperature: options.temperatureOverride,
+        }),
+      }
+
+      let responseId = ''
+      let responseModel = normalizeModelStringForAPI(options.model)
+      let finishReason: string | null = null
+      let content = ''
+      let sentMessageStart = false
+      let sentTextBlockStart = false
+      let toolCalls: Array<{
+        id: string
+        type: 'tool_use'
+        name: string
+        input: unknown
+      }> = []
+      const toolCallsByIndex = new Map<
+        number,
+        {
+          id: string
+          name: string
+          arguments: string
+        }
+      >()
+      let usageForLog = {
+        input_tokens: 0,
+        output_tokens: 0,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+        server_tool_use: { web_search_requests: 0, web_fetch_requests: 0 },
+        service_tier: null,
+        cache_creation: {
+          ephemeral_1h_input_tokens: 0,
+          ephemeral_5m_input_tokens: 0,
+        },
+        inference_geo: null,
+        iterations: null,
+        speed: null,
+      } as NonNullableUsage
+
+      for await (const chunk of createStreamingChatCompletion(
+        request,
+        signal,
+      )) {
+        responseId = chunk.id || responseId
+        responseModel = chunk.model || responseModel
+        const choice = chunk.choices[0]
+        const mappedEvents = chunkToAnthropicStyleEvents({
+          chunk,
+          hasStarted: sentMessageStart,
+          hasTextBlockStarted: sentTextBlockStart,
+        })
+        for (const mappedEvent of mappedEvents) {
+          if (mappedEvent.type === 'message_start') {
+            sentMessageStart = true
+            yield {
+              type: 'stream_event',
+              event: {
+                ...mappedEvent,
+                message: {
+                  ...((mappedEvent.message as Record<string, unknown>) ?? {}),
+                  usage: usageForLog,
+                },
+              },
+              ttftMs: 0,
+            }
+            continue
+          }
+          if (mappedEvent.type === 'content_block_start') {
+            const contentBlock = mappedEvent.content_block as {
+              type?: string
+            }
+            if (contentBlock?.type === 'text') {
+              sentTextBlockStart = true
+            }
+          }
+          yield {
+            type: 'stream_event',
+            event: mappedEvent,
+          }
+        }
+        const deltaText = choice?.delta?.content ?? ''
+        if (deltaText) {
+          content += deltaText
+        }
+        if (choice?.delta?.tool_calls?.length) {
+          for (const tc of choice.delta.tool_calls) {
+            const current = toolCallsByIndex.get(tc.index) ?? {
+              id: tc.id ?? `openai-tool-${tc.index}`,
+              name: tc.function?.name ?? '',
+              arguments: '',
+            }
+            const isNewTool = !toolCallsByIndex.has(tc.index)
+            if (tc.id) current.id = tc.id
+            if (tc.function?.name) current.name = tc.function.name
+            if (tc.function?.arguments) {
+              current.arguments += tc.function.arguments
+            }
+            toolCallsByIndex.set(tc.index, current)
+          }
+        }
+        if (choice?.finish_reason) {
+          finishReason = choice.finish_reason
+        }
+        if (chunk.usage) {
+          usageForLog = {
+            input_tokens: chunk.usage.prompt_tokens ?? 0,
+            output_tokens: chunk.usage.completion_tokens ?? 0,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+            server_tool_use: { web_search_requests: 0, web_fetch_requests: 0 },
+            service_tier: null,
+            cache_creation: {
+              ephemeral_1h_input_tokens: 0,
+              ephemeral_5m_input_tokens: 0,
+            },
+            inference_geo: null,
+            iterations: null,
+            speed: null,
+          }
+        }
+      }
+
+      if (!content && toolCallsByIndex.size === 0) {
+        const response = await createChatCompletion(request)
+        responseId = response.id
+        responseModel = response.model
+        finishReason = response.choices[0]?.finish_reason ?? null
+        content = response.choices[0]?.message?.content ?? ''
+        toolCalls =
+          response.choices[0]?.message?.tool_calls?.map(tc => ({
+            id: tc.id,
+            type: 'tool_use' as const,
+            name: tc.function.name,
+            input: JSON.parse(tc.function.arguments || '{}'),
+          })) ?? []
+        usageForLog = {
+          input_tokens: response.usage?.prompt_tokens ?? 0,
+          output_tokens: response.usage?.completion_tokens ?? 0,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 0,
+          server_tool_use: { web_search_requests: 0, web_fetch_requests: 0 },
+          service_tier: null,
+          cache_creation: {
+            ephemeral_1h_input_tokens: 0,
+            ephemeral_5m_input_tokens: 0,
+          },
+          inference_geo: null,
+          iterations: null,
+          speed: null,
+        }
+      }
+
+      if (sentTextBlockStart) {
+        yield {
+          type: 'stream_event',
+          event: {
+            type: 'content_block_stop',
+            index: 0,
+          },
+        }
+      }
+
+      if (toolCallsByIndex.size > 0) {
+        for (const index of toolCallsByIndex.keys()) {
+          yield {
+            type: 'stream_event',
+            event: {
+              type: 'content_block_stop',
+              index: index + 1,
+            },
+          }
+        }
+      }
+
+      yield {
+        type: 'stream_event',
+        event: {
+          type: 'message_delta',
+          delta: {
+            stop_reason:
+              finishReason ?? (toolCalls.length > 0 ? 'tool_use' : 'end_turn'),
+          },
+          usage: usageForLog,
+        },
+      }
+
+      yield {
+        type: 'stream_event',
+        event: {
+          type: 'message_stop',
+        },
+      }
+
+      if (toolCalls.length === 0 && toolCallsByIndex.size > 0) {
+        toolCalls = [...toolCallsByIndex.values()].map(tc => ({
+          id: tc.id,
+          type: 'tool_use' as const,
+          name: tc.name,
+          input: safeParseJSON(tc.arguments) ?? {},
+        }))
+      }
+
+      const assistantMessage = createAssistantMessage({
+        content:
+          toolCalls.length > 0
+            ? [
+                ...(content
+                  ? ([{ type: 'text', text: content }] as BetaContentBlock[])
+                  : []),
+                ...(toolCalls as unknown as BetaContentBlock[]),
+              ]
+            : content,
+        usage: usageForLog as unknown as BetaUsage,
+      })
+
+      assistantMessage.message = {
+        ...assistantMessage.message,
+        model: responseModel,
+        id: responseId,
+      }
+
+      yield assistantMessage
+
+      const logMessageCount = messagesForAPI.length
+      const logMessageTokens = tokenCountFromLastAPIResponse(messagesForAPI)
+      void options.getToolPermissionContext().then(permissionContext => {
+        logAPISuccessAndDuration({
+          model: responseModel,
+          preNormalizedModel: options.model,
+          usage: usageForLog,
+          start: startIncludingRetries,
+          startIncludingRetries,
+          attempt: 1,
+          messageCount: logMessageCount,
+          messageTokens: logMessageTokens,
+          requestId: responseId,
+          stopReason: (finishReason as BetaStopReason) ?? null,
+          ttftMs: 0,
+          didFallBackToNonStreaming: false,
+          querySource: options.querySource,
+          headers: undefined,
+          costUSD: 0,
+          queryTracking: options.queryTracking,
+          permissionMode: permissionContext.mode,
+          newMessages: [assistantMessage],
+          llmSpan,
+          globalCacheStrategy: 'none',
+          requestSetupMs: 0,
+          attemptStartTimes: [startIncludingRetries],
+          fastMode: false,
+          previousRequestId,
+          betas: undefined,
+        })
+      })
+      return
+    } catch (error) {
+      yield getAssistantMessageFromError(error, options.model, {
+        messages,
+        messagesForAPI,
+      })
+      return
+    }
+  }
+
   const startIncludingRetries = Date.now()
   let start = Date.now()
   let attemptNumber = 0
   const attemptStartTimes: number[] = []
-  let stream: Stream<BetaRawMessageStreamEvent> | undefined = undefined
-  let streamRequestId: string | null | undefined = undefined
-  let clientRequestId: string | undefined = undefined
+  let stream: Stream<BetaRawMessageStreamEvent> | undefined
+  let streamRequestId: string | null | undefined
+  let clientRequestId: string | undefined
   // eslint-disable-next-line eslint-plugin-n/no-unsupported-features/node-builtins -- Response is available in Node 18+ and is used by the SDK
-  let streamResponse: Response | undefined = undefined
+  let streamResponse: Response | undefined
 
   // Release all stream resources to prevent native memory leaks.
   // The Response object holds native TLS/socket buffers that live outside the
@@ -1597,7 +1905,7 @@ async function* queryModel(
     const hasThinking =
       thinkingConfig.type !== 'disabled' &&
       !isEnvTruthy(process.env.CLAUDE_CODE_DISABLE_THINKING)
-    let thinking: BetaMessageStreamParams['thinking'] | undefined = undefined
+    let thinking: BetaMessageStreamParams['thinking'] | undefined
 
     // IMPORTANT: Do not change the adaptive-vs-budget thinking selection below
     // without notifying the model launch DRI and research. This is a sensitive
@@ -1761,7 +2069,7 @@ async function* queryModel(
 
   const newMessages: AssistantMessage[] = []
   let ttftMs = 0
-  let partialMessage: BetaMessage | undefined = undefined
+  let partialMessage: BetaMessage | undefined
   const contentBlocks: (BetaContentBlock | ConnectorTextBlock)[] = []
   let usage: NonNullableUsage = EMPTY_USAGE
   let costUSD = 0
@@ -1769,8 +2077,8 @@ async function* queryModel(
   let didFallBackToNonStreaming = false
   let fallbackMessage: AssistantMessage | undefined
   let maxOutputTokens = 0
-  let responseHeaders: globalThis.Headers | undefined = undefined
-  let research: unknown = undefined
+  let responseHeaders: globalThis.Headers | undefined
+  let research: unknown
   let isFastModeRequest = isFastMode // Keep separate state as it may change if falling back
   let isAdvisorInProgress = false
 
@@ -2079,7 +2387,8 @@ async function* queryModel(
                 })
                 throw new Error('Content block is not a connector_text block')
               }
-              ;(contentBlock as { connector_text: string }).connector_text += delta.connector_text
+              ;(contentBlock as { connector_text: string }).connector_text +=
+                delta.connector_text
             } else {
               switch (delta.type) {
                 case 'citations_delta':
@@ -2158,7 +2467,8 @@ async function* queryModel(
                     })
                     throw new Error('Content block is not a thinking block')
                   }
-                  ;(contentBlock as { thinking: string }).thinking += delta.thinking
+                  ;(contentBlock as { thinking: string }).thinking +=
+                    delta.thinking
                   break
               }
             }
@@ -2249,7 +2559,10 @@ async function* queryModel(
             }
 
             // Update cost
-            const costUSDForPart = calculateUSDCost(resolvedModel, usage as unknown as BetaUsage)
+            const costUSDForPart = calculateUSDCost(
+              resolvedModel,
+              usage as unknown as BetaUsage,
+            )
             costUSD += addToTotalSessionCost(
               costUSDForPart,
               usage as unknown as BetaUsage,
@@ -2819,10 +3132,14 @@ async function* queryModel(
     // message_delta handler before any yield. Fallback pushes to newMessages
     // then yields, so tracking must be here to survive .return() at the yield.
     if (fallbackMessage) {
-      const fallbackUsage = fallbackMessage.message.usage as BetaMessageDeltaUsage
+      const fallbackUsage = fallbackMessage.message
+        .usage as BetaMessageDeltaUsage
       usage = updateUsage(EMPTY_USAGE, fallbackUsage)
       stopReason = fallbackMessage.message.stop_reason as BetaStopReason
-      const fallbackCost = calculateUSDCost(resolvedModel, fallbackUsage as unknown as BetaUsage)
+      const fallbackCost = calculateUSDCost(
+        resolvedModel,
+        fallbackUsage as unknown as BetaUsage,
+      )
       costUSD += addToTotalSessionCost(
         fallbackCost,
         fallbackUsage as unknown as BetaUsage,
@@ -2858,7 +3175,9 @@ async function* queryModel(
   void options.getToolPermissionContext().then(permissionContext => {
     logAPISuccessAndDuration({
       model:
-        (newMessages[0]?.message.model as string | undefined) ?? partialMessage?.model ?? options.model,
+        (newMessages[0]?.message.model as string | undefined) ??
+        partialMessage?.model ??
+        options.model,
       preNormalizedModel: options.model,
       usage,
       start,

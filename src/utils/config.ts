@@ -180,6 +180,17 @@ export type DiffTool = 'terminal' | 'auto'
 
 export type OutputStyle = string
 
+export type ProviderType = 'openai' | 'anthropic' | 'gemini'
+
+export type LLMProvider = {
+  id: string
+  name: string
+  type: ProviderType
+  apiKey?: string
+  baseUrl?: string
+  models?: string[]
+}
+
 export type GlobalConfig = {
   /**
    * @deprecated Use settings.apiKeyHelper instead.
@@ -222,6 +233,15 @@ export type GlobalConfig = {
     rejected?: string[]
   }
   primaryApiKey?: string // Primary API key for the user when no environment variable is set, set via oauth (TODO: rename)
+
+  llmProviders?: LLMProvider[]
+  activeProviderId?: string
+
+  // OpenAI provider configuration
+  openaiApiKey?: string // API key for OpenAI Completions API
+  openaiBaseUrl?: string // Base URL for OpenAI-compatible API (default: https://api.openai.com/v1)
+  openaiModels?: string[] // Cached list of available OpenAI models
+
   hasAcknowledgedCostThreshold?: boolean
   hasSeenUndercoverAutoNotice?: boolean // ant-only: whether the one-time auto-undercover explainer has been shown
   hasSeenUltraplanTerms?: boolean // ant-only: whether the one-time CCR terms notice has been shown in the ultraplan launch dialog
@@ -556,7 +576,6 @@ export type GlobalConfig = {
   // Speculation configuration (ant-only)
   speculationEnabled?: boolean // Whether speculation is enabled (default: true)
 
-
   // Client data for server-side experiments (fetched during bootstrap).
   clientDataCache?: Record<string, unknown> | null
 
@@ -602,6 +621,7 @@ function createDefaultGlobalConfig(): GlobalConfig {
       approved: [],
       rejected: [],
     },
+    llmProviders: [],
     env: {},
     tipsHistory: {},
     memoryUsageCount: 0,
@@ -632,6 +652,8 @@ export const GLOBAL_CONFIG_KEYS = [
   'theme',
   'verbose',
   'preferredNotifChannel',
+  'llmProviders',
+  'activeProviderId',
   'shiftEnterKeyBindingInstalled',
   'editorMode',
   'hasUsedBackslashReturn',
@@ -910,9 +932,46 @@ registerCleanup(async () => {
  * @internal
  */
 function migrateConfigFields(config: GlobalConfig): GlobalConfig {
+  const providerMigration = (() => {
+    if (config.llmProviders && config.llmProviders.length > 0) {
+      return {
+        llmProviders: config.llmProviders,
+        activeProviderId: config.activeProviderId,
+      }
+    }
+
+    if (
+      !config.openaiApiKey &&
+      !config.openaiBaseUrl &&
+      !(config.openaiModels && config.openaiModels.length > 0)
+    ) {
+      return {
+        llmProviders: config.llmProviders,
+        activeProviderId: config.activeProviderId,
+      }
+    }
+
+    return {
+      llmProviders: [
+        {
+          id: 'openai-default',
+          name: 'OpenAI',
+          type: 'openai' as const,
+          apiKey: config.openaiApiKey,
+          baseUrl: config.openaiBaseUrl,
+          models: config.openaiModels,
+        },
+      ],
+      activeProviderId: config.activeProviderId ?? 'openai-default',
+    }
+  })()
+
   // Already migrated
   if (config.installMethod !== undefined) {
-    return config
+    return {
+      ...config,
+      ...providerMigration,
+    }
   }
 
   // autoUpdaterStatus is removed from the type but may exist in old configs
@@ -954,6 +1013,7 @@ function migrateConfigFields(config: GlobalConfig): GlobalConfig {
 
   return {
     ...config,
+    ...providerMigration,
     installMethod,
     autoUpdates,
   }

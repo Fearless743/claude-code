@@ -380,6 +380,29 @@ export const ConfigTool = buildTool({
         })
       }
 
+      if (setting === 'openaiApiKey' || setting === 'openaiBaseUrl') {
+        const { fetchOpenAIModels } = await import(
+          '../../services/api/openai.js'
+        )
+        try {
+          const models = await fetchOpenAIModels()
+          const modelIds = models.map(m => m.id)
+          saveGlobalConfig(prev => ({
+            ...prev,
+            openaiModels: modelIds,
+          }))
+          context.setAppState(prev => ({
+            ...prev,
+            mainLoopModel:
+              prev.mainLoopModel === null || prev.mainLoopModel === undefined
+                ? (modelIds[0] ?? prev.mainLoopModel)
+                : prev.mainLoopModel,
+          }))
+        } catch {
+          // Keep the config write successful even if model refresh fails.
+        }
+      }
+
       logEvent('tengu_config_tool_changed', {
         setting:
           setting as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,

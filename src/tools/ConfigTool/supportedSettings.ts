@@ -45,6 +45,17 @@ export const SUPPORTED_SETTINGS: Record<string, SettingConfig> = {
     description: 'Show detailed debug output',
     appStateKey: 'verbose',
   },
+  openaiApiKey: {
+    source: 'global',
+    type: 'string',
+    description:
+      'OpenAI-compatible API key used for fetching and switching models',
+  },
+  openaiBaseUrl: {
+    source: 'global',
+    type: 'string',
+    description: 'OpenAI-compatible base URL, e.g. https://api.openai.com/v1',
+  },
   preferredNotifChannel: {
     source: 'global',
     type: 'string',

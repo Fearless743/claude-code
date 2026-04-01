@@ -1,16 +1,66 @@
 import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from '../../services/analytics/index.js'
+import { getGlobalConfig } from '../config.js'
 import { isEnvTruthy } from '../envUtils.js'
+import { getActiveProvider } from '../providers.js'
 
-export type APIProvider = 'firstParty' | 'bedrock' | 'vertex' | 'foundry'
+export type APIProvider =
+  | 'firstParty'
+  | 'bedrock'
+  | 'vertex'
+  | 'foundry'
+  | 'openai'
 
 export function getAPIProvider(): APIProvider {
-  return isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK)
-    ? 'bedrock'
-    : isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX)
-      ? 'vertex'
-      : isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY)
-        ? 'foundry'
-        : 'firstParty'
+  let openAIApiKey = process.env.OPENAI_API_KEY
+
+  // getAPIProvider() is called during very early startup (e.g. betas/advisor
+  // checks) before config reading is allowed. In that phase we must not touch
+  // global config yet, otherwise startup crashes with
+  // "Config accessed before allowed.".
+  //
+  // So we:
+  // 1. always honor explicit env flags immediately
+  // 2. best-effort read the persisted OpenAI key only after config becomes
+  //    available; if it's too early, silently fall back to env-only detection.
+  try {
+    openAIApiKey ||=
+      getActiveProvider()?.type === 'openai'
+        ? getActiveProvider()?.apiKey || getGlobalConfig().openaiApiKey
+        : getGlobalConfig().openaiApiKey
+  } catch {
+    // Ignore early-startup config guard; env-based provider detection still works.
+  }
+
+  return getAPIProviderFromConfig({
+    useOpenAI: process.env.CLAUDE_CODE_USE_OPENAI,
+    useBedrock: process.env.CLAUDE_CODE_USE_BEDROCK,
+    useVertex: process.env.CLAUDE_CODE_USE_VERTEX,
+    useFoundry: process.env.CLAUDE_CODE_USE_FOUNDRY,
+    openAIApiKey,
+  })
+}
+
+export function getAPIProviderFromConfig(params: {
+  useOpenAI?: string
+  useBedrock?: string
+  useVertex?: string
+  useFoundry?: string
+  openAIApiKey?: string
+}): APIProvider {
+  return isEnvTruthy(params.useOpenAI)
+    ? 'openai'
+    : !isEnvTruthy(params.useBedrock) &&
+        !isEnvTruthy(params.useVertex) &&
+        !isEnvTruthy(params.useFoundry) &&
+        !!params.openAIApiKey
+      ? 'openai'
+      : isEnvTruthy(params.useBedrock)
+        ? 'bedrock'
+        : isEnvTruthy(params.useVertex)
+          ? 'vertex'
+          : isEnvTruthy(params.useFoundry)
+            ? 'foundry'
+            : 'firstParty'
 }
 
 export function getAPIProviderForStatsig(): AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS {
