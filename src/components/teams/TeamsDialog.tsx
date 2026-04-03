@@ -10,6 +10,7 @@ import { stringWidth } from '../../ink/stringWidth.js';
 import { Box, Text, useInput } from '../../ink.js';
 import { useKeybindings } from '../../keybindings/useKeybinding.js';
 import { useShortcutDisplay } from '../../keybindings/useShortcutDisplay.js';
+import { translate } from '../../i18n/index.js';
 import { type AppState, useAppState, useSetAppState } from '../../state/AppState.js';
 import { getEmptyToolPermissionContext } from '../../Tool.js';
 import { AGENT_COLOR_TO_THEME_COLOR } from '../../tools/AgentTool/agentColorManager.js';
@@ -248,13 +249,20 @@ function TeamDetailView(t0) {
     selectedIndex,
     onCancel
   } = t0;
-  const subtitle = `${teammates.length} ${teammates.length === 1 ? "teammate" : "teammates"}`;
+  const subtitle = translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogSubtitle', {
+    count: teammates.length,
+    label: teammates.length === 1
+      ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogTeammateSingular')
+      : translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogTeammatePlural')
+  });
   const supportsHideShow = getCachedBackend()?.supportsHideShow ?? false;
   const cycleModeShortcut = useShortcutDisplay("confirm:cycleMode", "Confirmation", "shift+tab");
-  const t1 = `Team ${teamName}`;
+  const t1 = translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogTitle', {
+    teamName
+  });
   let t2;
   if ($[0] !== selectedIndex || $[1] !== teammates) {
-    t2 = teammates.length === 0 ? <Text dimColor={true}>No teammates</Text> : <Box flexDirection="column">{teammates.map((teammate, index) => <TeammateListItem key={teammate.agentId} teammate={teammate} isSelected={index === selectedIndex} />)}</Box>;
+    t2 = teammates.length === 0 ? <Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogNoTeammates')}</Text> : <Box flexDirection="column">{teammates.map((teammate, index) => <TeammateListItem key={teammate.agentId} teammate={teammate} isSelected={index === selectedIndex} />)}</Box>;
     $[0] = selectedIndex;
     $[1] = teammates;
     $[2] = t2;
@@ -274,7 +282,12 @@ function TeamDetailView(t0) {
   }
   let t4;
   if ($[8] !== cycleModeShortcut) {
-    t4 = <Box marginLeft={1}><Text dimColor={true}>{figures.arrowUp}/{figures.arrowDown} select · Enter view · k kill · s shutdown · p prune idle{supportsHideShow && " \xB7 h hide/show \xB7 H hide/show all"}{" \xB7 "}{cycleModeShortcut} sync cycle modes for all · Esc close</Text></Box>;
+    t4 = <Box marginLeft={1}><Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogListHint', {
+      up: figures.arrowUp,
+      down: figures.arrowDown,
+      hideShowHint: supportsHideShow ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogHideShowHint') : '',
+      cycleModeShortcut
+    })}</Text></Box>;
     $[8] = cycleModeShortcut;
     $[9] = t4;
   } else {
@@ -321,7 +334,7 @@ function TeammateListItem(t0) {
   const t3 = isSelected ? figures.pointer + " " : "  ";
   let t4;
   if ($[3] !== teammate.isHidden) {
-    t4 = teammate.isHidden && <Text dimColor={true}>[hidden] </Text>;
+    t4 = teammate.isHidden && <Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogHiddenTag')}</Text>;
     $[3] = teammate.isHidden;
     $[4] = t4;
   } else {
@@ -329,7 +342,7 @@ function TeammateListItem(t0) {
   }
   let t5;
   if ($[5] !== isIdle) {
-    t5 = isIdle && <Text dimColor={true}>[idle] </Text>;
+    t5 = isIdle && <Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogIdleTag')}</Text>;
     $[5] = isIdle;
     $[6] = t5;
   } else {
@@ -438,7 +451,9 @@ function TeammateDetailView(t0) {
       subtitleParts.push(teammate.model);
     }
     if (workingPath) {
-      subtitleParts.push(teammate.worktreePath ? `worktree: ${workingPath}` : workingPath);
+      subtitleParts.push(teammate.worktreePath ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogWorktreePrefix', {
+        path: workingPath
+      }) : workingPath);
     }
     $[7] = teammate.model;
     $[8] = teammate.worktreePath;
@@ -492,7 +507,7 @@ function TeammateDetailView(t0) {
   const title = t8;
   let t9;
   if ($[23] !== teammateTasks) {
-    t9 = teammateTasks.length > 0 && <Box flexDirection="column"><Text bold={true}>Tasks</Text>{teammateTasks.map(_temp2)}</Box>;
+    t9 = teammateTasks.length > 0 && <Box flexDirection="column"><Text bold={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogTasksTitle')}</Text>{teammateTasks.map(_temp2)}</Box>;
     $[23] = teammateTasks;
     $[24] = t9;
   } else {
@@ -500,7 +515,7 @@ function TeammateDetailView(t0) {
   }
   let t10;
   if ($[25] !== promptExpanded || $[26] !== teammate.prompt) {
-    t10 = teammate.prompt && <Box flexDirection="column"><Text bold={true}>Prompt</Text><Text>{promptExpanded ? teammate.prompt : truncateToWidth(teammate.prompt, 80)}{stringWidth(teammate.prompt) > 80 && !promptExpanded && <Text dimColor={true}> (p to expand)</Text>}</Text></Box>;
+    t10 = teammate.prompt && <Box flexDirection="column"><Text bold={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogPromptTitle')}</Text><Text>{promptExpanded ? teammate.prompt : truncateToWidth(teammate.prompt, 80)}{stringWidth(teammate.prompt) > 80 && !promptExpanded && <Text dimColor={true}> {translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogPromptExpandHint')}</Text>}</Text></Box>;
     $[25] = promptExpanded;
     $[26] = teammate.prompt;
     $[27] = t10;
@@ -521,7 +536,11 @@ function TeammateDetailView(t0) {
   }
   let t12;
   if ($[34] !== cycleModeShortcut) {
-    t12 = <Box marginLeft={1}><Text dimColor={true}>{figures.arrowLeft} back · Esc close · k kill · s shutdown{getCachedBackend()?.supportsHideShow && " \xB7 h hide/show"}{" \xB7 "}{cycleModeShortcut} cycle mode</Text></Box>;
+    t12 = <Box marginLeft={1}><Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogDetailHint', {
+      left: figures.arrowLeft,
+      hideShowHint: getCachedBackend()?.supportsHideShow ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.teamsDialogHideShowHint').replace(' · H 全部隐藏/显示', '').replace(' · H hide/show all', '') : '',
+      cycleModeShortcut
+    })}</Text></Box>;
     $[34] = cycleModeShortcut;
     $[35] = t12;
   } else {

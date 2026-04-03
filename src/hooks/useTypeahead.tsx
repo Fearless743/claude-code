@@ -8,6 +8,7 @@ import { type Command, getCommandName } from '../commands.js';
 import { getModeFromInput, getValueFromInput } from '../components/PromptInput/inputModes.js';
 import type { SuggestionItem, SuggestionType } from '../components/PromptInput/PromptInputFooterSuggestions.js';
 import { useIsModalOverlayActive, useRegisterOverlay } from '../context/overlayContext.js';
+import { translate } from '../i18n/index.js';
 import { KeyboardEvent } from '../ink/events/keyboard-event.js';
 // eslint-disable-next-line custom-rules/prefer-use-keybindings -- backward-compat bridge until consumers wire handleKeyDown to <Box onKeyDown>
 import { useInput } from '../ink.js';
@@ -373,6 +374,7 @@ export function useTypeahead({
     addNotification
   } = useNotifications();
   const thinkingToggleShortcut = useShortcutDisplay('chat:thinkingToggle', 'Chat', 'alt+t');
+  const uiLanguage = useAppState(s => s.settings.language);
   const [suggestionType, setSuggestionType] = useState<SuggestionType>('none');
 
   // Compute max column width from ALL commands once (not filtered results)
@@ -1326,7 +1328,9 @@ export function useTypeahead({
         addNotification({
           key: 'thinking-toggle-hint',
           jsx: <Text dimColor>
-              Use {thinkingToggleShortcut} to toggle thinking
+              {translate(uiLanguage, 'settings.toggleThinkingHint', {
+                shortcut: thinkingToggleShortcut,
+              })}
             </Text>,
           priority: 'immediate',
           timeoutMs: 3000

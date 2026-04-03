@@ -190,12 +190,16 @@ export function GlobalSearchDialog(t0) {
     t8 = $[13];
   }
   const handleInsert = t8;
-  const matchLabel = matches.length > 0 ? `${matches.length}${truncated ? "+" : ""} matches${isSearching ? "\u2026" : ""}` : " ";
+  const matchLabel = matches.length > 0 ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.globalSearchMatchLabel', {
+    count: matches.length,
+    plusSuffix: truncated ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.globalSearchPlusSuffix') : '',
+    ellipsis: isSearching ? "…" : ''
+  }) : " ";
   const t9 = previewOnRight ? "right" : "bottom";
   let t10;
   if ($[14] !== handleInsert) {
     t10 = {
-      action: "mention",
+      action: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.globalSearchActionMention'),
       handler: m_5 => handleInsert(m_5, true)
     };
     $[14] = handleInsert;
@@ -206,7 +210,7 @@ export function GlobalSearchDialog(t0) {
   let t11;
   if ($[16] !== handleInsert) {
     t11 = {
-      action: "insert path",
+      action: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.globalSearchActionInsertPath'),
       handler: m_6 => handleInsert(m_6, false)
     };
     $[16] = handleInsert;
@@ -216,7 +220,7 @@ export function GlobalSearchDialog(t0) {
   }
   let t12;
   if ($[18] !== isSearching) {
-    t12 = q_0 => isSearching ? "Searching\u2026" : q_0 ? "No matches" : "Type to search\u2026";
+    t12 = q_0 => isSearching ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.globalSearchSearching') : q_0 ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.globalSearchNoMatches') : translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.globalSearchTypeToSearch');
     $[18] = isSearching;
     $[19] = t12;
   } else {
@@ -234,7 +238,7 @@ export function GlobalSearchDialog(t0) {
   }
   let t14;
   if ($[24] !== preview || $[25] !== previewWidth || $[26] !== query) {
-    t14 = m_8 => preview?.file === m_8.file && preview.line === m_8.line ? <><Text dimColor={true}>{truncatePathMiddle(m_8.file, previewWidth)}:{m_8.line}</Text>{preview.content.split("\n").map((line_0, i) => <Text key={i}>{highlightMatch(truncateToWidth(line_0, previewWidth), query)}</Text>)}</> : <LoadingState message={"Loading\u2026"} dimColor={true} />;
+    t14 = m_8 => preview?.file === m_8.file && preview.line === m_8.line ? <><Text dimColor={true}>{truncatePathMiddle(m_8.file, previewWidth)}:{m_8.line}</Text>{preview.content.split("\n").map((line_0, i) => <Text key={i}>{highlightMatch(truncateToWidth(line_0, previewWidth), query)}</Text>)}</> : <LoadingState message={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.globalSearchPreviewLoading')} dimColor={true} />;
     $[24] = preview;
     $[25] = previewWidth;
     $[26] = query;
@@ -244,7 +248,7 @@ export function GlobalSearchDialog(t0) {
   }
   let t15;
   if ($[28] !== handleOpen || $[29] !== matchLabel || $[30] !== matches || $[31] !== onDone || $[32] !== t10 || $[33] !== t11 || $[34] !== t12 || $[35] !== t13 || $[36] !== t14 || $[37] !== t9 || $[38] !== visibleResults) {
-    t15 = <FuzzyPicker title="Global Search" placeholder={"Type to search\u2026"} items={matches} getKey={matchKey} visibleCount={visibleResults} direction="up" previewPosition={t9} onQueryChange={handleQueryChange} onFocus={setFocused} onSelect={handleOpen} onTab={t10} onShiftTab={t11} onCancel={onDone} emptyMessage={t12} matchLabel={matchLabel} selectAction="open in editor" renderItem={t13} renderPreview={t14} />;
+    t15 = <FuzzyPicker title={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.globalSearchTitle')} placeholder={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.globalSearchPlaceholder')} items={matches} getKey={matchKey} visibleCount={visibleResults} direction="up" previewPosition={t9} onQueryChange={handleQueryChange} onFocus={setFocused} onSelect={handleOpen} onTab={t10} onShiftTab={t11} onCancel={onDone} emptyMessage={t12} matchLabel={matchLabel} selectAction={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.globalSearchActionOpenInEditor')} renderItem={t13} renderPreview={t14} />;
     $[28] = handleOpen;
     $[29] = matchLabel;
     $[30] = matches;

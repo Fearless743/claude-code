@@ -3,6 +3,7 @@ import React from 'react';
 import type { DeepImmutable } from 'src/types/utils.js';
 import { useElapsedTime } from '../../hooks/useElapsedTime.js';
 import type { KeyboardEvent } from '../../ink/events/keyboard-event.js';
+import { translate } from '../../i18n/index.js';
 import { Box, Text } from '../../ink.js';
 import { useKeybindings } from '../../keybindings/useKeybinding.js';
 import type { DreamTaskState } from '../../tasks/DreamTask/DreamTask.js';
@@ -21,6 +22,7 @@ type Props = {
 const VISIBLE_TURNS = 6;
 export function DreamDetailDialog(t0) {
   const $ = _c(70);
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
   const {
     task,
     onDone,
@@ -101,63 +103,76 @@ export function DreamDetailDialog(t0) {
     t15 = true;
     t16 = handleKeyDown;
     T1 = Dialog;
-    t8 = "Memory consolidation";
+    t8 = translate(uiLanguage, 'dialogs.backgroundTasksDreamDialogTitle');
     const t17 = task.sessionsReviewing;
     let t18;
-    if ($[33] !== task.sessionsReviewing) {
-      t18 = plural(task.sessionsReviewing, "session");
+    if ($[33] !== task.sessionsReviewing || $[34] !== uiLanguage) {
+      t18 = translate(uiLanguage, task.sessionsReviewing === 1 ? 'dialogs.backgroundTasksDreamSessionCountOne' : 'dialogs.backgroundTasksDreamSessionCountMany', {
+        count: task.sessionsReviewing
+      });
       $[33] = task.sessionsReviewing;
-      $[34] = t18;
+      $[34] = uiLanguage;
+      $[35] = t18;
     } else {
-      t18 = $[34];
+      t18 = $[35];
     }
     let t19;
-    if ($[35] !== task.filesTouched.length) {
-      t19 = task.filesTouched.length > 0 && <>{" "}· {task.filesTouched.length}{" "}{plural(task.filesTouched.length, "file")} touched</>;
-      $[35] = task.filesTouched.length;
-      $[36] = t19;
+    if ($[36] !== task.filesTouched.length || $[37] !== uiLanguage) {
+      t19 = task.filesTouched.length > 0 && <>{" "}· {translate(uiLanguage, 'dialogs.backgroundTasksDreamFilesTouched', {
+        count: task.filesTouched.length
+      })}</>;
+      $[36] = task.filesTouched.length;
+      $[37] = uiLanguage;
+      $[38] = t19;
     } else {
-      t19 = $[36];
+      t19 = $[38];
     }
-    if ($[37] !== elapsedTime || $[38] !== t18 || $[39] !== t19 || $[40] !== task.sessionsReviewing) {
-      t9 = <Text dimColor={true}>{elapsedTime} · reviewing {t17}{" "}{t18}{t19}</Text>;
-      $[37] = elapsedTime;
-      $[38] = t18;
-      $[39] = t19;
-      $[40] = task.sessionsReviewing;
-      $[41] = t9;
+    if ($[39] !== elapsedTime || $[40] !== t18 || $[41] !== t19 || $[42] !== task.sessionsReviewing || $[43] !== uiLanguage) {
+      t9 = <Text dimColor={true}>{elapsedTime} · {translate(uiLanguage, 'dialogs.backgroundTasksDreamReviewingPrefix')} {t17}{" "}{t18}{t19}</Text>;
+      $[39] = elapsedTime;
+      $[40] = t18;
+      $[41] = t19;
+      $[42] = task.sessionsReviewing;
+      $[43] = uiLanguage;
+      $[44] = t9;
     } else {
-      t9 = $[41];
+      t9 = $[44];
     }
     t10 = onDone;
     t11 = "background";
-    if ($[42] !== onBack || $[43] !== onKill || $[44] !== task.status) {
-      t12 = exitState => exitState.pending ? <Text>Press {exitState.keyName} again to exit</Text> : <Byline>{onBack && <KeyboardShortcutHint shortcut={"\u2190"} action="go back" />}<KeyboardShortcutHint shortcut="Esc/Enter/Space" action="close" />{task.status === "running" && onKill && <KeyboardShortcutHint shortcut="x" action="stop" />}</Byline>;
-      $[42] = onBack;
-      $[43] = onKill;
-      $[44] = task.status;
-      $[45] = t12;
+    if ($[45] !== onBack || $[46] !== onKill || $[47] !== task.status || $[48] !== uiLanguage) {
+      t12 = exitState => exitState.pending ? <Text>{translate(uiLanguage, 'dialogs.taskDetailPressAgainToExit', {
+        key: exitState.keyName
+      })}</Text> : <Byline>{onBack && <KeyboardShortcutHint shortcut={"\u2190"} action={translate(uiLanguage, 'dialogs.taskDetailGoBackAction')} />}<KeyboardShortcutHint shortcut="Esc/Enter/Space" action={translate(uiLanguage, 'dialogs.taskDetailCloseAction')} />{task.status === "running" && onKill && <KeyboardShortcutHint shortcut="x" action={translate(uiLanguage, 'dialogs.taskDetailStopAction')} />}</Byline>;
+      $[45] = onBack;
+      $[46] = onKill;
+      $[47] = task.status;
+      $[48] = uiLanguage;
+      $[49] = t12;
     } else {
-      t12 = $[45];
+      t12 = $[49];
     }
     T0 = Box;
     t4 = "column";
     t5 = 1;
     let t20;
-    if ($[46] === Symbol.for("react.memo_cache_sentinel")) {
-      t20 = <Text bold={true}>Status:</Text>;
-      $[46] = t20;
+    if ($[50] === Symbol.for("react.memo_cache_sentinel")) {
+      t20 = <Text bold={true}>{translate(uiLanguage, 'dialogs.shellDetailStatusLabel')}</Text>;
+      $[50] = t20;
     } else {
-      t20 = $[46];
+      t20 = $[50];
     }
-    if ($[47] !== task.status) {
-      t6 = <Text>{t20}{" "}{task.status === "running" ? <Text color="background">running</Text> : task.status === "completed" ? <Text color="success">{task.status}</Text> : <Text color="error">{task.status}</Text>}</Text>;
-      $[47] = task.status;
-      $[48] = t6;
+    if ($[51] !== task.status || $[52] !== uiLanguage) {
+      t6 = <Text>{t20}{" "}{task.status === "running" ? <Text color="background">{translate(uiLanguage, 'dialogs.remoteSessionReviewRunning')}</Text> : task.status === "completed" ? <Text color="success">{translate(uiLanguage, 'dialogs.backgroundTasksStatusDone')}</Text> : <Text color="error">{task.status}</Text>}</Text>;
+      $[51] = task.status;
+      $[52] = uiLanguage;
+      $[53] = t6;
     } else {
-      t6 = $[48];
+      t6 = $[53];
     }
-    t7 = shown.length === 0 ? <Text dimColor={true}>{task.status === "running" ? "Starting\u2026" : "(no text output)"}</Text> : <>{hidden > 0 && <Text dimColor={true}>({hidden} earlier {plural(hidden, "turn")})</Text>}{shown.map(_temp2)}</>;
+    t7 = shown.length === 0 ? <Text dimColor={true}>{task.status === "running" ? translate(uiLanguage, 'dialogs.backgroundTasksDreamStarting') : translate(uiLanguage, 'dialogs.backgroundTasksDreamNoTextOutput')}</Text> : <>{hidden > 0 && <Text dimColor={true}>{translate(uiLanguage, hidden === 1 ? 'dialogs.backgroundTasksDreamEarlierTurnOne' : 'dialogs.backgroundTasksDreamEarlierTurnMany', {
+          count: hidden
+        })}</Text>}{shown.map(_temp2)}</>;
     $[8] = elapsedTime;
     $[9] = handleKeyDown;
     $[10] = onBack;
@@ -243,7 +258,10 @@ export function DreamDetailDialog(t0) {
   return t19;
 }
 function _temp2(turn, i) {
-  return <Box key={i} flexDirection="column"><Text wrap="wrap">{turn.text}</Text>{turn.toolUseCount > 0 && <Text dimColor={true}>{"  "}({turn.toolUseCount}{" "}{plural(turn.toolUseCount, "tool")})</Text>}</Box>;
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
+  return <Box key={i} flexDirection="column"><Text wrap="wrap">{turn.text}</Text>{turn.toolUseCount > 0 && <Text dimColor={true}>{"  "}({translate(uiLanguage, turn.toolUseCount === 1 ? 'dialogs.taskDetailToolCountOne' : 'dialogs.taskDetailToolCountMany', {
+    count: turn.toolUseCount
+  })})</Text>}</Box>;
 }
 function _temp(t) {
   return t.text !== "";

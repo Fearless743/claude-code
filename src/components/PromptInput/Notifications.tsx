@@ -11,6 +11,7 @@ import { useIdeConnectionStatus } from '../../hooks/useIdeConnectionStatus.js';
 import type { IDESelection } from '../../hooks/useIdeSelection.js';
 import { useMainLoopModel } from '../../hooks/useMainLoopModel.js';
 import { useVoiceEnabled } from '../../hooks/useVoiceEnabled.js';
+import { translate } from '../../i18n/index.js';
 import { Box, Text } from '../../ink.js';
 import { useClaudeAiLimits } from '../../services/claudeAiLimitsHook.js';
 import { calculateTokenWarningState } from '../../services/compact/autoCompact.js';
@@ -24,7 +25,6 @@ import { setEnvHookNotifier } from '../../utils/hooks/fileChangedWatcher.js';
 import { toIDEDisplayName } from '../../utils/ide.js';
 import { getMessagesAfterCompactBoundary } from '../../utils/messages.js';
 import { tokenCountFromLastAPIResponse } from '../../utils/tokens.js';
-import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
 import { IdeStatusIndicator } from '../IdeStatusIndicator.js';
 import { MemoryUsageIndicator } from '../MemoryUsageIndicator.js';
 import { SentryErrorBoundary } from '../SentryErrorBoundary.js';
@@ -78,6 +78,7 @@ export function Notifications(t0) {
   const notifications = useAppState(_temp);
   const { addNotification, removeNotification } = useNotifications();
   const claudeAiLimits = useClaudeAiLimits();
+  const uiLanguage = useAppState(s => s.settings.language);
   const isInOverageMode = claudeAiLimits.isUsingOverage;
   let t5;
   let t6;
@@ -136,12 +137,10 @@ export function Notifications(t0) {
           key: 'external-editor-hint',
           jsx: (
             <Text dimColor={true}>
-              <ConfigurableShortcutHint
-                action="chat:externalEditor"
-                context="Chat"
-                fallback="ctrl+g"
-                description={`edit in ${toIDEDisplayName(editor)}`}
-              />
+              {translate(uiLanguage, 'settings.editInEditorHint', {
+              shortcut: 'ctrl+g',
+              editor: toIDEDisplayName(editor),
+            })}
             </Text>
           ),
           priority: 'immediate',
@@ -189,6 +188,7 @@ export function Notifications(t0) {
         verbose={verbose}
         tokenUsage={tokenUsage}
         mainLoopModel={mainLoopModel}
+        uiLanguage={uiLanguage}
       />
     );
     $[15] = apiKeyStatus;
@@ -239,6 +239,7 @@ function NotificationContent({
   verbose,
   tokenUsage,
   mainLoopModel,
+  uiLanguage,
 }: {
   ideSelection: IDESelection | undefined;
   mcpClients?: MCPServerConnection[];
@@ -253,6 +254,7 @@ function NotificationContent({
   verbose: boolean;
   tokenUsage: number;
   mainLoopModel: string;
+  uiLanguage: string | undefined;
 }): ReactNode {
   // Poll apiKeyHelper inflight state to show slow-helper notice.
   // Gated on configuration — most users never set apiKeyHelper, so the
@@ -310,14 +312,14 @@ function NotificationContent({
       {isInOverageMode && !isTeamOrEnterprise && (
         <Box>
           <Text dimColor wrap="truncate">
-            Now using extra usage
+            {translate(uiLanguage, 'settings.extraUsageInUse')}
           </Text>
         </Box>
       )}
       {apiKeyHelperSlow && (
         <Box>
           <Text color="warning" wrap="truncate">
-            apiKeyHelper is taking a while{' '}
+            {translate(uiLanguage, 'settings.apiKeyHelperSlow')}{' '}
           </Text>
           <Text dimColor wrap="truncate">
             ({apiKeyHelperSlow})
@@ -328,22 +330,24 @@ function NotificationContent({
         <Box>
           <Text color="error" wrap="truncate">
             {isEnvTruthy(process.env.CLAUDE_CODE_REMOTE)
-              ? 'Authentication error · Try again'
-              : 'Not logged in · Run /login'}
+              ? translate(uiLanguage, 'settings.authErrorRetry')
+              : translate(uiLanguage, 'settings.notLoggedInRunLogin')}
           </Text>
         </Box>
       )}
       {debug && (
         <Box>
           <Text color="warning" wrap="truncate">
-            Debug mode
+            {translate(uiLanguage, 'settings.debugMode')}
           </Text>
         </Box>
       )}
       {apiKeyStatus !== 'invalid' && apiKeyStatus !== 'missing' && verbose && (
         <Box>
           <Text dimColor wrap="truncate">
-            {tokenUsage} tokens
+            {translate(uiLanguage, 'settings.tokenCountLabel', {
+              count: tokenUsage,
+            })}
           </Text>
         </Box>
       )}

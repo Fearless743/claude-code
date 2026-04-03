@@ -1,6 +1,7 @@
 import { c as _c } from "react/compiler-runtime";
 import type { ReactNode } from 'react';
 import React from 'react';
+import { translate } from '../../i18n/index.js';
 import { Text } from 'src/ink.js';
 import type { TaskStatus } from 'src/Task.js';
 import type { LocalShellTaskState } from 'src/tasks/LocalShellTask/guards.js';
@@ -33,6 +34,7 @@ export function TaskStatusText(t0) {
 }
 export function ShellProgress(t0) {
   const $ = _c(4);
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
   const {
     shell
   } = t0;
@@ -40,33 +42,36 @@ export function ShellProgress(t0) {
     case "completed":
       {
         let t1;
-        if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-          t1 = <TaskStatusText status="completed" label="done" />;
-          $[0] = t1;
-        } else {
-          t1 = $[0];
-        }
-        return t1;
-      }
-    case "failed":
-      {
-        let t1;
-        if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-          t1 = <TaskStatusText status="failed" label="error" />;
+        if ($[0] !== uiLanguage) {
+          t1 = <TaskStatusText status="completed" label={translate(uiLanguage, 'dialogs.backgroundTasksStatusDone')} />;
+          $[0] = uiLanguage;
           $[1] = t1;
         } else {
           t1 = $[1];
         }
         return t1;
       }
+    case "failed":
+      {
+        let t1;
+        if ($[2] !== uiLanguage) {
+          t1 = <TaskStatusText status="failed" label={translate(uiLanguage, 'dialogs.backgroundTasksStatusError')} />;
+          $[2] = uiLanguage;
+          $[3] = t1;
+        } else {
+          t1 = $[3];
+        }
+        return t1;
+      }
     case "killed":
       {
         let t1;
-        if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-          t1 = <TaskStatusText status="killed" label="stopped" />;
-          $[2] = t1;
+        if ($[4] !== uiLanguage) {
+          t1 = <TaskStatusText status="killed" label={translate(uiLanguage, 'dialogs.backgroundTasksStatusStopped')} />;
+          $[4] = uiLanguage;
+          $[5] = t1;
         } else {
-          t1 = $[2];
+          t1 = $[5];
         }
         return t1;
       }
@@ -74,11 +79,11 @@ export function ShellProgress(t0) {
     case "pending":
       {
         let t1;
-        if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+        if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
           t1 = <TaskStatusText status="running" />;
-          $[3] = t1;
+          $[6] = t1;
         } else {
-          t1 = $[3];
+          t1 = $[6];
         }
         return t1;
       }

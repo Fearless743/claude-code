@@ -8,6 +8,7 @@ import type { InProcessTeammateTaskState } from 'src/tasks/InProcessTeammateTask
 import { isPanelAgentTask } from 'src/tasks/LocalAgentTask/LocalAgentTask.js';
 import { isBackgroundTask, type TaskState } from 'src/tasks/types.js';
 import type { DeepImmutable } from 'src/types/utils.js';
+import { translate } from '../../i18n/index.js';
 import { summarizeRecentActivities } from 'src/utils/collapseReadSearch.js';
 
 /**
@@ -75,10 +76,11 @@ export function getTaskStatusColor(status: TaskStatus, options?: {
  * recent-activity summary → last activity description → 'working'.
  */
 export function describeTeammateActivity(t: DeepImmutable<InProcessTeammateTaskState>): string {
-  if (t.shutdownRequested) return 'stopping';
-  if (t.awaitingPlanApproval) return 'awaiting approval';
-  if (t.isIdle) return 'idle';
-  return (t.progress?.recentActivities && summarizeRecentActivities(t.progress.recentActivities)) ?? t.progress?.lastActivity?.activityDescription ?? 'working';
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
+  if (t.shutdownRequested) return translate(uiLanguage, 'dialogs.backgroundTasksTeammateStopping');
+  if (t.awaitingPlanApproval) return translate(uiLanguage, 'dialogs.backgroundTasksTeammateAwaitingApproval');
+  if (t.isIdle) return translate(uiLanguage, 'dialogs.backgroundTasksTeammateIdle');
+  return (t.progress?.recentActivities && summarizeRecentActivities(t.progress.recentActivities)) ?? t.progress?.lastActivity?.activityDescription ?? translate(uiLanguage, 'dialogs.remoteSessionUltraplanWorking');
 }
 
 /**

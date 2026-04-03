@@ -34,6 +34,7 @@ import { useTypeahead } from '../../hooks/useTypeahead.js';
 import type { BorderTextOptions } from '../../ink/render-border.js';
 import { stringWidth } from '../../ink/stringWidth.js';
 import { Box, type ClickEvent, type Key, Text, useInput } from '../../ink.js';
+import { translate } from '../../i18n/index.js';
 import { useOptionalKeybindingContext } from '../../keybindings/KeybindingContext.js';
 import { getShortcutDisplay } from '../../keybindings/shortcutFormat.js';
 import { useKeybinding, useKeybindings } from '../../keybindings/useKeybinding.js';
@@ -293,6 +294,7 @@ function PromptInput({
   // WebBrowser pill — visible when a browser is open
   const bagelFooterVisible = useAppState(s => false);
   const teamContext = useAppState(s => s.teamContext);
+  const uiLanguage = useAppState(s => s.settings.language);
   const queuedCommands = useCommandQueue();
   const promptSuggestionState = useAppState(s => s.promptSuggestion);
   const speculation = useAppState(s => s.speculation);
@@ -2091,7 +2093,7 @@ function PromptInput({
     addNotification({
       key: 'thinking-toggled-hotkey',
       jsx: <Text color={enabled ? 'suggestion' : undefined} dimColor={!enabled}>
-            Thinking {enabled ? 'on' : 'off'}
+            {translate(uiLanguage, enabled ? 'settings.thinkingOn' : 'settings.thinkingOff')}
           </Text>,
       priority: 'immediate',
       timeoutMs: 3000

@@ -11,6 +11,7 @@ import { getTotalAPIDuration, getTotalCost, getTotalDuration, getTotalInputToken
 import { useMainLoopModel } from '../hooks/useMainLoopModel.js';
 import { type ReadonlySettings, useSettings } from '../hooks/useSettings.js';
 import { Ansi, Box, Text } from '../ink.js';
+import { translate } from '../i18n/index.js';
 import { getRawUtilization } from '../services/claudeAiLimits.js';
 import type { Message } from '../types/message.js';
 import type { StatusLineCommandInput } from '../types/statusLine.js';
@@ -140,6 +141,7 @@ function StatusLineInner({
   lastAssistantMessageId,
   vimMode
 }: Props): React.ReactNode {
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
   const abortControllerRef = useRef<AbortController | undefined>(undefined);
   const permissionMode = useAppState(s => s.toolPermissionContext.mode);
   const additionalWorkingDirectories = useAppState(s => s.toolPermissionContext.additionalWorkingDirectories);
@@ -277,7 +279,7 @@ function StatusLineInner({
       if (!checkHasTrustDialogAccepted()) {
         addNotification({
           key: 'statusline-trust-blocked',
-          text: 'statusline skipped · restart to fix',
+          text: translate(uiLanguage, 'notifications.statusLineSkipped'),
           color: 'warning',
           priority: 'low'
         });

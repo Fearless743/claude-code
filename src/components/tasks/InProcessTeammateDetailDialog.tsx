@@ -5,6 +5,7 @@ import { useElapsedTime } from '../../hooks/useElapsedTime.js';
 import type { KeyboardEvent } from '../../ink/events/keyboard-event.js';
 import { Box, Text, useTheme } from '../../ink.js';
 import { useKeybindings } from '../../keybindings/useKeybinding.js';
+import { translate } from '../../i18n/index.js';
 import { getEmptyToolPermissionContext } from '../../Tool.js';
 import type { InProcessTeammateTaskState } from '../../tasks/InProcessTeammateTask/types.js';
 import { getTools } from '../../tools.js';
@@ -40,6 +41,7 @@ export function InProcessTeammateDetailDialog(t0) {
     t1 = $[0];
   }
   const tools = t1;
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
   const elapsedTime = useElapsedTime(teammate.startTime, teammate.status === "running", 1000, teammate.totalPausedMs ?? 0);
   let t2;
   if ($[1] !== onDone) {
@@ -150,116 +152,128 @@ export function InProcessTeammateDetailDialog(t0) {
   }
   const title = t10;
   let t11;
-  if ($[24] !== teammate.status) {
-    t11 = teammate.status !== "running" && <Text color={teammate.status === "completed" ? "success" : teammate.status === "killed" ? "warning" : "error"}>{teammate.status === "completed" ? "Completed" : teammate.status === "failed" ? "Failed" : "Stopped"}{" \xB7 "}</Text>;
+  if ($[24] !== teammate.status || $[25] !== uiLanguage) {
+    t11 = teammate.status !== "running" && <Text color={teammate.status === "completed" ? "success" : teammate.status === "killed" ? "warning" : "error"}>{teammate.status === "completed" ? translate(uiLanguage, 'dialogs.taskDetailCompleted') : teammate.status === "failed" ? translate(uiLanguage, 'dialogs.taskDetailFailed') : translate(uiLanguage, 'dialogs.taskDetailStopped')}<Text dimColor={true}>{" \xB7 "}</Text></Text>;
     $[24] = teammate.status;
-    $[25] = t11;
+    $[25] = uiLanguage;
+    $[26] = t11;
   } else {
-    t11 = $[25];
+    t11 = $[26];
   }
   let t12;
-  if ($[26] !== tokenCount) {
-    t12 = tokenCount !== undefined && tokenCount > 0 && <> · {formatNumber(tokenCount)} tokens</>;
-    $[26] = tokenCount;
-    $[27] = t12;
+  if ($[27] !== tokenCount || $[28] !== uiLanguage) {
+    t12 = tokenCount !== undefined && tokenCount > 0 && <>{translate(uiLanguage, 'dialogs.taskDetailTokenCount', {
+      count: formatNumber(tokenCount)
+    })}</>;
+    $[27] = tokenCount;
+    $[28] = uiLanguage;
+    $[29] = t12;
   } else {
-    t12 = $[27];
+    t12 = $[29];
   }
   let t13;
-  if ($[28] !== toolUseCount) {
-    t13 = toolUseCount !== undefined && toolUseCount > 0 && <>{" "}· {toolUseCount} {toolUseCount === 1 ? "tool" : "tools"}</>;
-    $[28] = toolUseCount;
-    $[29] = t13;
+  if ($[30] !== toolUseCount || $[31] !== uiLanguage) {
+    t13 = toolUseCount !== undefined && toolUseCount > 0 && <> {translate(uiLanguage, toolUseCount === 1 ? 'dialogs.taskDetailToolCountOne' : 'dialogs.taskDetailToolCountMany', {
+      count: toolUseCount
+    })}</>;
+    $[30] = toolUseCount;
+    $[31] = uiLanguage;
+    $[32] = t13;
   } else {
-    t13 = $[29];
+    t13 = $[32];
   }
   let t14;
-  if ($[30] !== elapsedTime || $[31] !== t12 || $[32] !== t13) {
+  if ($[33] !== elapsedTime || $[34] !== t12 || $[35] !== t13) {
     t14 = <Text dimColor={true}>{elapsedTime}{t12}{t13}</Text>;
-    $[30] = elapsedTime;
-    $[31] = t12;
-    $[32] = t13;
-    $[33] = t14;
+    $[33] = elapsedTime;
+    $[34] = t12;
+    $[35] = t13;
+    $[36] = t14;
   } else {
-    t14 = $[33];
+    t14 = $[36];
   }
   let t15;
-  if ($[34] !== t11 || $[35] !== t14) {
+  if ($[37] !== t11 || $[38] !== t14) {
     t15 = <Text>{t11}{t14}</Text>;
-    $[34] = t11;
-    $[35] = t14;
-    $[36] = t15;
+    $[37] = t11;
+    $[38] = t14;
+    $[39] = t15;
   } else {
-    t15 = $[36];
+    t15 = $[39];
   }
   const subtitle = t15;
   let t16;
-  if ($[37] !== onBack || $[38] !== onForeground || $[39] !== onKill || $[40] !== teammate.status) {
-    t16 = exitState => exitState.pending ? <Text>Press {exitState.keyName} again to exit</Text> : <Byline>{onBack && <KeyboardShortcutHint shortcut={"\u2190"} action="go back" />}<KeyboardShortcutHint shortcut="Esc/Enter/Space" action="close" />{teammate.status === "running" && onKill && <KeyboardShortcutHint shortcut="x" action="stop" />}{teammate.status === "running" && onForeground && <KeyboardShortcutHint shortcut="f" action="foreground" />}</Byline>;
-    $[37] = onBack;
-    $[38] = onForeground;
-    $[39] = onKill;
-    $[40] = teammate.status;
-    $[41] = t16;
+  if ($[40] !== onBack || $[41] !== onForeground || $[42] !== onKill || $[43] !== teammate.status || $[44] !== uiLanguage) {
+    t16 = exitState => exitState.pending ? <Text>{translate(uiLanguage, 'dialogs.taskDetailPressAgainToExit', {
+      key: exitState.keyName
+    })}</Text> : <Byline>{onBack && <KeyboardShortcutHint shortcut={"\u2190"} action={translate(uiLanguage, 'dialogs.taskDetailGoBackAction')} />}<KeyboardShortcutHint shortcut="Esc/Enter/Space" action={translate(uiLanguage, 'dialogs.taskDetailCloseAction')} />{teammate.status === "running" && onKill && <KeyboardShortcutHint shortcut="x" action={translate(uiLanguage, 'dialogs.taskDetailStopAction')} />}{teammate.status === "running" && onForeground && <KeyboardShortcutHint shortcut="f" action={translate(uiLanguage, 'dialogs.backgroundTasksActionForeground')} />}</Byline>;
+    $[40] = onBack;
+    $[41] = onForeground;
+    $[42] = onKill;
+    $[43] = teammate.status;
+    $[44] = uiLanguage;
+    $[45] = t16;
   } else {
-    t16 = $[41];
+    t16 = $[45];
   }
   let t17;
-  if ($[42] !== teammate.progress || $[43] !== teammate.status || $[44] !== theme) {
-    t17 = teammate.status === "running" && teammate.progress?.recentActivities && teammate.progress.recentActivities.length > 0 && <Box flexDirection="column"><Text bold={true} dimColor={true}>Progress</Text>{teammate.progress.recentActivities.map((activity_0, i) => <Text key={i} dimColor={i < teammate.progress.recentActivities.length - 1} wrap="truncate-end">{i === teammate.progress.recentActivities.length - 1 ? "\u203A " : "  "}{renderToolActivity(activity_0, tools, theme)}</Text>)}</Box>;
-    $[42] = teammate.progress;
-    $[43] = teammate.status;
-    $[44] = theme;
-    $[45] = t17;
+  if ($[46] !== teammate.progress || $[47] !== teammate.status || $[48] !== theme || $[49] !== uiLanguage) {
+    t17 = teammate.status === "running" && teammate.progress?.recentActivities && teammate.progress.recentActivities.length > 0 && <Box flexDirection="column"><Text bold={true} dimColor={true}>{translate(uiLanguage, 'dialogs.taskDetailProgressTitle')}</Text>{teammate.progress.recentActivities.map((activity_0, i) => <Text key={i} dimColor={i < teammate.progress.recentActivities.length - 1} wrap="truncate-end">{i === teammate.progress.recentActivities.length - 1 ? "\u203A " : "  "}{renderToolActivity(activity_0, tools, theme)}</Text>)}</Box>;
+    $[46] = teammate.progress;
+    $[47] = teammate.status;
+    $[48] = theme;
+    $[49] = uiLanguage;
+    $[50] = t17;
   } else {
-    t17 = $[45];
+    t17 = $[50];
   }
   let t18;
-  if ($[46] === Symbol.for("react.memo_cache_sentinel")) {
-    t18 = <Text bold={true} dimColor={true}>Prompt</Text>;
-    $[46] = t18;
+  if ($[51] === Symbol.for("react.memo_cache_sentinel")) {
+    t18 = <Text bold={true} dimColor={true}>{translate(uiLanguage, 'dialogs.taskDetailPromptTitle')}</Text>;
+    $[51] = t18;
   } else {
-    t18 = $[46];
+    t18 = $[51];
   }
   let t19;
-  if ($[47] !== displayPrompt) {
+  if ($[52] !== displayPrompt) {
     t19 = <Box flexDirection="column" marginTop={1}>{t18}<Text wrap="wrap">{displayPrompt}</Text></Box>;
-    $[47] = displayPrompt;
-    $[48] = t19;
+    $[52] = displayPrompt;
+    $[53] = t19;
   } else {
-    t19 = $[48];
+    t19 = $[53];
   }
   let t20;
-  if ($[49] !== teammate.error || $[50] !== teammate.status) {
-    t20 = teammate.status === "failed" && teammate.error && <Box flexDirection="column" marginTop={1}><Text bold={true} color="error">Error</Text><Text color="error" wrap="wrap">{teammate.error}</Text></Box>;
-    $[49] = teammate.error;
-    $[50] = teammate.status;
-    $[51] = t20;
+  if ($[54] !== teammate.error || $[55] !== teammate.status || $[56] !== uiLanguage) {
+    t20 = teammate.status === "failed" && teammate.error && <Box flexDirection="column" marginTop={1}><Text bold={true} color="error">{translate(uiLanguage, 'dialogs.taskDetailErrorTitle')}</Text><Text color="error" wrap="wrap">{teammate.error}</Text></Box>;
+    $[54] = teammate.error;
+    $[55] = teammate.status;
+    $[56] = uiLanguage;
+    $[57] = t20;
   } else {
-    t20 = $[51];
+    t20 = $[57];
   }
   let t21;
-  if ($[52] !== onDone || $[53] !== subtitle || $[54] !== t16 || $[55] !== t17 || $[56] !== t19 || $[57] !== t20 || $[58] !== title) {
+  if ($[58] !== onDone || $[59] !== subtitle || $[60] !== t16 || $[61] !== t17 || $[62] !== t19 || $[63] !== t20 || $[64] !== title) {
     t21 = <Dialog title={title} subtitle={subtitle} onCancel={onDone} color="background" inputGuide={t16}>{t17}{t19}{t20}</Dialog>;
-    $[52] = onDone;
-    $[53] = subtitle;
-    $[54] = t16;
-    $[55] = t17;
-    $[56] = t19;
-    $[57] = t20;
-    $[58] = title;
-    $[59] = t21;
+    $[58] = onDone;
+    $[59] = subtitle;
+    $[60] = t16;
+    $[61] = t17;
+    $[62] = t19;
+    $[63] = t20;
+    $[64] = title;
+    $[65] = t21;
   } else {
-    t21 = $[59];
+    t21 = $[65];
   }
   let t22;
-  if ($[60] !== handleKeyDown || $[61] !== t21) {
+  if ($[66] !== handleKeyDown || $[67] !== t21) {
     t22 = <Box flexDirection="column" tabIndex={0} autoFocus={true} onKeyDown={handleKeyDown}>{t21}</Box>;
-    $[60] = handleKeyDown;
-    $[61] = t21;
-    $[62] = t22;
+    $[66] = handleKeyDown;
+    $[67] = t21;
+    $[68] = t22;
   } else {
-    t22 = $[62];
+    t22 = $[68];
   }
   return t22;
 }

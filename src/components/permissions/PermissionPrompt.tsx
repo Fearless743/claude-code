@@ -3,6 +3,7 @@ import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { Box, Text } from '../../ink.js';
 import type { KeybindingAction } from '../../keybindings/types.js';
 import { useKeybindings } from '../../keybindings/useKeybinding.js';
+import { translate } from '../../i18n/index.js';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEvent } from '../../services/analytics/index.js';
 import { useSetAppState } from '../../state/AppState.js';
 import { type OptionWithDescription, Select } from '../CustomSelect/select.js';
@@ -28,9 +29,17 @@ export type PermissionPromptProps<T extends string> = {
   toolAnalyticsContext?: ToolAnalyticsContext;
 };
 const DEFAULT_PLACEHOLDERS: Record<FeedbackType, string> = {
-  accept: 'tell Claude what to do next',
-  reject: 'tell Claude what to do differently'
+  accept: '',
+  reject: ''
 };
+
+export function getDefaultPlaceholders(): Record<FeedbackType, string> {
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
+  return {
+    accept: translate(uiLanguage, 'permissions.feedbackPlaceholderAccept'),
+    reject: translate(uiLanguage, 'permissions.feedbackPlaceholderReject')
+  };
+}
 
 /**
  * Shared component for permission prompts with optional feedback input.
@@ -44,6 +53,8 @@ const DEFAULT_PLACEHOLDERS: Record<FeedbackType, string> = {
  */
 export function PermissionPrompt(t0) {
   const $ = _c(54);
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
+  const defaultPlaceholders = getDefaultPlaceholders();
   const {
     options,
     onSelect,
@@ -51,7 +62,7 @@ export function PermissionPrompt(t0) {
     question: t1,
     toolAnalyticsContext
   } = t0;
-  const question = t1 === undefined ? "Do you want to proceed?" : t1;
+  const question = t1 === undefined ? translate(uiLanguage, 'permissions.doYouWantToProceed') : t1;
   const setAppState = useSetAppState();
   const [acceptFeedback, setAcceptFeedback] = useState("");
   const [rejectFeedback, setRejectFeedback] = useState("");
@@ -102,7 +113,7 @@ export function PermissionPrompt(t0) {
         } = feedbackConfig;
         const isInputMode = type === "accept" ? acceptInputMode : rejectInputMode;
         const onChange = type === "accept" ? setAcceptFeedback : setRejectFeedback;
-        const defaultPlaceholder = DEFAULT_PLACEHOLDERS[type];
+        const defaultPlaceholder = defaultPlaceholders[type];
         if (isInputMode) {
           return {
             type: "input" as const,

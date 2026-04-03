@@ -7,6 +7,7 @@ import type { DeepImmutable } from 'src/types/utils.js';
 import type { CommandResultDisplay } from '../../commands.js';
 import { DIAMOND_FILLED, DIAMOND_OPEN } from '../../constants/figures.js';
 import { useElapsedTime } from '../../hooks/useElapsedTime.js';
+import { translate } from '../../i18n/index.js';
 import type { KeyboardEvent } from '../../ink/events/keyboard-event.js';
 import { Box, Link, Text } from '../../ink.js';
 import type { RemoteAgentTaskState } from '../../tasks/RemoteAgentTask/RemoteAgentTask.js';
@@ -19,7 +20,6 @@ import { errorMessage } from '../../utils/errors.js';
 import { formatDuration, truncateToWidth } from '../../utils/format.js';
 import { toInternalMessages } from '../../utils/messages/mappers.js';
 import { EMPTY_LOOKUPS, normalizeMessages } from '../../utils/messages.js';
-import { plural } from '../../utils/stringUtils.js';
 import { teleportResumeCodeSession } from '../../utils/teleport.js';
 import { Select } from '../CustomSelect/select.js';
 import { Byline } from '../design-system/Byline.js';
@@ -44,7 +44,7 @@ type Props = {
 export function formatToolUseSummary(name: string, input: unknown): string {
   // plan_ready phase is only reached via ExitPlanMode tool
   if (name === EXIT_PLAN_MODE_V2_TOOL_NAME) {
-    return 'Review the plan in Claude Code on the web';
+    return translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionPlanReviewInBrowser');
   }
   if (!input || typeof input !== 'object') return name;
   // AskUserQuestion: show the question text as a CTA, not the tool name.
@@ -58,7 +58,9 @@ export function formatToolUseSummary(name: string, input: unknown): string {
       const q = 'question' in qs[0] && typeof qs[0].question === 'string' && qs[0].question ? qs[0].question : 'header' in qs[0] && typeof qs[0].header === 'string' ? qs[0].header : null;
       if (q) {
         const oneLine = q.replace(/\s+/g, ' ').trim();
-        return `Answer in browser: ${truncateToWidth(oneLine, 50)}`;
+        return translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionAnswerInBrowser', {
+          text: truncateToWidth(oneLine, 50)
+        });
       }
     }
   }
@@ -71,12 +73,12 @@ export function formatToolUseSummary(name: string, input: unknown): string {
   return name;
 }
 const PHASE_LABEL = {
-  needs_input: 'input required',
-  plan_ready: 'ready'
+  needs_input: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionUltraplanInputRequired'),
+  plan_ready: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionUltraplanReady')
 } as const;
 const AGENT_VERB = {
-  needs_input: 'waiting',
-  plan_ready: 'done'
+  needs_input: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionUltraplanWaiting'),
+  plan_ready: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionUltraplanDone')
 } as const;
 function UltraplanSessionDetail(t0) {
   const $ = _c(70);
@@ -88,7 +90,7 @@ function UltraplanSessionDetail(t0) {
   } = t0;
   const running = session.status === "running" || session.status === "pending";
   const phase = session.ultraplanPhase;
-  const statusText = running ? phase ? PHASE_LABEL[phase] : "running" : session.status;
+  const statusText = running ? phase ? PHASE_LABEL[phase] : translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionUltraplanWorking') : session.status;
   const elapsedTime = useElapsedTime(session.startTime, running, 1000, 0, session.endTime);
   let spawns = 0;
   let calls = 0;
@@ -147,7 +149,7 @@ function UltraplanSessionDetail(t0) {
   const sessionUrl = t4;
   let t5;
   if ($[8] !== onBack || $[9] !== onDone) {
-    t5 = onBack ?? (() => onDone("Remote session details dismissed", {
+    t5 = onBack ?? (() => onDone(translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDismissed'), {
       display: "system"
     }));
     $[8] = onBack;
@@ -168,7 +170,7 @@ function UltraplanSessionDetail(t0) {
     }
     let t7;
     if ($[12] === Symbol.for("react.memo_cache_sentinel")) {
-      t7 = <Text dimColor={true}>This will terminate the Claude Code on the web session.</Text>;
+      t7 = <Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionTerminateWebSessionWarning')}</Text>;
       $[12] = t7;
     } else {
       t7 = $[12];
@@ -176,7 +178,7 @@ function UltraplanSessionDetail(t0) {
     let t8;
     if ($[13] === Symbol.for("react.memo_cache_sentinel")) {
       t8 = {
-        label: "Terminate session",
+        label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionTerminateSession'),
         value: "stop" as const
       };
       $[13] = t8;
@@ -186,7 +188,7 @@ function UltraplanSessionDetail(t0) {
     let t9;
     if ($[14] === Symbol.for("react.memo_cache_sentinel")) {
       t9 = [t8, {
-        label: "Back",
+        label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionBack'),
         value: "back" as const
       }];
       $[14] = t9;
@@ -195,7 +197,7 @@ function UltraplanSessionDetail(t0) {
     }
     let t10;
     if ($[15] !== goBackOrClose || $[16] !== onKill) {
-      t10 = <Dialog title="Stop ultraplan?" onCancel={t6} color="background"><Box flexDirection="column" gap={1}>{t7}<Select options={t9} onChange={v => {
+      t10 = <Dialog title={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionStopUltraplanTitle')} onCancel={t6} color="background"><Box flexDirection="column" gap={1}>{t7}<Select options={t9} onChange={v => {
             if (v === "stop") {
               onKill?.();
               goBackOrClose();
@@ -255,101 +257,103 @@ function UltraplanSessionDetail(t0) {
   }
   let t12;
   if ($[29] !== agentsWorking) {
-    t12 = plural(agentsWorking, "agent");
+    t12 = translate(process.env.CLAUDE_CODE_LANGUAGE, agentsWorking === 1 ? 'dialogs.backgroundTasksAgentCountOne' : 'dialogs.backgroundTasksAgentCountMany', {
+      count: agentsWorking
+    });
     $[29] = agentsWorking;
     $[30] = t12;
   } else {
     t12 = $[30];
   }
-  const t13 = phase ? AGENT_VERB[phase] : "working";
+  const t13 = phase ? AGENT_VERB[phase] : translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionUltraplanWorking');
   let t14;
   if ($[31] !== toolCalls) {
-    t14 = plural(toolCalls, "call");
+    t14 = translate(process.env.CLAUDE_CODE_LANGUAGE, toolCalls === 1 ? 'dialogs.remoteSessionCallCountOne' : 'dialogs.remoteSessionCallCountMany', {
+      count: toolCalls
+    });
     $[31] = toolCalls;
     $[32] = t14;
   } else {
     t14 = $[32];
   }
   let t15;
-  if ($[33] !== agentsWorking || $[34] !== t11 || $[35] !== t12 || $[36] !== t13 || $[37] !== t14 || $[38] !== toolCalls) {
-    t15 = <Text>{t11}{agentsWorking} {t12}{" "}{t13} · {toolCalls} tool{" "}{t14}</Text>;
-    $[33] = agentsWorking;
-    $[34] = t11;
-    $[35] = t12;
-    $[36] = t13;
-    $[37] = t14;
-    $[38] = toolCalls;
-    $[39] = t15;
+  if ($[33] !== t11 || $[34] !== t12 || $[35] !== t13 || $[36] !== t14) {
+    t15 = <Text>{t11}{t12} {t13} · {t14}</Text>;
+    $[33] = t11;
+    $[34] = t12;
+    $[35] = t13;
+    $[36] = t14;
+    $[37] = t15;
   } else {
-    t15 = $[39];
+    t15 = $[37];
   }
   let t16;
-  if ($[40] !== lastToolCall) {
+  if ($[38] !== lastToolCall) {
     t16 = lastToolCall && <Text dimColor={true}>{lastToolCall}</Text>;
-    $[40] = lastToolCall;
-    $[41] = t16;
+    $[38] = lastToolCall;
+    $[39] = t16;
   } else {
-    t16 = $[41];
+    t16 = $[39];
   }
   let t17;
-  if ($[42] !== sessionUrl) {
+  if ($[40] !== sessionUrl) {
     t17 = <Text dimColor={true}>{sessionUrl}</Text>;
-    $[42] = sessionUrl;
-    $[43] = t17;
+    $[40] = sessionUrl;
+    $[41] = t17;
   } else {
-    t17 = $[43];
+    t17 = $[41];
   }
   let t18;
-  if ($[44] !== sessionUrl || $[45] !== t17) {
+  if ($[42] !== sessionUrl || $[43] !== t17) {
     t18 = <Link url={sessionUrl}>{t17}</Link>;
-    $[44] = sessionUrl;
-    $[45] = t17;
-    $[46] = t18;
+    $[42] = sessionUrl;
+    $[43] = t17;
+    $[44] = t18;
   } else {
-    t18 = $[46];
+    t18 = $[44];
   }
   let t19;
-  if ($[47] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[45] === Symbol.for("react.memo_cache_sentinel")) {
     t19 = {
-      label: "Review in Claude Code on the web",
+      label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewInWeb'),
       value: "open" as const
     };
-    $[47] = t19;
+    $[45] = t19;
   } else {
-    t19 = $[47];
+    t19 = $[45];
   }
   let t20;
-  if ($[48] !== onKill || $[49] !== running) {
+  if ($[46] !== onKill || $[47] !== running) {
     t20 = onKill && running ? [{
-      label: "Stop ultraplan",
+      label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionStopUltraplan'),
       value: "stop" as const
     }] : [];
-    $[48] = onKill;
-    $[49] = running;
-    $[50] = t20;
+    $[46] = onKill;
+    $[47] = running;
+    $[48] = t20;
   } else {
-    t20 = $[50];
+    t20 = $[48];
   }
   let t21;
-  if ($[51] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[49] === Symbol.for("react.memo_cache_sentinel")) {
     t21 = {
-      label: "Back",
+      label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionBack'),
       value: "back" as const
     };
-    $[51] = t21;
+    $[49] = t21;
   } else {
-    t21 = $[51];
+    t21 = $[49];
   }
   let t22;
-  if ($[52] !== t20) {
+  if ($[50] !== t20) {
     t22 = [t19, ...t20, t21];
-    $[52] = t20;
-    $[53] = t22;
+    $[50] = t20;
+    $[51] = t22;
   } else {
-    t22 = $[53];
+    t22 = $[51];
   }
   let t23;
-  if ($[54] !== goBackOrClose || $[55] !== onDone || $[56] !== sessionUrl) {
+  if ($[52] !== goBackOrClose || $[53] !== onDone || $[54] !== sessionUrl) {
     t23 = v_0 => {
       switch (v_0) {
         case "open":
@@ -370,50 +374,50 @@ function UltraplanSessionDetail(t0) {
           }
       }
     };
-    $[54] = goBackOrClose;
-    $[55] = onDone;
-    $[56] = sessionUrl;
-    $[57] = t23;
+    $[52] = goBackOrClose;
+    $[53] = onDone;
+    $[54] = sessionUrl;
+    $[55] = t23;
   } else {
-    t23 = $[57];
+    t23 = $[55];
   }
   let t24;
-  if ($[58] !== t22 || $[59] !== t23) {
+  if ($[56] !== t22 || $[57] !== t23) {
     t24 = <Select options={t22} onChange={t23} />;
-    $[58] = t22;
-    $[59] = t23;
-    $[60] = t24;
+    $[56] = t22;
+    $[57] = t23;
+    $[58] = t24;
   } else {
-    t24 = $[60];
+    t24 = $[58];
   }
   let t25;
-  if ($[61] !== t15 || $[62] !== t16 || $[63] !== t18 || $[64] !== t24) {
+  if ($[59] !== t15 || $[60] !== t16 || $[61] !== t18 || $[62] !== t24) {
     t25 = <Box flexDirection="column" gap={1}>{t15}{t16}{t18}{t24}</Box>;
-    $[61] = t15;
-    $[62] = t16;
-    $[63] = t18;
-    $[64] = t24;
-    $[65] = t25;
+    $[59] = t15;
+    $[60] = t16;
+    $[61] = t18;
+    $[62] = t24;
+    $[63] = t25;
   } else {
-    t25 = $[65];
+    t25 = $[63];
   }
   let t26;
-  if ($[66] !== goBackOrClose || $[67] !== t10 || $[68] !== t25) {
+  if ($[64] !== goBackOrClose || $[65] !== t10 || $[66] !== t25) {
     t26 = <Dialog title={t10} onCancel={goBackOrClose} color="background">{t25}</Dialog>;
-    $[66] = goBackOrClose;
-    $[67] = t10;
-    $[68] = t25;
-    $[69] = t26;
+    $[64] = goBackOrClose;
+    $[65] = t10;
+    $[66] = t25;
+    $[67] = t26;
   } else {
-    t26 = $[69];
+    t26 = $[67];
   }
   return t26;
 }
 const STAGES = ['finding', 'verifying', 'synthesizing'] as const;
 const STAGE_LABELS: Record<(typeof STAGES)[number], string> = {
-  finding: 'Find',
-  verifying: 'Verify',
-  synthesizing: 'Dedupe'
+  finding: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewStageFind'),
+  verifying: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewStageVerify'),
+  synthesizing: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewStageDedupe')
 };
 
 // Setup → Find → Verify → Dedupe pipeline. Current stage in cloud teal,
@@ -440,7 +444,7 @@ function StagePipeline(t0) {
   const inSetup = !completed && !hasProgress;
   let t2;
   if ($[2] !== inSetup) {
-    t2 = inSetup ? <Text color="background">Setup</Text> : <Text dimColor={true}>Setup</Text>;
+    t2 = inSetup ? <Text color="background">{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewStageSetup')}</Text> : <Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewStageSetup')}</Text>;
     $[2] = inSetup;
     $[3] = t2;
   } else {
@@ -494,12 +498,16 @@ function reviewCountsLine(session: DeepImmutable<RemoteAgentTaskState>): string 
   const p = session.reviewProgress;
   // No progress data — the orchestrator never wrote a snapshot. Don't
   // claim "0 findings" when completed; we just don't know.
-  if (!p) return session.status === 'completed' ? 'done' : 'setting up';
+  if (!p) return session.status === 'completed' ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewDone') : translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewSettingUp');
   const verified = p.bugsVerified;
   const refuted = p.bugsRefuted ?? 0;
   if (session.status === 'completed') {
-    const parts = [`${verified} ${plural(verified, 'finding')}`];
-    if (refuted > 0) parts.push(`${refuted} refuted`);
+    const parts = [translate(process.env.CLAUDE_CODE_LANGUAGE, verified === 1 ? 'dialogs.remoteSessionFindingOne' : 'dialogs.remoteSessionFindingMany', {
+      count: verified
+    })];
+    if (refuted > 0) parts.push(translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionRefuted', {
+      count: refuted
+    }));
     return parts.join(' · ');
   }
   return formatReviewStageCounts(p.stage, p.bugsFound, verified, refuted);
@@ -519,7 +527,7 @@ function ReviewSessionDetail(t0) {
   const elapsedTime = useElapsedTime(session.startTime, running, 1000, 0, session.endTime);
   let t1;
   if ($[0] !== onDone) {
-    t1 = () => onDone("Remote session details dismissed", {
+    t1 = () => onDone(translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDismissed'), {
       display: "system"
     });
     $[0] = onDone;
@@ -538,7 +546,7 @@ function ReviewSessionDetail(t0) {
     t2 = $[3];
   }
   const sessionUrl = t2;
-  const statusLabel = completed ? "ready" : running ? "running" : session.status;
+  const statusLabel = completed ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewReady') : running ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewRunning') : session.status;
   if (confirmingStop) {
     let t3;
     if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
@@ -549,7 +557,7 @@ function ReviewSessionDetail(t0) {
     }
     let t4;
     if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
-      t4 = <Text dimColor={true}>This archives the remote session and stops local tracking. The review will not complete and any findings so far are discarded.</Text>;
+      t4 = <Text dimColor={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewStopWarning')}</Text>;
       $[5] = t4;
     } else {
       t4 = $[5];
@@ -557,7 +565,7 @@ function ReviewSessionDetail(t0) {
     let t5;
     if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
       t5 = {
-        label: "Stop ultrareview",
+        label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionStopUltrareview'),
         value: "stop" as const
       };
       $[6] = t5;
@@ -567,7 +575,7 @@ function ReviewSessionDetail(t0) {
     let t6;
     if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
       t6 = [t5, {
-        label: "Back",
+        label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionBack'),
         value: "back" as const
       }];
       $[7] = t6;
@@ -576,7 +584,7 @@ function ReviewSessionDetail(t0) {
     }
     let t7;
     if ($[8] !== goBackOrClose || $[9] !== onKill) {
-      t7 = <Dialog title="Stop ultrareview?" onCancel={t3} color="background"><Box flexDirection="column" gap={1}>{t4}<Select options={t6} onChange={v => {
+      t7 = <Dialog title={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionStopUltrareviewTitle')} onCancel={t3} color="background"><Box flexDirection="column" gap={1}>{t4}<Select options={t6} onChange={v => {
             if (v === "stop") {
               onKill?.();
               goBackOrClose();
@@ -595,19 +603,19 @@ function ReviewSessionDetail(t0) {
   let t3;
   if ($[11] !== completed || $[12] !== onKill || $[13] !== running) {
     t3 = completed ? [{
-      label: "Open in Claude Code on the web",
+      label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewOpenInWeb'),
       value: "open"
     }, {
-      label: "Dismiss",
+      label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDismiss'),
       value: "dismiss"
     }] : [{
-      label: "Open in Claude Code on the web",
+      label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewOpenInWeb'),
       value: "open"
     }, ...(onKill && running ? [{
-      label: "Stop ultrareview",
+      label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionStopUltrareview'),
       value: "stop" as const
     }] : []), {
-      label: "Back",
+      label: translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionBack'),
       value: "back"
     }];
     $[11] = completed;
@@ -664,7 +672,7 @@ function ReviewSessionDetail(t0) {
   }
   let t7;
   if ($[22] === Symbol.for("react.memo_cache_sentinel")) {
-    t7 = <Text bold={true}>ultrareview</Text>;
+    t7 = <Text bold={true}>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionUltrareviewLabel')}</Text>;
     $[22] = t7;
   } else {
     t7 = $[22];
@@ -773,7 +781,9 @@ function ReviewSessionDetail(t0) {
   return t20;
 }
 function _temp(exitState) {
-  return exitState.pending ? <Text>Press {exitState.keyName} again to exit</Text> : <Byline><KeyboardShortcutHint shortcut="Enter" action="select" /><KeyboardShortcutHint shortcut="Esc" action="go back" /></Byline>;
+  return exitState.pending ? <Text>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.taskDetailPressAgainToExit', {
+    key: exitState.keyName
+  })}</Text> : <Byline><KeyboardShortcutHint shortcut="Enter" action={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.backgroundTasksActionSelect')} /><KeyboardShortcutHint shortcut="Esc" action={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.taskDetailGoBackAction')} /></Byline>;
 }
 export function RemoteSessionDetailDialog({
   session,
@@ -803,7 +813,7 @@ export function RemoteSessionDetailDialog({
   if (session.isRemoteReview) {
     return <ReviewSessionDetail session={session} onDone={onDone} onBack={onBack} onKill={onKill} />;
   }
-  const handleClose = () => onDone('Remote session details dismissed', {
+  const handleClose = () => onDone(translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailDismissed'), {
     display: 'system'
   });
 
@@ -812,7 +822,7 @@ export function RemoteSessionDetailDialog({
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === ' ') {
       e.preventDefault();
-      onDone('Remote session details dismissed', {
+      onDone(translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailDismissed'), {
         display: 'system'
       });
     } else if (e.key === 'left' && onBack) {
@@ -844,31 +854,33 @@ export function RemoteSessionDetailDialog({
   const displayTitle = truncateToWidth(session.title, 50);
 
   // Map TaskStatus to display status (handle 'pending')
-  const displayStatus = session.status === 'pending' ? 'starting' : session.status;
+  const displayStatus = session.status === 'pending' ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailStarting') : session.status;
   return <Box flexDirection="column" tabIndex={0} autoFocus onKeyDown={handleKeyDown}>
-      <Dialog title="Remote session details" onCancel={handleClose} color="background" inputGuide={exitState => exitState.pending ? <Text>Press {exitState.keyName} again to exit</Text> : <Byline>
-              {onBack && <KeyboardShortcutHint shortcut="←" action="go back" />}
-              <KeyboardShortcutHint shortcut="Esc/Enter/Space" action="close" />
-              {!isTeleporting && <KeyboardShortcutHint shortcut="t" action="teleport" />}
+      <Dialog title={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailTitle')} onCancel={handleClose} color="background" inputGuide={exitState => exitState.pending ? <Text>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.taskDetailPressAgainToExit', {
+        key: exitState.keyName
+      })}</Text> : <Byline>
+              {onBack && <KeyboardShortcutHint shortcut="←" action={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.taskDetailGoBackAction')} />}
+              <KeyboardShortcutHint shortcut="Esc/Enter/Space" action={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.taskDetailCloseAction')} />
+              {!isTeleporting && <KeyboardShortcutHint shortcut="t" action={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailTeleportAction')} />}
             </Byline>}>
         <Box flexDirection="column">
           <Text>
-            <Text bold>Status</Text>:{' '}
+            <Text bold>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailStatusLabel')}</Text>:{' '}
             {displayStatus === 'running' || displayStatus === 'starting' ? <Text color="background">{displayStatus}</Text> : displayStatus === 'completed' ? <Text color="success">{displayStatus}</Text> : <Text color="error">{displayStatus}</Text>}
           </Text>
           <Text>
-            <Text bold>Runtime</Text>:{' '}
+            <Text bold>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailRuntimeLabel')}</Text>:{' '}
             {formatDuration((session.endTime ?? Date.now()) - session.startTime)}
           </Text>
           <Text wrap="truncate-end">
-            <Text bold>Title</Text>: {displayTitle}
+            <Text bold>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailTitleLabel')}</Text>: {displayTitle}
           </Text>
           <Text>
-            <Text bold>Progress</Text>:{' '}
+            <Text bold>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailProgressLabel')}</Text>:{' '}
             <RemoteSessionProgress session={session} />
           </Text>
           <Text>
-            <Text bold>Session URL</Text>:{' '}
+            <Text bold>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailSessionUrlLabel')}</Text>:{' '}
             <Link url={getRemoteTaskSessionUrl(session.sessionId)}>
               <Text dimColor>{getRemoteTaskSessionUrl(session.sessionId)}</Text>
             </Link>
@@ -878,26 +890,30 @@ export function RemoteSessionDetailDialog({
         {/* Remote session messages section */}
         {session.log.length > 0 && <Box flexDirection="column" marginTop={1}>
             <Text>
-              <Text bold>Recent messages</Text>:
+              <Text bold>{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailRecentMessagesLabel')}</Text>:
             </Text>
             <Box flexDirection="column" height={10} overflowY="hidden">
               {lastMessages.map((msg, i) => <Message key={i} message={msg} lookups={EMPTY_LOOKUPS} addMargin={i > 0} tools={toolUseContext.options.tools} commands={toolUseContext.options.commands} verbose={toolUseContext.options.verbose} inProgressToolUseIDs={new Set()} progressMessagesForMessage={[]} shouldAnimate={false} shouldShowDot={false} style="condensed" isTranscriptMode={false} isStatic={true} />)}
             </Box>
             <Box marginTop={1}>
               <Text dimColor italic>
-                Showing last {lastMessages.length} of {session.log.length}{' '}
-                messages
+                {translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailShowingMessages', {
+                  shown: lastMessages.length,
+                  total: session.log.length
+                })}
               </Text>
             </Box>
           </Box>}
 
         {/* Teleport error message */}
         {teleportError && <Box marginTop={1}>
-            <Text color="error">Teleport failed: {teleportError}</Text>
+            <Text color="error">{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailTeleportFailed', {
+              error: teleportError
+            })}</Text>
           </Box>}
 
         {/* Teleporting status */}
-        {isTeleporting && <Text color="background">Teleporting to session…</Text>}
+        {isTeleporting && <Text color="background">{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionDetailTeleporting')}</Text>}
       </Dialog>
     </Box>;
 }

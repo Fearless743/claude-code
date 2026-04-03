@@ -6,6 +6,7 @@ import { DIAMOND_FILLED, DIAMOND_OPEN } from '../../constants/figures.js';
 import { useSettings } from '../../hooks/useSettings.js';
 import { Text, useAnimationFrame } from '../../ink.js';
 import { count } from '../../utils/array.js';
+import { translate } from '../../i18n/index.js';
 import { getRainbowColor } from '../../utils/thinking.js';
 const TICK_MS = 80;
 type ReviewStage = NonNullable<NonNullable<RemoteAgentTaskState['reviewProgress']>['stage']>;
@@ -20,21 +21,39 @@ type ReviewStage = NonNullable<NonNullable<RemoteAgentTaskState['reviewProgress'
  * for the synthesizing stage (matches STAGE_LABELS in the detail dialog).
  */
 export function formatReviewStageCounts(stage: ReviewStage | undefined, found: number, verified: number, refuted: number): string {
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
   // Pre-stage orchestrator images don't write the stage field.
-  if (!stage) return `${found} found · ${verified} verified`;
+  if (!stage) {
+    return translate(uiLanguage, 'dialogs.remoteSessionReviewCountsFoundVerified', {
+      found,
+      verified
+    });
+  }
   if (stage === 'synthesizing') {
-    const parts = [`${verified} verified`];
-    if (refuted > 0) parts.push(`${refuted} refuted`);
-    parts.push('deduping');
+    const parts = [translate(uiLanguage, 'dialogs.remoteSessionReviewCountsVerified', {
+      count: verified
+    })];
+    if (refuted > 0) parts.push(translate(uiLanguage, 'dialogs.remoteSessionRefuted', {
+      count: refuted
+    }));
+    parts.push(translate(uiLanguage, 'dialogs.remoteSessionReviewDeduping'));
     return parts.join(' · ');
   }
   if (stage === 'verifying') {
-    const parts = [`${found} found`, `${verified} verified`];
-    if (refuted > 0) parts.push(`${refuted} refuted`);
+    const parts = [translate(uiLanguage, 'dialogs.remoteSessionReviewCountsFound', {
+      count: found
+    }), translate(uiLanguage, 'dialogs.remoteSessionReviewCountsVerified', {
+      count: verified
+    })];
+    if (refuted > 0) parts.push(translate(uiLanguage, 'dialogs.remoteSessionRefuted', {
+      count: refuted
+    }));
     return parts.join(' · ');
   }
   // stage === 'finding'
-  return found > 0 ? `${found} found` : 'finding';
+  return found > 0 ? translate(uiLanguage, 'dialogs.remoteSessionReviewCountsFound', {
+    count: found
+  }) : translate(uiLanguage, 'dialogs.remoteSessionReviewFinding');
 }
 
 // Per-character rainbow gradient, same treatment as the ultraplan keyword.
@@ -104,73 +123,77 @@ function ReviewRainbowLine(t0) {
   const phase = Math.floor(time / (TICK_MS * 3)) % 7;
   if (session.status === "completed") {
     let t1;
-    if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = <><Text color="background">{DIAMOND_FILLED} </Text><RainbowText text="ultrareview" phase={0} /><Text dimColor={true}> ready · shift+↓ to view</Text></>;
-      $[0] = t1;
-    } else {
-      t1 = $[0];
-    }
-    return t1;
-  }
-  if (session.status === "failed") {
-    let t1;
-    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = <><Text color="background">{DIAMOND_FILLED} </Text><RainbowText text="ultrareview" phase={0} /><Text color="error" dimColor={true}>{" \xB7 "}error</Text></>;
+    if ($[0] !== process.env.CLAUDE_CODE_LANGUAGE) {
+      t1 = <><Text color="background">{DIAMOND_FILLED} </Text><RainbowText text={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionUltrareviewLabel')} phase={0} /><Text dimColor={true}> {translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewReadyToView')}</Text></>;
+      $[0] = process.env.CLAUDE_CODE_LANGUAGE;
       $[1] = t1;
     } else {
       t1 = $[1];
     }
     return t1;
   }
+  if (session.status === "failed") {
+    let t1;
+    if ($[2] !== process.env.CLAUDE_CODE_LANGUAGE) {
+      t1 = <><Text color="background">{DIAMOND_FILLED} </Text><RainbowText text={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionUltrareviewLabel')} phase={0} /><Text color="error" dimColor={true}>{" \xB7 "}{translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.backgroundTasksStatusError')}</Text></>;
+      $[2] = process.env.CLAUDE_CODE_LANGUAGE;
+      $[3] = t1;
+    } else {
+      t1 = $[3];
+    }
+    return t1;
+  }
   let t1;
-  if ($[2] !== found || $[3] !== p || $[4] !== refuted || $[5] !== verified) {
-    t1 = !p ? "setting up" : formatReviewStageCounts(p.stage, found, verified, refuted);
-    $[2] = found;
-    $[3] = p;
-    $[4] = refuted;
-    $[5] = verified;
-    $[6] = t1;
+  if ($[4] !== found || $[5] !== p || $[6] !== refuted || $[7] !== verified) {
+    t1 = !p ? translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionReviewSettingUp') : formatReviewStageCounts(p.stage, found, verified, refuted);
+    $[4] = found;
+    $[5] = p;
+    $[6] = refuted;
+    $[7] = verified;
+    $[8] = t1;
   } else {
-    t1 = $[6];
+    t1 = $[8];
   }
   const tail = t1;
   let t2;
-  if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[9] === Symbol.for("react.memo_cache_sentinel")) {
     t2 = <Text color="background">{DIAMOND_OPEN} </Text>;
-    $[7] = t2;
+    $[9] = t2;
   } else {
-    t2 = $[7];
+    t2 = $[9];
   }
   const t3 = running ? phase : 0;
   let t4;
-  if ($[8] !== t3) {
-    t4 = <RainbowText text="ultrareview" phase={t3} />;
-    $[8] = t3;
-    $[9] = t4;
+  if ($[10] !== t3 || $[11] !== process.env.CLAUDE_CODE_LANGUAGE) {
+    t4 = <RainbowText text={translate(process.env.CLAUDE_CODE_LANGUAGE, 'dialogs.remoteSessionUltrareviewLabel')} phase={t3} />;
+    $[10] = t3;
+    $[11] = process.env.CLAUDE_CODE_LANGUAGE;
+    $[12] = t4;
   } else {
-    t4 = $[9];
+    t4 = $[12];
   }
   let t5;
-  if ($[10] !== tail) {
+  if ($[13] !== tail) {
     t5 = <Text dimColor={true}> · {tail}</Text>;
-    $[10] = tail;
-    $[11] = t5;
+    $[13] = tail;
+    $[14] = t5;
   } else {
-    t5 = $[11];
+    t5 = $[14];
   }
   let t6;
-  if ($[12] !== t4 || $[13] !== t5) {
+  if ($[15] !== t4 || $[16] !== t5) {
     t6 = <>{t2}{t4}{t5}</>;
-    $[12] = t4;
-    $[13] = t5;
-    $[14] = t6;
+    $[15] = t4;
+    $[16] = t5;
+    $[17] = t6;
   } else {
-    t6 = $[14];
+    t6 = $[17];
   }
   return t6;
 }
 export function RemoteSessionProgress(t0) {
   const $ = _c(11);
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
   const {
     session
   } = t0;
@@ -187,53 +210,55 @@ export function RemoteSessionProgress(t0) {
   }
   if (session.status === "completed") {
     let t1;
-    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = <Text bold={true} color="success" dimColor={true}>done</Text>;
-      $[2] = t1;
-    } else {
-      t1 = $[2];
-    }
-    return t1;
-  }
-  if (session.status === "failed") {
-    let t1;
-    if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = <Text bold={true} color="error" dimColor={true}>error</Text>;
+    if ($[2] !== uiLanguage) {
+      t1 = <Text bold={true} color="success" dimColor={true}>{translate(uiLanguage, 'dialogs.backgroundTasksStatusDone')}</Text>;
+      $[2] = uiLanguage;
       $[3] = t1;
     } else {
       t1 = $[3];
     }
     return t1;
   }
-  if (!session.todoList.length) {
+  if (session.status === "failed") {
     let t1;
-    if ($[4] !== session.status) {
-      t1 = <Text dimColor={true}>{session.status}…</Text>;
-      $[4] = session.status;
+    if ($[4] !== uiLanguage) {
+      t1 = <Text bold={true} color="error" dimColor={true}>{translate(uiLanguage, 'dialogs.backgroundTasksStatusError')}</Text>;
+      $[4] = uiLanguage;
       $[5] = t1;
     } else {
       t1 = $[5];
     }
     return t1;
   }
+  if (!session.todoList.length) {
+    let t1;
+    if ($[6] !== session.status) {
+      t1 = <Text dimColor={true}>{session.status}…</Text>;
+      $[6] = session.status;
+      $[7] = t1;
+    } else {
+      t1 = $[7];
+    }
+    return t1;
+  }
   let t1;
-  if ($[6] !== session.todoList) {
+  if ($[8] !== session.todoList) {
     t1 = count(session.todoList, _temp);
-    $[6] = session.todoList;
-    $[7] = t1;
+    $[8] = session.todoList;
+    $[9] = t1;
   } else {
-    t1 = $[7];
+    t1 = $[9];
   }
   const completed = t1;
   const total = session.todoList.length;
   let t2;
-  if ($[8] !== completed || $[9] !== total) {
+  if ($[10] !== completed || $[11] !== total) {
     t2 = <Text dimColor={true}>{completed}/{total}</Text>;
-    $[8] = completed;
-    $[9] = total;
-    $[10] = t2;
+    $[10] = completed;
+    $[11] = total;
+    $[12] = t2;
   } else {
-    t2 = $[10];
+    t2 = $[12];
   }
   return t2;
 }

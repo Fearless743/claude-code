@@ -222,6 +222,7 @@ function localizeCommandDescription(command: Command): Command {
     compact: 'commandDescriptions.compact',
     config: 'commandDescriptions.config',
     context: 'commandDescriptions.context',
+    copy: 'commandDescriptions.copy',
     cost: 'commandDescriptions.cost',
     desktop: 'commandDescriptions.desktop',
     diff: 'commandDescriptions.diff',

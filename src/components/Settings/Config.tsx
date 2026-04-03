@@ -83,6 +83,7 @@ import {
 import { isFullscreenEnvEnabled } from '../../utils/fullscreen.js';
 import type { LLMProvider } from '../../utils/config.js';
 import { createProviderId, getActiveProvider, getProviders } from '../../utils/providers.js';
+import { isBridgeEnabled } from '../../bridge/bridgeEnabled.js';
 type Props = {
   onClose: (
     result?: string,
@@ -350,7 +351,9 @@ export function Config({
     setChanges(prev_0 => {
       const valStr =
         modelDisplayString(value) +
-        (isBilledAsExtraUsage(value, false, isOpus1mMergeEnabled()) ? ' · Billed as extra usage' : '');
+        (isBilledAsExtraUsage(value, false, isOpus1mMergeEnabled())
+          ? ` · ${translate(uiLanguage, 'settings.billedAsExtraUsageLabel')}`
+          : '');
       if ('model' in prev_0) {
         const { model, ...rest } = prev_0;
         return {

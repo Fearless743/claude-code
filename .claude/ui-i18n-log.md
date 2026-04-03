@@ -1,0 +1,293 @@
+# UI 文本改动日志
+
+> 目的：给后续接手的 AI 说明最近已经改了哪些 UI 文案，避免重复改逻辑或重复扫描。
+> 约束：只改 UI 文本，不改交互、逻辑、结构。
+
+## 2026-04-02 当前已改
+
+### 1. PromptInput / 页脚 / thinking / 快捷提示
+- `src/components/PromptInput/PromptInputHelpMenu.tsx`
+  - 多个输入提示改为走 `translate(...)`
+  - 包括 bash mode、commands、file paths、background、/btw、clear input、快捷键说明等
+- `src/components/PromptInput/Notifications.tsx`
+  - 通知区文案改为走 i18n
+  - 包括 extra usage、apiKeyHelper 慢、认证失败、未登录、debug mode、token 数等
+- `src/components/PromptInput/PromptInputFooterLeftSide.tsx`
+  - 模式提示、任务动作、退出提示、粘贴提示改为走 i18n
+  - 包括 bypass permissions / accept edits / auto / plan / don't ask / default 等模式提示
+- `src/hooks/useTypeahead.tsx`
+  - `Use {shortcut} to toggle thinking` 改为翻译键
+- `src/components/PromptInput/PromptInput.tsx`
+  - `Thinking on/off` 通知改为翻译键
+- `src/components/ThinkingToggle.tsx`
+  - thinking 切换弹层文本改为走 i18n
+
+### 2. 弹窗与通用退出提示
+- `src/components/design-system/Dialog.tsx`
+  - `Press {key} again to exit` 改为翻译键
+  - cancel 描述改为翻译键
+- `src/components/AutoModeOptInDialog.tsx`
+  - 标题、说明、选项文案改为走 i18n
+  - 注意：本次已改到文本层，但文件结构此前被重写过；如果继续维护，尽量只动字符串
+- `src/components/ApproveApiKey.tsx`
+  - 自定义 API key 检测确认弹窗文本改为走 i18n
+- `src/components/ExitFlow.tsx`
+  - goodbye 文案改为翻译键
+- `src/components/permissions/AskUserQuestionPermissionRequest/QuestionView.tsx`
+  - Other / Type something / Submit / Next / Chat about this / Skip interview and plan immediately / 导航提示 / editor hint 改为走 i18n
+
+### 3. 错误与拒绝提示
+- `src/components/FallbackToolUseErrorMessage.tsx`
+  - `Tool execution failed`
+  - `Invalid tool parameters`
+  - `line/lines`
+  - `to see all`
+  - 以上已接入翻译
+  - 注意：如果继续改这里，只改显示字符串，不要碰错误处理逻辑
+- `src/components/FileEditToolUseRejectedMessage.tsx`
+  - `User rejected write/update to ...`
+  - `No content`
+  - 行数提示改为翻译键
+
+### 4. 语言包新增词条
+- `src/i18n/locales/en.ts`
+- `src/i18n/locales/zh-CN.ts`
+- 已新增的主要词条包括：
+  - permissions/mode 状态文本
+  - thinking 开关相关文本
+  - help menu / notification / footer 提示
+  - press again to exit / pasting text
+  - tool execution failed / invalid tool parameters
+  - line / lines / see all
+  - custom API key 确认文本
+  - goodbye messages
+  - auto mode opt-in 文案
+  - AskUserQuestion 选项与提示文本
+  - `/copy` 命令说明
+
+### 5. 本轮新增记录
+- `src/i18n/locales/en.ts`
+  - 确认 `/copy` 命令说明词条已存在
+- `src/i18n/locales/zh-CN.ts`
+  - 新增 `/copy` 命令说明中文翻译
+  - 继续清理 `commandDescriptions` 中的中英混排：
+    - `agent` → `智能体`
+    - `diff` → `差异`
+    - `keybindings` → `快捷键配置`
+    - `allow/deny` → `允许/拒绝`
+    - `plan mode` → `规划模式`
+    - `skills` → `技能`
+    - `Normal 编辑模式` → `普通编辑模式`
+  - 继续清理 `remoteControl` / `bridgeDialog` / `dialogs` 中的中英混排：
+    - `Remote Control` → `远程控制`
+    - `Enter` → `回车`
+    - `stable` / `Stable Channel` → `稳定通道`
+    - `Bypass Permissions` → `绕过权限`
+    - `Claude app` → `Claude 应用`
+    - `WSL` 描述语句更自然化
+  - 继续清理 `agents` / `messageSelector` / `AskUserQuestion` 中的中英混排：
+    - `subagent` / `system prompt` / 英文角色名改为中文
+    - `Enter` → `回车`
+    - `Skill` → `技能`
+    - `bash` 警告改为 `命令行`
+  - 继续清理 `settings` / `agents` / `commandDescriptions` 中的术语混排：
+    - `API key` → `API 密钥`
+    - `Base URL` → `基础 URL`
+    - `tokens` → `令牌`
+    - `thinking` → `思考模式`
+    - `team lead` / `teammates` / `agents` → 中文表达
+    - `Hook` → `钩子`
+    - `Beta` → `测试版`
+    - `UX` → `体验`
+  - 继续清理品牌与展示术语：
+    - `esc` → `Esc`
+    - `URL` → `链接`
+    - `GIF` → `GIF 动图`
+    - `claude.ai 订阅套餐` → `claude.ai 订阅服务`
+  - 继续统一快捷键与提示术语大小写：
+    - `ctrl + z` → `Ctrl + Z`
+    - `ctrl+g` → `Ctrl+G`
+    - `/usage 订阅套餐` → `/usage 订阅服务`
+  - 继续清理 `settings` 中残留的术语混排：
+    - `Remote Control` → `远程控制`
+    - `API key` → `API 密钥`
+  - `src/components/permissions/AskUserQuestionPermissionRequest/QuestionView.tsx`
+    - `Planning:` 改为走 `translate(...)`
+  - `src/components/Settings/Config.tsx`
+    - `Billed as extra usage` 改为走 `translate(...)`
+  - `src/components/ModelPicker.tsx`
+    - `Select model`
+    - 模型切换说明文案
+    - `Current model`
+    - `Currently using ...`
+    - `and N more…`
+    - effort/fast mode/exit 提示改为走 `translate(...)`
+  - `src/components/QuickOpenDialog.tsx`
+    - `Quick Open`
+    - `Type to search files…`
+    - `Loading preview…`
+    - `No matching files`
+    - `Start typing to search…`
+    - `mention` / `insert path` / `open in editor` 改为走 `translate(...)`
+  - `src/components/GlobalSearchDialog.tsx`
+    - `Global Search`
+    - `Type to search…`
+    - `matches` / `Searching…` / `No matches`
+    - `Loading…`
+    - `mention` / `insert path` / `open in editor` 改为走 `translate(...)`
+  - `src/components/teams/TeamsDialog.tsx`
+    - `Team ...` 标题
+    - `teammate/teammates` 数量副标题
+    - `No teammates`
+    - 列表/详情底部操作提示
+    - `[hidden]` / `[idle]`
+    - `worktree:`
+    - `Tasks` / `Prompt` / `(p to expand)` 改为走 `translate(...)`
+  - `src/components/tasks/AsyncAgentDetailDialog.tsx`
+    - `Async agent`
+    - `Completed` / `Failed` / `Stopped`
+    - `tokens` / `tool/tools`
+    - `Press ... again to exit`
+    - `go back` / `close` / `stop`
+    - `Progress` / `Prompt` / `Error` 改为走 `translate(...)`
+  - `src/components/tasks/ShellDetailDialog.tsx`
+    - `Monitor details` / `Shell details`
+    - `Status:` / `Runtime:` / `Script:` / `Command:` / `Output:`
+    - `Loading output…`
+    - `No output available`
+    - `Showing N lines`
+    - `of SIZE`
+    - 退出与操作提示改为走 `translate(...)`
+  - `src/components/tasks/RemoteSessionDetailDialog.tsx`
+    - `Remote session details`
+    - `Status` / `Runtime` / `Title` / `Progress` / `Session URL`
+    - `Recent messages`
+    - `Showing last ... of ... messages`
+    - `Teleport failed: ...`
+    - `Teleporting to session…`
+    - `starting` / `teleport`
+    - 退出与返回提示改为走 `translate(...)`
+    - `Review the plan in Claude Code on the web`
+    - `Answer in browser: ...`
+    - `input required` / `ready` / `waiting` / `done` / `working`
+    - `Terminate session` / `Back` / `Stop ultraplan?` / `Stop ultraplan`
+    - review 分支补充：`done` / `setting up` / `ready` / `running`
+    - `finding/findings` / `refuted`
+    - `Stop ultrareview` / `Stop ultrareview?`
+    - `Open in Claude Code on the web` / `Dismiss`
+    - `ultrareview`
+  - `src/components/tasks/BackgroundTasksDialog.tsx`
+    - 任务汇总副标题接入 `dialogs.taskSummaryLabel`
+    - `Background tasks`
+    - `Background tasks dialog dismissed`
+    - `No tasks currently running`
+    - `Viewing teammate` / `Viewing leader`
+    - `Team: ...`
+    - 分组标题 `Agents / Shells / Monitors / Remote agents / Local agents / Workflows`
+    - 改为走 `translate(...)`
+  - `src/i18n/locales/en.ts`
+    - 新增 `settings.askUserQuestionPlanningLabel`
+    - 新增 `settings.billedAsExtraUsageLabel`
+    - 新增 `settings.modelPicker*` 相关词条
+    - 新增 `dialogs.quickOpen*` / `dialogs.globalSearch*` / `dialogs.teamsDialog*` / `dialogs.taskDetail*` / `dialogs.shellDetail*` / `dialogs.remoteSessionDetail*` / `dialogs.remoteSession*` / `dialogs.backgroundTasks*` 相关词条
+    - 新增任务汇总文案 `dialogs.taskSummaryLabel`
+  - `src/i18n/locales/zh-CN.ts`
+    - 新增 `settings.askUserQuestionPlanningLabel` 中文翻译
+    - 新增 `settings.billedAsExtraUsageLabel` 中文翻译
+    - 新增 `settings.modelPicker*` 中文翻译
+    - 新增 `dialogs.quickOpen*` / `dialogs.globalSearch*` / `dialogs.teamsDialog*` / `dialogs.taskDetail*` / `dialogs.shellDetail*` / `dialogs.remoteSessionDetail*` / `dialogs.remoteSession*` / `dialogs.backgroundTasks*` 中文翻译
+    - 新增任务汇总文案 `dialogs.taskSummaryLabel` 中文翻译
+- `src/commands.ts`
+  - 为 `copy` 补上 `commandDescriptions.copy` 映射
+  - 原因：命令菜单实际显示走 `localizeCommandDescription()`，之前没有覆盖 `copy`
+  - 额外检查：当前映射表与 `commandDescriptions` 的主要公开命令项已基本对齐，未再发现同类高优先级缺漏
+- `src/components/tasks/BackgroundTasksDialog.tsx`
+  - `Viewing teammate` / `Viewing leader` / `Background tasks dialog dismissed` 改为走 `translate(...)`
+  - 任务副标题中的 `active shell(s)` / `active agent(s)` 改为翻译键
+  - 列表底部动作提示 `select / view / foreground / stop all agents / close` 改为走 `translate(...)`
+- `src/components/tasks/RemoteSessionDetailDialog.tsx`
+  - `ultraplan` 详情中的 `agent(s)` / `tool call(s)` / `working` 改为走翻译键
+  - review 阶段管线中的 `Find / Verify / Dedupe / Setup` 改为走翻译键
+  - review 对话框底部 `Press ... again to exit` / `select` / `go back` 改为走 `translate(...)`
+  - 普通远程会话分支中的 `Remote session details dismissed` 改为走 `translate(...)`
+- `src/i18n/locales/en.ts`
+  - 新增 `dialogs.backgroundTasksActive*` / `dialogs.backgroundTasksAgentCount*` / `dialogs.backgroundTasksAction*`
+  - 新增 `dialogs.remoteSessionCallCountOne` / `dialogs.remoteSessionCallCountMany`
+- `src/i18n/locales/zh-CN.ts`
+  - 新增 `dialogs.backgroundTasksActive*` / `dialogs.backgroundTasksAgentCount*` / `dialogs.backgroundTasksAction*` 中文翻译
+  - 新增 `dialogs.remoteSessionCallCountOne` / `dialogs.remoteSessionCallCountMany` 中文翻译
+- `src/components/tasks/BackgroundTasksDialog.tsx`
+  - 将模块级 `uiLanguage` 提升到组件外，修复 `TeammateTaskGroups` 读取不到作用域变量的问题
+  - 列表底部 `close` 改为独立翻译键 `dialogs.backgroundTasksActionClose`
+- `src/components/tasks/RemoteSessionDetailDialog.tsx`
+  - 删除已不再使用的 `plural` 导入，避免遗留未使用引用
+- `src/i18n/locales/en.ts`
+  - 新增 `dialogs.backgroundTasksActionClose`
+- `src/i18n/locales/zh-CN.ts`
+  - 新增 `dialogs.backgroundTasksActionClose` 中文翻译
+- `src/components/tasks/ShellDetailDialog.tsx`
+  - `Shell details dismissed` 改为走 `translate(...)`
+- `src/components/tasks/InProcessTeammateDetailDialog.tsx`
+  - `Completed / Failed / Stopped`
+  - `tokens` / `tool/tools`
+  - `Press ... again to exit`
+  - `go back / close / stop / foreground`
+  - `Progress / Prompt / Error`
+  - 以上改为走 `translate(...)`
+- `src/i18n/locales/en.ts`
+  - 新增 `dialogs.shellDetailDismissed`
+- `src/i18n/locales/zh-CN.ts`
+  - 新增 `dialogs.shellDetailDismissed` 中文翻译
+- `src/components/tasks/BackgroundTask.tsx`
+  - `done` / `, unread` 改为走翻译键
+  - workflow 列表中的 `N agent(s)` 改为走翻译键
+  - dream 列表中的 `file/files` / `session/sessions` / `updating` / `reviewing` / `done` / `, unread` 改为走翻译键
+- `src/components/tasks/ShellProgress.tsx`
+  - `done` / `error` / `stopped` 改为走翻译键
+- `src/i18n/locales/en.ts`
+  - 新增 `dialogs.backgroundTasksStatus*`
+  - 新增 `dialogs.backgroundTasksDream*`
+- `src/i18n/locales/zh-CN.ts`
+  - 新增 `dialogs.backgroundTasksStatus*` 中文翻译
+  - 新增 `dialogs.backgroundTasksDream*` 中文翻译
+- `src/components/tasks/RemoteSessionProgress.tsx`
+  - review 进度条中的 `ready · shift+↓ to view` / `error` / `setting up`
+  - `found / verified / refuted / deduping / finding` 计数文案改为走翻译键
+- `src/components/tasks/taskStatusUtils.tsx`
+  - 队友状态里的 `stopping / awaiting approval / idle / working` 改为走翻译键
+- `src/components/tasks/DreamDetailDialog.tsx`
+  - `Memory consolidation`
+  - `reviewing N session(s)`
+  - `N file(s) touched`
+  - `Press ... again to exit`
+  - `go back / close / stop`
+  - `Status:` / `running`
+  - `Starting…` / `(no text output)`
+  - `(N earlier turn/turns)`
+  - `tool/tools` 计数改为走翻译键
+- `src/i18n/locales/en.ts`
+  - 新增 `dialogs.remoteSessionReviewReadyToView`
+  - 新增 `dialogs.remoteSessionReviewCounts*`
+  - 新增 `dialogs.backgroundTasksTeammate*`
+  - 新增 `dialogs.backgroundTasksDreamDialog*` 相关词条
+- `src/i18n/locales/zh-CN.ts`
+  - 新增上述中文翻译
+- `src/components/tasks/RemoteSessionProgress.tsx`
+  - `RemoteSessionProgress` 组件里的 `done` / `error` 改为走翻译键
+- `src/components/tasks/taskStatusUtils.tsx`
+  - `describeTeammateActivity` 中 `working` 使用已有翻译键
+- `src/components/permissions/PermissionPrompt.tsx`
+  - `Do you want to proceed?` 改为翻译键
+  - feedback placeholder `tell Claude what to do next / differently` 改为翻译键
+- `src/i18n/locales/en.ts`
+  - 新增 `permissions.doYouWantToProceed`
+  - 新增 `permissions.feedbackPlaceholderAccept`
+  - 新增 `permissions.feedbackPlaceholderReject`
+- `src/i18n/locales/zh-CN.ts`
+  - 新增上述中文翻译
+
+## 后续继续时的要求
+- 只改 UI 文本
+- 优先改用户能直接看到的英文提示
+- 每次改动后，把本文件补充更新
+- 回复用户时明确写出改了哪些文件和什么文本

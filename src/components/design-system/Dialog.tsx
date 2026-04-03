@@ -1,7 +1,9 @@
 import { c as _c } from "react/compiler-runtime";
 import React from 'react';
 import { type ExitState, useExitOnCtrlCDWithKeybindings } from '../../hooks/useExitOnCtrlCDWithKeybindings.js';
+import { translate } from '../../i18n/index.js';
 import { Box, Text } from '../../ink.js';
+import { useAppState } from '../../state/AppState.js';
 import { useKeybinding } from '../../keybindings/useKeybinding.js';
 import type { Theme } from '../../utils/theme.js';
 import { ConfigurableShortcutHint } from '../ConfigurableShortcutHint.js';
@@ -43,6 +45,7 @@ export function Dialog(t0) {
   const color = t1 === undefined ? "permission" : t1;
   const isCancelActive = t2 === undefined ? true : t2;
   const exitState = useExitOnCtrlCDWithKeybindings(undefined, undefined, isCancelActive);
+  const uiLanguage = useAppState(s => s.settings.language);
   let t3;
   if ($[0] !== isCancelActive) {
     t3 = {
@@ -56,13 +59,16 @@ export function Dialog(t0) {
   }
   useKeybinding("confirm:no", onCancel, t3);
   let t4;
-  if ($[2] !== exitState.keyName || $[3] !== exitState.pending) {
-    t4 = exitState.pending ? <Text>Press {exitState.keyName} again to exit</Text> : <Byline><KeyboardShortcutHint shortcut="Enter" action="confirm" /><ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description="cancel" /></Byline>;
+  if ($[2] !== exitState.keyName || $[3] !== exitState.pending || $[4] !== uiLanguage) {
+    t4 = exitState.pending ? <Text>{translate(uiLanguage, 'settings.pressAgainToExit', {
+      key: exitState.keyName
+    })}</Text> : <Byline><KeyboardShortcutHint shortcut="Enter" action="confirm" /><ConfigurableShortcutHint action="confirm:no" context="Confirmation" fallback="Esc" description={translate(uiLanguage, 'settings.cancelAction')} /></Byline>;
     $[2] = exitState.keyName;
     $[3] = exitState.pending;
-    $[4] = t4;
+    $[4] = uiLanguage;
+    $[5] = t4;
   } else {
-    t4 = $[4];
+    t4 = $[5];
   }
   const defaultInputGuide = t4;
   let t5;

@@ -1,6 +1,7 @@
 import { c as _c } from "react/compiler-runtime";
 import * as React from 'react';
 import { Text } from 'src/ink.js';
+import { translate } from '../../i18n/index.js';
 import type { BackgroundTaskState } from 'src/tasks/types.js';
 import type { DeepImmutable } from 'src/types/utils.js';
 import { truncate } from 'src/utils/format.js';
@@ -16,6 +17,7 @@ type Props = {
 };
 export function BackgroundTask(t0) {
   const $ = _c(92);
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
   const {
     task,
     maxActivityWidth
@@ -123,8 +125,8 @@ export function BackgroundTask(t0) {
         } else {
           t1 = $[24];
         }
-        const t2 = task.status === "completed" ? "done" : undefined;
-        const t3 = task.status === "completed" && !task.notified ? ", unread" : undefined;
+        const t2 = task.status === "completed" ? translate(uiLanguage, 'dialogs.backgroundTasksStatusDone') : undefined;
+        const t3 = task.status === "completed" && !task.notified ? translate(uiLanguage, 'dialogs.backgroundTasksStatusUnreadSuffix') : undefined;
         let t4;
         if ($[25] !== t2 || $[26] !== t3 || $[27] !== task.status) {
           t4 = <TaskStatusText status={task.status} label={t2} suffix={t3} />;
@@ -229,33 +231,36 @@ export function BackgroundTask(t0) {
           t2 = $[56];
         }
         let t3;
-        if ($[57] !== task.agentCount || $[58] !== task.status) {
-          t3 = task.status === "running" ? `${task.agentCount} ${plural(task.agentCount, "agent")}` : task.status === "completed" ? "done" : undefined;
+        if ($[57] !== task.agentCount || $[58] !== task.status || $[59] !== uiLanguage) {
+          t3 = task.status === "running" ? translate(uiLanguage, task.agentCount === 1 ? 'dialogs.backgroundTasksAgentCountOne' : 'dialogs.backgroundTasksAgentCountMany', {
+            count: task.agentCount
+          }) : task.status === "completed" ? translate(uiLanguage, 'dialogs.backgroundTasksStatusDone') : undefined;
           $[57] = task.agentCount;
           $[58] = task.status;
-          $[59] = t3;
-        } else {
-          t3 = $[59];
-        }
-        const t4 = task.status === "completed" && !task.notified ? ", unread" : undefined;
-        let t5;
-        if ($[60] !== t3 || $[61] !== t4 || $[62] !== task.status) {
-          t5 = <TaskStatusText status={task.status} label={t3} suffix={t4} />;
+          $[59] = uiLanguage;
           $[60] = t3;
-          $[61] = t4;
-          $[62] = task.status;
-          $[63] = t5;
         } else {
-          t5 = $[63];
+          t3 = $[60];
+        }
+        const t4 = task.status === "completed" && !task.notified ? translate(uiLanguage, 'dialogs.backgroundTasksStatusUnreadSuffix') : undefined;
+        let t5;
+        if ($[61] !== t3 || $[62] !== t4 || $[63] !== task.status) {
+          t5 = <TaskStatusText status={task.status} label={t3} suffix={t4} />;
+          $[61] = t3;
+          $[62] = t4;
+          $[63] = task.status;
+          $[64] = t5;
+        } else {
+          t5 = $[64];
         }
         let t6;
-        if ($[64] !== t2 || $[65] !== t5) {
+        if ($[65] !== t2 || $[66] !== t5) {
           t6 = <Text>{t2}{" "}{t5}</Text>;
-          $[64] = t2;
-          $[65] = t5;
-          $[66] = t6;
+          $[65] = t2;
+          $[66] = t5;
+          $[67] = t6;
         } else {
-          t6 = $[66];
+          t6 = $[67];
         }
         return t6;
       }
@@ -270,8 +275,8 @@ export function BackgroundTask(t0) {
         } else {
           t1 = $[69];
         }
-        const t2 = task.status === "completed" ? "done" : undefined;
-        const t3 = task.status === "completed" && !task.notified ? ", unread" : undefined;
+        const t2 = task.status === "completed" ? translate(uiLanguage, 'dialogs.backgroundTasksStatusDone') : undefined;
+        const t3 = task.status === "completed" && !task.notified ? translate(uiLanguage, 'dialogs.backgroundTasksStatusUnreadSuffix') : undefined;
         let t4;
         if ($[70] !== t2 || $[71] !== t3 || $[72] !== task.status) {
           t4 = <TaskStatusText status={task.status} label={t2} suffix={t3} />;
@@ -297,46 +302,52 @@ export function BackgroundTask(t0) {
       {
         const n = task.filesTouched.length;
         let t1;
-        if ($[77] !== n || $[78] !== task.phase || $[79] !== task.sessionsReviewing) {
-          t1 = task.phase === "updating" && n > 0 ? `${n} ${plural(n, "file")}` : `${task.sessionsReviewing} ${plural(task.sessionsReviewing, "session")}`;
+        if ($[77] !== n || $[78] !== task.phase || $[79] !== task.sessionsReviewing || $[80] !== uiLanguage) {
+          t1 = task.phase === "updating" && n > 0 ? translate(uiLanguage, n === 1 ? 'dialogs.backgroundTasksDreamFileCountOne' : 'dialogs.backgroundTasksDreamFileCountMany', {
+            count: n
+          }) : translate(uiLanguage, task.sessionsReviewing === 1 ? 'dialogs.backgroundTasksDreamSessionCountOne' : 'dialogs.backgroundTasksDreamSessionCountMany', {
+            count: task.sessionsReviewing
+          });
           $[77] = n;
           $[78] = task.phase;
           $[79] = task.sessionsReviewing;
-          $[80] = t1;
+          $[80] = uiLanguage;
+          $[81] = t1;
         } else {
-          t1 = $[80];
+          t1 = $[81];
         }
         const detail = t1;
         let t2;
-        if ($[81] !== detail || $[82] !== task.phase) {
-          t2 = <Text dimColor={true}>· {task.phase} · {detail}</Text>;
-          $[81] = detail;
-          $[82] = task.phase;
-          $[83] = t2;
+        if ($[82] !== detail || $[83] !== task.phase || $[84] !== uiLanguage) {
+          t2 = <Text dimColor={true}>· {translate(uiLanguage, `dialogs.backgroundTasksDreamPhase${task.phase === 'updating' ? 'Updating' : 'Reviewing'}`)} · {detail}</Text>;
+          $[82] = detail;
+          $[83] = task.phase;
+          $[84] = uiLanguage;
+          $[85] = t2;
         } else {
-          t2 = $[83];
+          t2 = $[85];
         }
-        const t3 = task.status === "completed" ? "done" : undefined;
-        const t4 = task.status === "completed" && !task.notified ? ", unread" : undefined;
+        const t3 = task.status === "completed" ? translate(uiLanguage, 'dialogs.backgroundTasksStatusDone') : undefined;
+        const t4 = task.status === "completed" && !task.notified ? translate(uiLanguage, 'dialogs.backgroundTasksStatusUnreadSuffix') : undefined;
         let t5;
-        if ($[84] !== t3 || $[85] !== t4 || $[86] !== task.status) {
+        if ($[86] !== t3 || $[87] !== t4 || $[88] !== task.status) {
           t5 = <TaskStatusText status={task.status} label={t3} suffix={t4} />;
-          $[84] = t3;
-          $[85] = t4;
-          $[86] = task.status;
-          $[87] = t5;
+          $[86] = t3;
+          $[87] = t4;
+          $[88] = task.status;
+          $[89] = t5;
         } else {
-          t5 = $[87];
+          t5 = $[89];
         }
         let t6;
-        if ($[88] !== t2 || $[89] !== t5 || $[90] !== task.description) {
+        if ($[90] !== t2 || $[91] !== t5 || $[92] !== task.description) {
           t6 = <Text>{task.description}{" "}{t2}{" "}{t5}</Text>;
-          $[88] = t2;
-          $[89] = t5;
-          $[90] = task.description;
-          $[91] = t6;
+          $[90] = t2;
+          $[91] = t5;
+          $[92] = task.description;
+          $[93] = t6;
         } else {
-          t6 = $[91];
+          t6 = $[93];
         }
         return t6;
       }

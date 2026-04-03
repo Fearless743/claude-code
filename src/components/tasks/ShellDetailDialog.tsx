@@ -3,6 +3,7 @@ import React, { Suspense, use, useDeferredValue, useEffect, useState } from 'rea
 import type { DeepImmutable } from 'src/types/utils.js';
 import type { CommandResultDisplay } from '../../commands.js';
 import { useTerminalSize } from '../../hooks/useTerminalSize.js';
+import { translate } from '../../i18n/index.js';
 import type { KeyboardEvent } from '../../ink/events/keyboard-event.js';
 import { Box, Text } from '../../ink.js';
 import { useKeybindings } from '../../keybindings/useKeybinding.js';
@@ -57,6 +58,7 @@ export function ShellDetailDialog(t0) {
   const {
     columns
   } = useTerminalSize();
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
   let t1;
   if ($[0] !== shell) {
     t1 = () => getTaskOutput(shell);
@@ -92,42 +94,43 @@ export function ShellDetailDialog(t0) {
   }
   useEffect(t2, t3);
   let t4;
-  if ($[7] !== onDone) {
-    t4 = () => onDone("Shell details dismissed", {
+  if ($[7] !== onDone || $[8] !== uiLanguage) {
+    t4 = () => onDone(translate(uiLanguage, 'dialogs.shellDetailDismissed'), {
       display: "system"
     });
     $[7] = onDone;
-    $[8] = t4;
+    $[8] = uiLanguage;
+    $[9] = t4;
   } else {
-    t4 = $[8];
+    t4 = $[9];
   }
   const handleClose = t4;
   let t5;
-  if ($[9] !== handleClose) {
+  if ($[10] !== handleClose) {
     t5 = {
       "confirm:yes": handleClose
     };
-    $[9] = handleClose;
-    $[10] = t5;
+    $[10] = handleClose;
+    $[11] = t5;
   } else {
-    t5 = $[10];
+    t5 = $[11];
   }
   let t6;
-  if ($[11] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[12] === Symbol.for("react.memo_cache_sentinel")) {
     t6 = {
       context: "Confirmation"
     };
-    $[11] = t6;
+    $[12] = t6;
   } else {
-    t6 = $[11];
+    t6 = $[12];
   }
   useKeybindings(t5, t6);
   let t7;
-  if ($[12] !== onBack || $[13] !== onDone || $[14] !== onKillShell || $[15] !== shell.status) {
+  if ($[13] !== onBack || $[14] !== onDone || $[15] !== onKillShell || $[16] !== shell.status || $[17] !== uiLanguage) {
     t7 = e => {
       if (e.key === " ") {
         e.preventDefault();
-        onDone("Shell details dismissed", {
+        onDone(translate(uiLanguage, 'dialogs.shellDetailDismissed'), {
           display: "system"
         });
       } else {
@@ -142,29 +145,32 @@ export function ShellDetailDialog(t0) {
         }
       }
     };
-    $[12] = onBack;
-    $[13] = onDone;
-    $[14] = onKillShell;
-    $[15] = shell.status;
-    $[16] = t7;
+    $[13] = onBack;
+    $[14] = onDone;
+    $[15] = onKillShell;
+    $[16] = shell.status;
+    $[17] = uiLanguage;
+    $[18] = t7;
   } else {
-    t7 = $[16];
+    t7 = $[18];
   }
   const handleKeyDown = t7;
   const isMonitor = shell.kind === "monitor";
   let t8;
-  if ($[17] !== shell.command) {
+  if ($[19] !== shell.command) {
     t8 = truncateToWidth(shell.command, 280);
-    $[17] = shell.command;
-    $[18] = t8;
+    $[19] = shell.command;
+    $[20] = t8;
   } else {
-    t8 = $[18];
+    t8 = $[20];
   }
   const displayCommand = t8;
-  const t9 = isMonitor ? "Monitor details" : "Shell details";
+  const t9 = isMonitor ? translate(uiLanguage, 'dialogs.shellDetailMonitorTitle') : translate(uiLanguage, 'dialogs.shellDetailShellTitle');
   let t10;
   if ($[19] !== onBack || $[20] !== onKillShell || $[21] !== shell.status) {
-    t10 = exitState => exitState.pending ? <Text>Press {exitState.keyName} again to exit</Text> : <Byline>{onBack && <KeyboardShortcutHint shortcut={"\u2190"} action="go back" />}<KeyboardShortcutHint shortcut="Esc/Enter/Space" action="close" />{shell.status === "running" && onKillShell && <KeyboardShortcutHint shortcut="x" action="stop" />}</Byline>;
+    t10 = exitState => exitState.pending ? <Text>{translate(uiLanguage, 'dialogs.taskDetailPressAgainToExit', {
+      key: exitState.keyName
+    })}</Text> : <Byline>{onBack && <KeyboardShortcutHint shortcut={"\u2190"} action={translate(uiLanguage, 'dialogs.taskDetailGoBackAction')} />}<KeyboardShortcutHint shortcut="Esc/Enter/Space" action={translate(uiLanguage, 'dialogs.taskDetailCloseAction')} />{shell.status === "running" && onKillShell && <KeyboardShortcutHint shortcut="x" action={translate(uiLanguage, 'dialogs.taskDetailStopAction')} />}</Byline>;
     $[19] = onBack;
     $[20] = onKillShell;
     $[21] = shell.status;
@@ -174,7 +180,7 @@ export function ShellDetailDialog(t0) {
   }
   let t11;
   if ($[23] === Symbol.for("react.memo_cache_sentinel")) {
-    t11 = <Text bold={true}>Status:</Text>;
+    t11 = <Text bold={true}>{translate(uiLanguage, 'dialogs.shellDetailStatusLabel')}</Text>;
     $[23] = t11;
   } else {
     t11 = $[23];
@@ -190,7 +196,7 @@ export function ShellDetailDialog(t0) {
   }
   let t13;
   if ($[27] === Symbol.for("react.memo_cache_sentinel")) {
-    t13 = <Text bold={true}>Runtime:</Text>;
+    t13 = <Text bold={true}>{translate(uiLanguage, 'dialogs.shellDetailRuntimeLabel')}</Text>;
     $[27] = t13;
   } else {
     t13 = $[27];
@@ -220,7 +226,7 @@ export function ShellDetailDialog(t0) {
   } else {
     t17 = $[33];
   }
-  const t18 = isMonitor ? "Script:" : "Command:";
+  const t18 = isMonitor ? translate(uiLanguage, 'dialogs.shellDetailScriptLabel') : translate(uiLanguage, 'dialogs.shellDetailCommandLabel');
   let t19;
   if ($[34] !== t18) {
     t19 = <Text bold={true}>{t18}</Text>;
@@ -250,14 +256,14 @@ export function ShellDetailDialog(t0) {
   }
   let t22;
   if ($[43] === Symbol.for("react.memo_cache_sentinel")) {
-    t22 = <Text bold={true}>Output:</Text>;
+    t22 = <Text bold={true}>{translate(uiLanguage, 'dialogs.shellDetailOutputLabel')}</Text>;
     $[43] = t22;
   } else {
     t22 = $[43];
   }
   let t23;
   if ($[44] === Symbol.for("react.memo_cache_sentinel")) {
-    t23 = <Text dimColor={true}>Loading output…</Text>;
+    t23 = <Text dimColor={true}>{translate(uiLanguage, 'dialogs.shellDetailLoadingOutput')}</Text>;
     $[44] = t23;
   } else {
     t23 = $[44];
@@ -303,6 +309,7 @@ type ShellOutputContentProps = {
 };
 function ShellOutputContent(t0) {
   const $ = _c(19);
+  const uiLanguage = process.env.CLAUDE_CODE_LANGUAGE;
   const {
     outputPromise,
     columns
@@ -314,7 +321,7 @@ function ShellOutputContent(t0) {
   if (!content) {
     let t1;
     if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = <Text dimColor={true}>No output available</Text>;
+      t1 = <Text dimColor={true}>{translate(uiLanguage, 'dialogs.shellDetailNoOutputAvailable')}</Text>;
       $[0] = t1;
     } else {
       t1 = $[0];
@@ -368,10 +375,14 @@ function ShellOutputContent(t0) {
   } else {
     t3 = $[9];
   }
-  const t4 = `Showing ${rendered.length} lines`;
+  const t4 = translate(uiLanguage, 'dialogs.shellDetailShowingLines', {
+    count: rendered.length
+  });
   let t5;
   if ($[10] !== bytesTotal || $[11] !== isIncomplete) {
-    t5 = isIncomplete ? ` of ${formatFileSize(bytesTotal)}` : "";
+    t5 = isIncomplete ? translate(uiLanguage, 'dialogs.shellDetailOfFileSize', {
+      size: formatFileSize(bytesTotal)
+    }) : "";
     $[10] = bytesTotal;
     $[11] = isIncomplete;
     $[12] = t5;
