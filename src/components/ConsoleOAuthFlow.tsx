@@ -13,7 +13,6 @@ import { OAuthService } from '../services/oauth/index.js';
 import { getOauthAccountInfo, validateForceLoginOrg } from '../utils/auth.js';
 import { logError } from '../utils/log.js';
 import { getSettings_DEPRECATED } from '../utils/settings/settings.js';
-import { Select } from './CustomSelect/select.js';
 import { KeyboardShortcutHint } from './design-system/KeyboardShortcutHint.js';
 import { Spinner } from './Spinner.js';
 import TextInput from './TextInput.js';
@@ -364,7 +363,7 @@ function OAuthStatusMessage(t0) {
   switch (oauthStatus.state) {
     case "idle":
       {
-        const t1 = startingMessage ? startingMessage : "Claude Code can be used with your Claude subscription or billed based on API usage through your Console account.";
+        const t1 = startingMessage ? startingMessage : "This open-source build does not use Anthropic hosted login.";
         let t2;
         if ($[0] !== t1) {
           t2 = <Text bold={true}>{t1}</Text>;
@@ -375,78 +374,63 @@ function OAuthStatusMessage(t0) {
         }
         let t3;
         if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-          t3 = <Text>Select login method:</Text>;
+          t3 = <Text>Configure a local or third-party provider instead of signing in.</Text>;
           $[2] = t3;
         } else {
           t3 = $[2];
         }
         let t4;
         if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-          t4 = {
-            label: <Text>Claude account with subscription ·{" "}<Text dimColor={true}>Pro, Max, Team, or Enterprise</Text>{false && <Text>{"\n"}<Text color="warning">[ANT-ONLY]</Text>{" "}<Text dimColor={true}>Please use this option unless you need to login to a special org for accessing sensitive data (e.g. customer data, HIPI data) with the Console option</Text></Text>}{"\n"}</Text>,
-            value: "claudeai"
-          };
+          t4 = <Text dimColor={true}>Supported setups include Amazon Bedrock, Microsoft Foundry, Vertex AI, or any self-hosted compatible endpoint already wired into this fork.</Text>;
           $[3] = t4;
         } else {
           t4 = $[3];
         }
         let t5;
         if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-          t5 = {
-            label: <Text>Anthropic Console account ·{" "}<Text dimColor={true}>API usage billing</Text>{"\n"}</Text>,
-            value: "console"
-          };
+          t5 = <Text bold={true}>Documentation:</Text>;
           $[4] = t5;
         } else {
           t5 = $[4];
         }
         let t6;
         if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
-          t6 = [t4, t5, {
-            label: <Text>3rd-party platform ·{" "}<Text dimColor={true}>Amazon Bedrock, Microsoft Foundry, or Vertex AI</Text>{"\n"}</Text>,
-            value: "platform"
-          }];
+          t6 = <Text>· Amazon Bedrock:{" "}<Link url="https://code.claude.com/docs/en/amazon-bedrock">https://code.claude.com/docs/en/amazon-bedrock</Link></Text>;
           $[5] = t6;
         } else {
           t6 = $[5];
         }
         let t7;
-        if ($[6] !== setLoginWithClaudeAi || $[7] !== setOAuthStatus) {
-          t7 = <Box><Select options={t6} onChange={value_0 => {
-              if (value_0 === "platform") {
-                logEvent("tengu_oauth_platform_selected", {});
-                setOAuthStatus({
-                  state: "platform_setup"
-                });
-              } else {
-                setOAuthStatus({
-                  state: "ready_to_start"
-                });
-                if (value_0 === "claudeai") {
-                  logEvent("tengu_oauth_claudeai_selected", {});
-                  setLoginWithClaudeAi(true);
-                } else {
-                  logEvent("tengu_oauth_console_selected", {});
-                  setLoginWithClaudeAi(false);
-                }
-              }
-            }} /></Box>;
-          $[6] = setLoginWithClaudeAi;
-          $[7] = setOAuthStatus;
-          $[8] = t7;
+        if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
+          t7 = <Text>· Microsoft Foundry:{" "}<Link url="https://code.claude.com/docs/en/microsoft-foundry">https://code.claude.com/docs/en/microsoft-foundry</Link></Text>;
+          $[6] = t7;
         } else {
-          t7 = $[8];
+          t7 = $[6];
         }
         let t8;
-        if ($[9] !== t2 || $[10] !== t7) {
-          t8 = <Box flexDirection="column" gap={1} marginTop={1}>{t2}{t3}{t7}</Box>;
-          $[9] = t2;
-          $[10] = t7;
-          $[11] = t8;
+        if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
+          t8 = <Text>· Vertex AI:{" "}<Link url="https://code.claude.com/docs/en/google-vertex-ai">https://code.claude.com/docs/en/google-vertex-ai</Link></Text>;
+          $[7] = t8;
         } else {
-          t8 = $[11];
+          t8 = $[7];
         }
-        return t8;
+        let t9;
+        if ($[8] === Symbol.for("react.memo_cache_sentinel")) {
+          t9 = <Text dimColor={true}>Hosted Anthropic account selection has been removed from this build.</Text>;
+          $[8] = t9;
+        } else {
+          t9 = $[8];
+        }
+        let t10;
+        if ($[9] !== t2 || $[10] !== t4) {
+          t10 = <Box flexDirection="column" gap={1} marginTop={1}>{t2}{t3}{t4}<Box flexDirection="column" gap={0}>{t5}{t6}{t7}{t8}</Box>{t9}</Box>;
+          $[9] = t2;
+          $[10] = t4;
+          $[11] = t10;
+        } else {
+          t10 = $[11];
+        }
+        return t10;
       }
     case "platform_setup":
       {
