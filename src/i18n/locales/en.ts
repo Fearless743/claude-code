@@ -31,7 +31,8 @@ export const en = {
     tabUsage: 'Usage',
     themeTitle: 'Theme',
     themeIntro: "Let's get started.",
-    themeDescription: 'Choose the text style that looks best with your terminal',
+    themeDescription:
+      'Choose the text style that looks best with your terminal',
     themeAuto: 'Auto (match terminal)',
     themeDark: 'Dark mode',
     themeLight: 'Light mode',
@@ -40,7 +41,8 @@ export const en = {
     themeDarkAnsi: 'Dark mode (ANSI colors only)',
     themeLightAnsi: 'Light mode (ANSI colors only)',
     outputStyleTitle: 'Preferred output style',
-    outputStyleDescription: 'This changes how Claude Code communicates with you',
+    outputStyleDescription:
+      'This changes how Claude Code communicates with you',
     loadingOutputStyles: 'Loading output styles…',
     providersLabel: 'Providers',
     autoCompactLabel: 'Auto-compact',
@@ -80,7 +82,8 @@ export const en = {
     teammateModeLabel: 'Teammate mode',
     teammateModeOverriddenLabel: 'Teammate mode [overridden: {mode}]',
     defaultTeammateModelLabel: 'Default teammate model',
-    enableRemoteControlForAllSessionsLabel: 'Enable Remote Control for all sessions',
+    enableRemoteControlForAllSessionsLabel:
+      'Enable Remote Control for all sessions',
     externalClaudeMdIncludesLabel: 'External CLAUDE.md includes',
     useCustomApiKeyLabel: 'Use custom API key: {key}',
     useCustomApiKeySearchText: 'Use custom API key',
@@ -127,16 +130,19 @@ export const en = {
     toggleTerminalTabStatus: '{state} terminal tab status',
     toggleTurnDuration: '{state} turn duration',
     resetRemoteControlToDefault: 'Reset Remote Control to default',
-    toggleRemoteControlForAllSessions: '{state} Remote Control for all sessions',
+    toggleRemoteControlForAllSessions:
+      '{state} Remote Control for all sessions',
     statusDialogDismissed: 'Status dialog dismissed',
     configDialogDismissed: 'Config dialog dismissed',
     pressAgainToExit: 'Press {key} again to exit',
     syntaxHighlightingDisabledViaEnv:
       'Syntax highlighting disabled (via CLAUDE_CODE_SYNTAX_HIGHLIGHT={value})',
-    syntaxHighlightingDisabledEnable: 'Syntax highlighting disabled ({shortcut} to enable)',
+    syntaxHighlightingDisabledEnable:
+      'Syntax highlighting disabled ({shortcut} to enable)',
     syntaxThemeLabel: 'Syntax theme: {theme}{source} ({shortcut} to disable)',
     syntaxThemeFromSource: ' (from {source})',
-    syntaxHighlightingEnabledDisable: 'Syntax highlighting enabled ({shortcut} to disable)',
+    syntaxHighlightingEnabledDisable:
+      'Syntax highlighting enabled ({shortcut} to disable)',
     defaultLeaderModel: "Default (leader's model)",
     currentSessionTitle: 'Current session',
     currentWeekAllModelsTitle: 'Current week (all models)',
@@ -178,14 +184,17 @@ export const en = {
     providersConfiguredCount: '{count} configured',
     providerDetailsTitle: 'Provider details',
     providerTitle: 'Provider: {name}',
-    providerEditHint: 'Edit the selected provider. Tab enters field editing for text inputs.',
+    providerEditHint:
+      'Edit the selected provider. Tab enters field editing for text inputs.',
     providerFieldName: 'Name',
     providerFieldNameDescription: 'Display name for this provider.',
     providerPlaceholderName: 'My provider',
     providerFieldApiKey: 'API key',
-    providerFieldApiKeyDescription: 'API key used for requests to this provider.',
+    providerFieldApiKeyDescription:
+      'API key used for requests to this provider.',
     providerFieldBaseUrl: 'Base URL',
-    providerFieldBaseUrlDescription: 'Optional base URL override for this provider.',
+    providerFieldBaseUrlDescription:
+      'Optional base URL override for this provider.',
     providerPlaceholderBaseUrl: 'https://api.example.com',
     providerTypeLabel: 'Type: {type}',
     providerTypeCycleHint: 'Press Enter to cycle provider type.',
@@ -212,7 +221,8 @@ export const en = {
     shortcutsHint: '? for shortcuts',
     apiKeyHelperSlow: 'apiKeyHelper is taking a while',
     authErrorRetry: 'Authentication error · Try again',
-    notLoggedInRunLogin: 'Not logged in · Run /login',
+    notLoggedInRunLogin:
+      'Not logged in · Anthropic login is unavailable in this build',
     debugMode: 'Debug mode',
     customizeKeybindingsHint: '/keybindings to customize',
     holdToSpeakHint: 'hold {shortcut} to speak',
@@ -226,7 +236,8 @@ export const en = {
     stopAgentsAction: 'stop agents',
     nativeSelectAction: 'native select',
     copyAction: 'copy',
-    macOptionClickSettingHint: 'set macOptionClickForcesSelection in VS Code settings',
+    macOptionClickSettingHint:
+      'set macOptionClickForcesSelection in VS Code settings',
     tokenCountLabel: '{count} tokens',
     bypassPermissionsMode: 'Bypass Permissions',
     bypassPermissionsOn: '{mode} on',
@@ -248,7 +259,8 @@ export const en = {
     thinkingToggleTitle: 'Toggle thinking mode',
     thinkingToggleDescription: 'Enable or disable thinking for this session.',
     thinkingToggleEnabledDescription: 'Claude will think before responding',
-    thinkingToggleDisabledDescription: 'Claude will respond without extended thinking',
+    thinkingToggleDisabledDescription:
+      'Claude will respond without extended thinking',
     thinkingToggleProceedWarning:
       'Changing thinking mode mid-conversation will increase latency and may reduce quality. For best results, set this at the start of a session.',
     thinkingToggleProceedQuestion: 'Do you want to proceed?',
@@ -309,7 +321,8 @@ export const en = {
     modelPickerFastModeOffSuffix: ' to turn on Fast mode ({model} only).',
     modelPickerFastModeOnNotice:
       'Fast mode is ON and available with {model} only (/fast). Switching to other models turn off fast mode.',
-    modelPickerFastModeOffNotice: 'Use /fast to turn on Fast mode ({model} only).',
+    modelPickerFastModeOffNotice:
+      'Use /fast to turn on Fast mode ({model} only).',
   },
   agents: {
     title: 'Agents',
@@ -556,15 +569,15 @@ export const en = {
     externalClaudeMdDeny: 'No, disable external imports',
     externalClaudeMdTitle: 'Allow external CLAUDE.md file imports?',
     remoteCalloutTitle: 'Remote Control',
-    remoteCalloutEnable: 'Enable Remote Control for this session',
-    remoteCalloutEnableDescription: 'Opens a secure connection to claude.ai.',
+    remoteCalloutEnable: 'Remote Control unavailable',
+    remoteCalloutEnableDescription:
+      'Anthropic online authentication has been removed from this build.',
     remoteCalloutDismiss: 'Never mind',
     remoteCalloutDismissDescription:
-      'You can always enable it later with /remote-control.',
+      'Remote Control is unavailable in this build.',
     remoteCalloutIntro:
-      'Remote Control lets you access this CLI session from the web (claude.ai/code) or the Claude app, so you can pick up where you left off on any device.',
-    remoteCalloutOutro:
-      'You can disconnect remote access anytime by running /remote-control again.',
+      'Remote Control and other Anthropic-hosted online services are unavailable in this build.',
+    remoteCalloutOutro: 'Local MCP and skills remain available.',
     pressEnterToContinue: 'Press {key} to continue…',
     historySearchTitle: 'Search prompts',
     historySearchPlaceholder: 'Filter history…',
@@ -641,12 +654,14 @@ export const en = {
     remoteSessionDetailProgressLabel: 'Progress',
     remoteSessionDetailSessionUrlLabel: 'Session URL',
     remoteSessionDetailRecentMessagesLabel: 'Recent messages',
-    remoteSessionDetailShowingMessages: 'Showing last {shown} of {total} messages',
+    remoteSessionDetailShowingMessages:
+      'Showing last {shown} of {total} messages',
     remoteSessionDetailTeleportFailed: 'Teleport failed: {error}',
     remoteSessionDetailTeleporting: 'Teleporting to session…',
     remoteSessionDetailStarting: 'starting',
     remoteSessionDetailTeleportAction: 'teleport',
-    remoteSessionPlanReviewInBrowser: 'Review the plan in Claude Code on the web',
+    remoteSessionPlanReviewInBrowser:
+      'Review the plan in Claude Code on the web',
     remoteSessionAnswerInBrowser: 'Answer in browser: {text}',
     remoteSessionDismissed: 'Remote session details dismissed',
     remoteSessionUltraplanInputRequired: 'input required',
@@ -656,7 +671,8 @@ export const en = {
     remoteSessionUltraplanWorking: 'working',
     remoteSessionCallCountOne: '{count} tool call',
     remoteSessionCallCountMany: '{count} tool calls',
-    remoteSessionTerminateWebSessionWarning: 'This will terminate the Claude Code on the web session.',
+    remoteSessionTerminateWebSessionWarning:
+      'This will terminate the Claude Code on the web session.',
     remoteSessionTerminateSession: 'Terminate session',
     remoteSessionBack: 'Back',
     remoteSessionStopUltraplanTitle: 'Stop ultraplan?',
@@ -681,7 +697,8 @@ export const en = {
     remoteSessionReviewOpenInWeb: 'Open in Claude Code on the web',
     remoteSessionReviewRunning: 'running',
     remoteSessionReviewReadyToView: 'ready · shift+↓ to view',
-    remoteSessionReviewCountsFoundVerified: '{found} found · {verified} verified',
+    remoteSessionReviewCountsFoundVerified:
+      '{found} found · {verified} verified',
     remoteSessionReviewCountsFound: '{count} found',
     remoteSessionReviewCountsVerified: '{count} verified',
     remoteSessionReviewDeduping: 'deduping',
@@ -731,10 +748,10 @@ export const en = {
     permissions: {
       doYouWantToProceed: 'Do you want to proceed?',
       feedbackPlaceholderAccept: 'tell Claude what to do next',
-      feedbackPlaceholderReject: 'tell Claude what to do differently'
+      feedbackPlaceholderReject: 'tell Claude what to do differently',
     },
     notifications: {
-      statusLineSkipped: 'statusline skipped · restart to fix'
+      statusLineSkipped: 'statusline skipped · restart to fix',
     },
     previewUnavailable: '(preview unavailable)',
     invalidSettingsTitle: 'Settings Error',

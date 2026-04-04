@@ -211,7 +211,7 @@ export const zhCN = {
     shortcutsHint: '? 查看快捷键',
     apiKeyHelperSlow: 'API 密钥助手响应较慢',
     authErrorRetry: '认证失败 · 请重试',
-    notLoggedInRunLogin: '未登录 · 运行 /login',
+    notLoggedInRunLogin: '未登录 · 当前构建已禁用 Anthropic 登录',
     debugMode: '调试模式',
     customizeKeybindingsHint: '/keybindings 自定义快捷键配置',
     holdToSpeakHint: '按住 {shortcut} 开始说话',
@@ -225,7 +225,8 @@ export const zhCN = {
     stopAgentsAction: '停止智能体',
     nativeSelectAction: '原生选择',
     copyAction: '复制',
-    macOptionClickSettingHint: '请在 VS Code 设置中启用 macOptionClickForcesSelection 选项',
+    macOptionClickSettingHint:
+      '请在 VS Code 设置中启用 macOptionClickForcesSelection 选项',
     tokenCountLabel: '{count} 个令牌',
     bypassPermissionsMode: '绕过权限',
     bypassPermissionsOn: '已开启 {mode}',
@@ -302,7 +303,8 @@ export const zhCN = {
     modelPickerEffortModelSuffix: '（{model}）',
     modelPickerFastModePrefix: '快速模式当前',
     modelPickerFastModeOnWord: '已开启',
-    modelPickerFastModeOnSuffix: '，且仅支持 {model}（/fast）。切换到其他模型会关闭快速模式。',
+    modelPickerFastModeOnSuffix:
+      '，且仅支持 {model}（/fast）。切换到其他模型会关闭快速模式。',
     modelPickerFastModeOffPrefix: '使用 ',
     modelPickerFastModeOffSuffix: ' 开启快速模式（仅支持 {model}）。',
     modelPickerFastModeOnNotice:
@@ -325,8 +327,10 @@ export const zhCN = {
     createNewAgent: '创建新智能体',
     noAgentsFoundTitle: '未找到智能体',
     noAgentsFoundBody: '未找到智能体。创建 Claude 可委派的专用子智能体。',
-    noAgentsFoundContext: '每个子智能体都有自己的上下文窗口、自定义系统提示词和专用工具。',
-    noAgentsFoundSuggestions: '可以尝试创建：代码审查员、代码精简员、安全审查员、技术负责人或体验审查员。',
+    noAgentsFoundContext:
+      '每个子智能体都有自己的上下文窗口、自定义系统提示词和专用工具。',
+    noAgentsFoundSuggestions:
+      '可以尝试创建：代码审查员、代码精简员、安全审查员、技术负责人或体验审查员。',
     countSubtitle: '{count} 个智能体',
     memorySuffix: '{memory} 记忆',
     shadowedBy: '被 {source} 覆盖',
@@ -354,7 +358,8 @@ export const zhCN = {
     skillsLabel: '技能',
     colorLabel: '颜色',
     systemPromptLabel: '系统提示词',
-    openedInEditor: '已在编辑器中打开 {name}。如果你做了修改，请重启以加载最新版本。',
+    openedInEditor:
+      '已在编辑器中打开 {name}。如果你做了修改，请重启以加载最新版本。',
     updatedAgent: '已更新智能体：{name}',
     failedToSaveAgent: '保存智能体失败',
     openInEditor: '在编辑器中打开',
@@ -375,11 +380,13 @@ export const zhCN = {
     neverMind: '算了',
     failedToRestoreConversation: '恢复对话失败：\n{error}',
     failedToSummarize: '总结失败：\n{error}',
-    failedToRestoreConversationAndCode: '恢复对话和代码失败：\n{conversationError}\n{codeError}',
+    failedToRestoreConversationAndCode:
+      '恢复对话和代码失败：\n{conversationError}\n{codeError}',
     failedToRestoreCode: '恢复代码失败：\n{error}',
     messageNotFound: '未找到消息。',
     confirmRestore: '确认要恢复到你发送这条消息之前的状态吗：',
-    confirmRestoreConversationOnly: '确认要将对话恢复到你发送这条消息之前的状态吗：',
+    confirmRestoreConversationOnly:
+      '确认要将对话恢复到你发送这条消息之前的状态吗：',
     summarizing: '正在总结…',
     manualOrBashWarning: '回退不会影响手动编辑或通过命令行修改的文件。',
     restoreCodeOrConversationPrompt: '将代码和/或对话恢复到此前的某个时间点…',
@@ -390,7 +397,8 @@ export const zhCN = {
     enterToContinue: '回车继续',
     escToExit: 'Esc 退出',
     messagesAfterWillBeSummarized: '此位置之后的消息将被总结。',
-    precedingWillBeSummarized: '此前的消息将被总结。这条消息及其后的消息保持不变——你会停留在当前对话末尾。',
+    precedingWillBeSummarized:
+      '此前的消息将被总结。这条消息及其后的消息保持不变——你会停留在当前对话末尾。',
     conversationWillBeForked: '对话将被分叉。',
     conversationWillBeUnchanged: '对话不会变化。',
     codeWillBeUnchanged: '代码不会变化。',
@@ -537,14 +545,12 @@ export const zhCN = {
     externalClaudeMdDeny: '不，禁用外部导入',
     externalClaudeMdTitle: '允许导入外部 CLAUDE.md 文件吗？',
     remoteCalloutTitle: '远程控制',
-    remoteCalloutEnable: '为当前会话启用远程控制',
-    remoteCalloutEnableDescription: '将打开到 claude.ai 的安全连接。',
+    remoteCalloutEnable: '远程控制不可用',
+    remoteCalloutEnableDescription: '当前构建已移除 Anthropic 在线认证。',
     remoteCalloutDismiss: '暂时不用',
-    remoteCalloutDismissDescription: '你之后随时都可以通过 /remote-control 启用。',
-    remoteCalloutIntro:
-      '远程控制允许你从网页（claude.ai/code）或 Claude 客户端访问当前 CLI 会话，从而在任意设备上继续上次的工作。',
-    remoteCalloutOutro:
-      '你可以随时再次运行 /remote-control 来断开远程访问。',
+    remoteCalloutDismissDescription: '当前构建不提供远程控制。',
+    remoteCalloutIntro: '当前构建不提供远程控制及其他 Anthropic 托管在线服务。',
+    remoteCalloutOutro: '本地 MCP 与 skills 功能仍然保留。',
     pressEnterToContinue: '按 {key} 继续…',
     historySearchTitle: '搜索提示词',
     historySearchPlaceholder: '筛选历史记录…',
@@ -636,7 +642,8 @@ export const zhCN = {
     remoteSessionUltraplanWorking: '进行中',
     remoteSessionCallCountOne: '{count} 次工具调用',
     remoteSessionCallCountMany: '{count} 次工具调用',
-    remoteSessionTerminateWebSessionWarning: '这会终止网页中的 Claude Code 会话。',
+    remoteSessionTerminateWebSessionWarning:
+      '这会终止网页中的 Claude Code 会话。',
     remoteSessionTerminateSession: '终止会话',
     remoteSessionBack: '返回',
     remoteSessionStopUltraplanTitle: '停止 ultraplan？',
@@ -661,7 +668,8 @@ export const zhCN = {
     remoteSessionReviewOpenInWeb: '在网页中的 Claude Code 里打开',
     remoteSessionReviewRunning: '进行中',
     remoteSessionReviewReadyToView: '已就绪 · Shift+↓ 查看',
-    remoteSessionReviewCountsFoundVerified: '{found} 个发现 · {verified} 个已验证',
+    remoteSessionReviewCountsFoundVerified:
+      '{found} 个发现 · {verified} 个已验证',
     remoteSessionReviewCountsFound: '{count} 个发现',
     remoteSessionReviewCountsVerified: '{count} 个已验证',
     remoteSessionReviewDeduping: '去重中',
@@ -711,14 +719,15 @@ export const zhCN = {
     permissions: {
       doYouWantToProceed: '是否继续？',
       feedbackPlaceholderAccept: '告诉 Claude 下一步要做什么',
-      feedbackPlaceholderReject: '告诉 Claude 应该如何改进'
+      feedbackPlaceholderReject: '告诉 Claude 应该如何改进',
     },
     notifications: {
-      statusLineSkipped: '状态行已跳过 · 重启以修复'
+      statusLineSkipped: '状态行已跳过 · 重启以修复',
     },
     previewUnavailable: '（预览不可用）',
     invalidSettingsTitle: '设置错误',
-    invalidSettingsSkippedHint: '有错误的文件会被整个跳过，而不只是其中的无效设置。',
+    invalidSettingsSkippedHint:
+      '有错误的文件会被整个跳过，而不只是其中的无效设置。',
     invalidSettingsExit: '退出并手动修复',
     invalidSettingsContinue: '忽略这些设置并继续',
   },

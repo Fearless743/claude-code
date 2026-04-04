@@ -25,8 +25,6 @@ import ide from './commands/ide/index.js'
 import init from './commands/init.js'
 import initVerifiers from './commands/init-verifiers.js'
 import keybindings from './commands/keybindings/index.js'
-import installGitHubApp from './commands/install-github-app/index.js'
-import installSlackApp from './commands/install-slack-app/index.js'
 import breakCache from './commands/break-cache/index.js'
 import mcp from './commands/mcp/index.js'
 import mobile from './commands/mobile/index.js'
@@ -41,7 +39,6 @@ import share from './commands/share/index.js'
 import skills from './commands/skills/index.js'
 import status from './commands/status/index.js'
 import tasks from './commands/tasks/index.js'
-import teleport from './commands/teleport/index.js'
 /* eslint-disable @typescript-eslint/no-require-imports */
 const agentsPlatform =
   process.env.USER_TYPE === 'ant'
@@ -114,7 +111,6 @@ import permissions from './commands/permissions/index.js'
 import plan from './commands/plan/index.js'
 import fast from './commands/fast/index.js'
 import passes from './commands/passes/index.js'
-import privacySettings from './commands/privacy-settings/index.js'
 import hooks from './commands/hooks/index.js'
 import files from './commands/files/index.js'
 import branch from './commands/branch/index.js'
@@ -134,7 +130,6 @@ import {
 import antTrace from './commands/ant-trace/index.js'
 import perfIssue from './commands/perf-issue/index.js'
 import sandboxToggle from './commands/sandbox-toggle/index.js'
-import chrome from './commands/chrome/index.js'
 import stickers from './commands/stickers/index.js'
 import advisor from './commands/advisor.js'
 import { logError } from './utils/log.js'
@@ -181,7 +176,6 @@ const usageReport: Command = {
     return real.getPromptForCommand(args, context)
   },
 }
-import oauthRefresh from './commands/oauth-refresh/index.js'
 import debugToolCall from './commands/debug-tool-call/index.js'
 import { getSettingSourceName } from './utils/settings/constants.js'
 import {
@@ -294,11 +288,9 @@ export const INTERNAL_ONLY_COMMANDS = [
   onboarding,
   share,
   summary,
-  teleport,
   antTrace,
   perfIssue,
   env,
-  oauthRefresh,
   debugToolCall,
   agentsPlatform,
   autofixPr,
@@ -312,7 +304,6 @@ const COMMANDS = memoize((): Command[] => [
   agents,
   branch,
   btw,
-  chrome,
   clear,
   color,
   compact,
@@ -333,8 +324,6 @@ const COMMANDS = memoize((): Command[] => [
   ide,
   init,
   keybindings,
-  installGitHubApp,
-  installSlackApp,
   mcp,
   memory,
   mobile,
@@ -364,20 +353,19 @@ const COMMANDS = memoize((): Command[] => [
   usage,
   usageReport,
   vim,
-  ...(webCmd ? [webCmd] : []),
+  ...[],
   ...(forkCmd ? [forkCmd] : []),
   ...(buddy ? [buddy] : []),
   ...(proactive ? [proactive] : []),
   ...(briefCommand ? [briefCommand] : []),
   ...(assistantCommand ? [assistantCommand] : []),
-  ...(bridge ? [bridge] : []),
+  ...[],
   ...(remoteControlServerCommand ? [remoteControlServerCommand] : []),
-  ...(voiceCommand ? [voiceCommand] : []),
+  ...[],
   thinkback,
   thinkbackPlay,
   permissions,
   plan,
-  privacySettings,
   hooks,
   exportCommand,
   sandboxToggle,

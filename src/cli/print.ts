@@ -186,10 +186,9 @@ import {
   logSuggestionSuppressed,
   type PromptVariant,
 } from 'src/services/PromptSuggestion/promptSuggestion.js'
+import { getAnthropicOnlineServicesDisabledMessage } from 'src/utils/anthropicOnlineServices.js'
 import { getLastCacheSafeParams } from 'src/utils/forkedAgent.js'
 import { getAccountInformation } from 'src/utils/auth.js'
-import { OAuthService } from 'src/services/oauth/index.js'
-import { installOAuthTokens } from 'src/cli/handlers/auth.js'
 import { getAPIProvider } from 'src/utils/model/providers.js'
 import type { HookCallbackMatcher } from 'src/types/hooks.js'
 import { AwsAuthStatusManager } from 'src/utils/awsAuthStatusManager.js'
@@ -362,9 +361,12 @@ const proactiveModule =
   feature('PROACTIVE') || feature('KAIROS')
     ? (require('../proactive/index.js') as typeof import('../proactive/index.js'))
     : null
-const cronSchedulerModule = require('../utils/cronScheduler.js') as typeof import('../utils/cronScheduler.js')
-const cronJitterConfigModule = require('../utils/cronJitterConfig.js') as typeof import('../utils/cronJitterConfig.js')
-const cronGate = require('../tools/ScheduleCronTool/prompt.js') as typeof import('../tools/ScheduleCronTool/prompt.js')
+const cronSchedulerModule =
+  require('../utils/cronScheduler.js') as typeof import('../utils/cronScheduler.js')
+const cronJitterConfigModule =
+  require('../utils/cronJitterConfig.js') as typeof import('../utils/cronJitterConfig.js')
+const cronGate =
+  require('../tools/ScheduleCronTool/prompt.js') as typeof import('../tools/ScheduleCronTool/prompt.js')
 const extractMemoriesModule = feature('EXTRACT_MEMORIES')
   ? (require('../services/extractMemories/extractMemories.js') as typeof import('../services/extractMemories/extractMemories.js'))
   : null
@@ -1642,7 +1644,10 @@ function runHeadlessStreaming(
         connection.config.type === 'stdio' ||
         connection.config.type === undefined
       ) {
-        const stdioConfig = connection.config as { command: string; args: string[] }
+        const stdioConfig = connection.config as {
+          command: string
+          args: string[]
+        }
         config = {
           type: 'stdio' as const,
           command: stdioConfig.command,
@@ -1804,7 +1809,8 @@ function runHeadlessStreaming(
     }
     for (const [name, config] of Object.entries(sdkMcpConfigs)) {
       if (config.type === 'sdk' && !(name in supportedConfigs)) {
-        supportedConfigs[name] = config as unknown as McpServerConfigForProcessTransport
+        supportedConfigs[name] =
+          config as unknown as McpServerConfigForProcessTransport
       }
     }
     const { response, sdkServersChanged } =
@@ -2253,7 +2259,9 @@ function runHeadlessStreaming(
 
           if (feature('FILE_PERSISTENCE') && turnStartTime !== undefined) {
             void executeFilePersistence(
-              { turnStartTime } as import('src/utils/filePersistence/types.js').TurnStartTime,
+              {
+                turnStartTime,
+              } as import('src/utils/filePersistence/types.js').TurnStartTime,
               abortController.signal,
               result => {
                 output.enqueue({
@@ -2699,9 +2707,7 @@ function runHeadlessStreaming(
   // the end of run() picks up the queued command.
   let cronScheduler: import('../utils/cronScheduler.js').CronScheduler | null =
     null
-  if (
-    cronGate.isKairosCronEnabled()
-  ) {
+  if (cronGate.isKairosCronEnabled()) {
     cronScheduler = cronSchedulerModule.createCronScheduler({
       onFire: prompt => {
         if (inputClosed) return
@@ -2789,16 +2795,6 @@ function runHeadlessStreaming(
   // token exchange completion. Reconnect is handled separately by the
   // extension via handleAuthDone → mcp_reconnect.
   const oauthAuthPromises = new Map<string, Promise<void>>()
-
-  // In-flight Anthropic OAuth flow (claude_authenticate). Single-slot: a
-  // second authenticate request cleans up the first. The service holds the
-  // PKCE verifier + localhost listener; the promise settles after
-  // installOAuthTokens — after it resolves, the in-process memoized token
-  // cache is already cleared and the next API call picks up the new creds.
-  let claudeOAuth: {
-    service: OAuthService
-    flow: Promise<void>
-  } | null = null
 
   // This is essentially spawning a parallel async task- we have two
   // running in parallel- one reading from stdin and adding to the
@@ -3508,142 +3504,22 @@ function runHeadlessStreaming(
             )
           }
         } else if (message.request.subtype === 'claude_authenticate') {
-          // Anthropic OAuth over the control channel. The SDK client owns
-          // the user's browser (we're headless in -p mode); we hand back
-          // both URLs and wait. Automatic URL → localhost listener catches
-          // the redirect if the browser is on this host; manual URL → the
-          // success page shows "code#state" for claude_oauth_callback.
-          const { loginWithClaudeAi } = message.request
-
-          // Clean up any prior flow. cleanup() closes the localhost listener
-          // and nulls the manual resolver. The prior `flow` promise is left
-          // pending (AuthCodeListener.close() does not reject) but its object
-          // graph becomes unreachable once the server handle is released and
-          // is GC'd — no fd or port is held.
-          claudeOAuth?.service.cleanup()
-
-          logEvent('tengu_oauth_flow_start', {
-            loginWithClaudeAi: loginWithClaudeAi ?? true,
-          })
-
-          const service = new OAuthService()
-          let urlResolver!: (urls: {
-            manualUrl: string
-            automaticUrl: string
-          }) => void
-          const urlPromise = new Promise<{
-            manualUrl: string
-            automaticUrl: string
-          }>(resolve => {
-            urlResolver = resolve
-          })
-
-          const flow = service
-            .startOAuthFlow(
-              async (manualUrl, automaticUrl) => {
-                // automaticUrl is always defined when skipBrowserOpen is set;
-                // the signature is optional only for the existing single-arg callers.
-                urlResolver({ manualUrl, automaticUrl: automaticUrl! })
-              },
-              {
-                loginWithClaudeAi: loginWithClaudeAi ?? true,
-                skipBrowserOpen: true,
-              },
-            )
-            .then(async tokens => {
-              // installOAuthTokens: performLogout (clear stale state) →
-              // store profile → saveOAuthTokensIfNeeded → clearOAuthTokenCache
-              // → clearAuthRelatedCaches. After this resolves, the memoized
-              // getClaudeAIOAuthTokens in this process is invalidated; the
-              // next API call re-reads keychain/file and works. No respawn.
-              await installOAuthTokens(tokens)
-              logEvent('tengu_oauth_success', {
-                loginWithClaudeAi: loginWithClaudeAi ?? true,
-              })
-            })
-            .finally(() => {
-              service.cleanup()
-              if (claudeOAuth?.service === service) {
-                claudeOAuth = null
-              }
-            })
-
-          claudeOAuth = { service, flow }
-
-          // Attach the rejection handler before awaiting so a synchronous
-          // startOAuthFlow failure doesn't surface as an unhandled rejection.
-          // The claude_oauth_callback handler re-awaits flow for the manual
-          // path and surfaces the real error to the client.
-          void flow.catch(err =>
-            logForDebugging(`claude_authenticate flow ended: ${err}`, {
-              level: 'info',
-            }),
+          sendControlResponseError(
+            message,
+            getAnthropicOnlineServicesDisabledMessage(
+              'Anthropic authentication',
+            ),
           )
-
-          try {
-            // Race against flow: if startOAuthFlow rejects before calling
-            // the authURLHandler (e.g. AuthCodeListener.start() fails with
-            // EACCES or fd exhaustion), urlPromise would pend forever and
-            // wedge the stdin loop. flow resolving first is unreachable in
-            // practice (it's suspended on the same urls we're waiting for).
-            const { manualUrl, automaticUrl } = await Promise.race([
-              urlPromise,
-              flow.then(() => {
-                throw new Error(
-                  'OAuth flow completed without producing auth URLs',
-                )
-              }),
-            ])
-            sendControlResponseSuccess(message, {
-              manualUrl,
-              automaticUrl,
-            })
-          } catch (error) {
-            sendControlResponseError(message, errorMessage(error))
-          }
         } else if (
           message.request.subtype === 'claude_oauth_callback' ||
           message.request.subtype === 'claude_oauth_wait_for_completion'
         ) {
-          if (!claudeOAuth) {
-            sendControlResponseError(
-              message,
-              'No active claude_authenticate flow',
-            )
-          } else {
-            // Inject the manual code synchronously — must happen in stdin
-            // message order so a subsequent claude_authenticate doesn't
-            // replace the service before this code lands.
-            if (message.request.subtype === 'claude_oauth_callback') {
-              claudeOAuth.service.handleManualAuthCodeInput({
-                authorizationCode: message.request.authorizationCode,
-                state: message.request.state,
-              })
-            }
-            // Detach the await — the stdin reader is serial and blocking
-            // here deadlocks claude_oauth_wait_for_completion: flow may
-            // only resolve via a future claude_oauth_callback on stdin,
-            // which can't be read while we're parked. Capture the binding;
-            // claudeOAuth is nulled in flow's own .finally.
-            const { flow } = claudeOAuth
-            void flow.then(
-              () => {
-                const accountInfo = getAccountInformation()
-                sendControlResponseSuccess(message, {
-                  account: {
-                    email: accountInfo?.email,
-                    organization: accountInfo?.organization,
-                    subscriptionType: accountInfo?.subscription,
-                    tokenSource: accountInfo?.tokenSource,
-                    apiKeySource: accountInfo?.apiKeySource,
-                    apiProvider: getAPIProvider(),
-                  },
-                })
-              },
-              (error: unknown) =>
-                sendControlResponseError(message, errorMessage(error)),
-            )
-          }
+          sendControlResponseError(
+            message,
+            getAnthropicOnlineServicesDisabledMessage(
+              'Anthropic authentication',
+            ),
+          )
         } else if (message.request.subtype === 'mcp_clear_auth') {
           const { serverName } = message.request
           const currentAppState = getAppState()
@@ -4431,7 +4307,10 @@ async function handleInitializeRequest(
   const accountInfo = getAccountInformation()
   if (request.hooks) {
     const hooks: Partial<Record<HookEvent, HookCallbackMatcher[]>> = {}
-    for (const [event, matchers] of Object.entries(request.hooks) as [string, Array<{ hookCallbackIds: string[]; timeout?: number; matcher?: string }>][]) {
+    for (const [event, matchers] of Object.entries(request.hooks) as [
+      string,
+      Array<{ hookCallbackIds: string[]; timeout?: number; matcher?: string }>,
+    ][]) {
       hooks[event as HookEvent] = matchers.map(matcher => {
         const callbacks = matcher.hookCallbackIds.map(callbackId => {
           return structuredIO.createHookCallback(callbackId, matcher.timeout)
@@ -4521,7 +4400,11 @@ async function handleRewindFiles(
   dryRun: boolean,
 ): Promise<RewindFilesResult> {
   if (!fileHistoryEnabled()) {
-    return { canRewind: false, error: 'File rewinding is not enabled.', filesChanged: [] }
+    return {
+      canRewind: false,
+      error: 'File rewinding is not enabled.',
+      filesChanged: [],
+    }
   }
   if (!fileHistoryCanRestore(appState.fileHistory, userMessageId)) {
     return {
@@ -4826,7 +4709,10 @@ function reregisterChannelHandlerAfterReconnect(
         value: wrapChannelMessage(connection.name, content, meta),
         priority: 'next',
         isMeta: true,
-        origin: { kind: 'channel', server: connection.name } as unknown as string,
+        origin: {
+          kind: 'channel',
+          server: connection.name,
+        } as unknown as string,
         skipSlashCommands: true,
       })
     },
@@ -4987,35 +4873,7 @@ async function loadInitialMessages(
   // Handle teleport in print mode
   if (options.teleport) {
     try {
-      if (!isPolicyAllowed('allow_remote_sessions')) {
-        throw new Error(
-          "Remote sessions are disabled by your organization's policy.",
-        )
-      }
-
-      logEvent('tengu_teleport_print', {})
-
-      if (typeof options.teleport !== 'string') {
-        throw new Error('No session ID provided for teleport')
-      }
-
-      const {
-        checkOutTeleportedSessionBranch,
-        processMessagesForTeleportResume,
-        teleportResumeCodeSession,
-        validateGitState,
-      } = await import('src/utils/teleport.js')
-      await validateGitState()
-      const teleportResult = await teleportResumeCodeSession(options.teleport)
-      const { branchError } = await checkOutTeleportedSessionBranch(
-        teleportResult.branch,
-      )
-      return {
-        messages: processMessagesForTeleportResume(
-          teleportResult.log,
-          branchError,
-        ),
-      }
+      throw new Error(getAnthropicOnlineServicesDisabledMessage('Teleport'))
     } catch (error) {
       logError(error)
       gracefulShutdownSync(1)
@@ -5250,13 +5108,21 @@ export async function handleOrphanedPermissionResponse({
   onEnqueued?: () => void
   handledToolUseIds: Set<string>
 }): Promise<boolean> {
-  const responseInner = message.response as { subtype?: string; response?: Record<string, unknown>; request_id?: string } | undefined
+  const responseInner = message.response as
+    | {
+        subtype?: string
+        response?: Record<string, unknown>
+        request_id?: string
+      }
+    | undefined
   if (
     responseInner?.subtype === 'success' &&
     responseInner.response?.toolUseID &&
     typeof responseInner.response.toolUseID === 'string'
   ) {
-    const permissionResult = responseInner.response as PermissionResult & { toolUseID?: string }
+    const permissionResult = responseInner.response as PermissionResult & {
+      toolUseID?: string
+    }
     const toolUseID = permissionResult.toolUseID
     if (!toolUseID) {
       return false

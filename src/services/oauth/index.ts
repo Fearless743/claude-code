@@ -1,4 +1,5 @@
 import { logEvent } from 'src/services/analytics/index.js'
+import { assertAnthropicOnlineServicesEnabled } from '../../utils/anthropicOnlineServices.js'
 import { openBrowser } from '../../utils/browser.js'
 import { AuthCodeListener } from './auth-code-listener.js'
 import * as client from './client.js'
@@ -47,6 +48,8 @@ export class OAuthService {
       skipBrowserOpen?: boolean
     },
   ): Promise<OAuthTokens> {
+    assertAnthropicOnlineServicesEnabled('Anthropic OAuth')
+
     // Create OAuth callback listener and start it
     this.authCodeListener = new AuthCodeListener()
     this.port = await this.authCodeListener.start()

@@ -20,6 +20,7 @@ import { truncateToWidth } from '../utils/format.js'
 import { logError } from '../utils/log.js'
 import { sleep } from '../utils/sleep.js'
 import { createAgentWorktree, removeAgentWorktree } from '../utils/worktree.js'
+import { getAnthropicOnlineServicesDisabledMessage } from '../utils/anthropicOnlineServices.js'
 import {
   BridgeFatalError,
   createBridgeApiClient,
@@ -1978,6 +1979,14 @@ async function fetchSessionTitle(
 }
 
 export async function bridgeMain(args: string[]): Promise<void> {
+  // Anthropic-hosted Remote Control is intentionally removed in this build.
+  // Keep the command surface but terminate immediately so fast-path callers
+  // cannot reach the networked bridge implementation.
+  // biome-ignore lint/suspicious/noConsole: intentional user-facing stderr
+  console.error(getAnthropicOnlineServicesDisabledMessage('Remote Control'))
+  // eslint-disable-next-line custom-rules/no-process-exit
+  process.exit(1)
+
   const parsed = parseArgs(args)
 
   if (parsed.help) {
@@ -2392,7 +2401,7 @@ export async function bridgeMain(args: string[]): Promise<void> {
       }
       // biome-ignore lint/suspicious/noConsole: intentional error output
       console.error(
-        `Error: Session ${resumeSessionId} not found. It may have been archived or expired, or your login may have lapsed (run \`claude /login\`).`,
+        `Error: Session ${resumeSessionId} not found. It may have been archived or expired. Anthropic online login is unavailable in this build.`,
       )
       // eslint-disable-next-line custom-rules/no-process-exit
       process.exit(1)

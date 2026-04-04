@@ -245,8 +245,10 @@ import { logPluginLoadErrors, logPluginsEnabledForSession } from './utils/teleme
 import { logSkillsLoaded } from './utils/telemetry/skillLoadedEvent.js';
 import { generateTempFilePath } from './utils/tempfile.js';
 import { validateUuid } from './utils/uuid.js';
+import { getAnthropicOnlineServicesDisabledMessage } from './utils/anthropicOnlineServices.js';
 // Plugin startup checks are now handled non-blockingly in REPL.tsx
 
+import { registerMcpAddCommand } from 'src/commands/mcp/addCommand.js';
 import { logPermissionContextForAnts } from 'src/services/internalLogging.js';
 import { fetchClaudeAIMcpConfigsIfEligible } from 'src/services/mcp/claudeai.js';
 import { clearServerCache } from 'src/services/mcp/client.js';
@@ -261,7 +263,6 @@ import {
   parseMcpConfigFromFilePath,
 } from 'src/services/mcp/config.js';
 import { excludeCommandsByServer, excludeResourcesByServer } from 'src/services/mcp/utils.js';
-import { isXaaEnabled } from 'src/services/mcp/xaaIdpLogin.js';
 import { getRelevantTips } from 'src/services/tips/tipRegistry.js';
 import { logContextMetrics } from 'src/utils/api.js';
 import { CLAUDE_IN_CHROME_MCP_SERVER_NAME, isClaudeInChromeMCPServer } from 'src/utils/claudeInChrome/common.js';
@@ -1738,6 +1739,18 @@ async function run(): Promise<CommanderCommand> {
       const remoteControlName =
         typeof remoteControlOption === 'string' && remoteControlOption.length > 0 ? remoteControlOption : undefined;
 
+      if (teleport) {
+        exitWithMessage(getAnthropicOnlineServicesDisabledMessage('Teleport'));
+      }
+
+      if (remote !== null) {
+        exitWithMessage(getAnthropicOnlineServicesDisabledMessage('Remote sessions'));
+      }
+
+      if (remoteControlOption) {
+        exitWithMessage(getAnthropicOnlineServicesDisabledMessage('Remote Control'));
+      }
+
       // Validate session ID if provided
       if (sessionId) {
         // Check for conflicting flags
@@ -2024,6 +2037,9 @@ async function run(): Promise<CommanderCommand> {
       const chromeOpts = options as {
         chrome?: boolean;
       };
+      if (chromeOpts.chrome) {
+        exitWithMessage(getAnthropicOnlineServicesDisabledMessage('Claude in Chrome'));
+      }
       // Store the explicit CLI flag so teammates can inherit it
       setChromeFlagOverride(chromeOpts.chrome);
       const enableClaudeInChrome =
@@ -4180,10 +4196,7 @@ async function run(): Promise<CommanderCommand> {
 
           // Add remote session info as initial system message
           const remoteSessionUrl = `${getRemoteSessionUrl(createdSession.id)}?m=0`;
-          const remoteInfoMessage = createSystemMessage(
-            `/remote-control is active. Code in CLI or at ${remoteSessionUrl}`,
-            'info',
-          );
+          const remoteInfoMessage = createSystemMessage(`Remote session link: ${remoteSessionUrl}`, 'info');
 
           // Create initial user message from the prompt if provided (CCR echoes it back but we ignore that)
           const initialUserMessage = hasInitialPrompt
@@ -4744,6 +4757,7 @@ async function run(): Promise<CommanderCommand> {
         verbose,
       });
     });
+  registerMcpAddCommand(mcp);
 
   mcp
     .command('remove <name>')
@@ -4917,7 +4931,7 @@ async function run(): Promise<CommanderCommand> {
         process.stderr.write(
           'Usage: claude ssh <user@host | ssh-config-alias> [dir]\n\n' +
             "Runs Claude Code on a remote Linux host. You don't need to install\n" +
-            'anything on the remote or run `claude auth login` there — the binary is\n' +
+            'anything on the remote or authenticate there — the binary is\n' +
             'deployed over SSH and API auth tunnels back through your local machine.\n',
         );
         process.exit(1);
@@ -5241,12 +5255,9 @@ async function run(): Promise<CommanderCommand> {
         hidden: true,
       })
       .alias('rc')
-      .description('Connect your local environment for remote-control sessions via claude.ai/code')
+      .description('Remote Control is unavailable in this build')
       .action(async () => {
-        // Unreachable — cli.tsx fast-path handles this command before main.tsx loads.
-        // If somehow reached, delegate to bridgeMain.
-        const { bridgeMain } = await import('./bridge/bridgeMain.js');
-        await bridgeMain(process.argv.slice(3));
+        exitWithMessage(getAnthropicOnlineServicesDisabledMessage('Remote Control'));
       });
   }
   if (feature('KAIROS')) {

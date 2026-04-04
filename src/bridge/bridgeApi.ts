@@ -471,7 +471,7 @@ function handleErrorStatus(
     case 403:
       throw new BridgeFatalError(
         isExpiredErrorType(errorType)
-          ? 'Remote Control session has expired. Please restart with `claude remote-control` or /remote-control.'
+          ? 'Remote Control is unavailable in this build because Anthropic online authentication has been removed.'
           : `${context}: Access denied (403)${detail ? `: ${detail}` : ''}. Check your organization permissions.`,
         403,
         errorType,
@@ -486,7 +486,7 @@ function handleErrorStatus(
     case 410:
       throw new BridgeFatalError(
         detail ??
-          'Remote Control session has expired. Please restart with `claude remote-control` or /remote-control.',
+          'Remote Control is unavailable in this build because Anthropic online authentication has been removed.',
         410,
         errorType ?? 'environment_expired',
       )

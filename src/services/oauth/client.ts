@@ -17,6 +17,10 @@ import {
   isClaudeAISubscriber,
   saveApiKey,
 } from '../../utils/auth.js'
+import {
+  assertAnthropicOnlineServicesEnabled,
+  isAnthropicOnlineServicesEnabled,
+} from '../../utils/anthropicOnlineServices.js'
 import type { AccountInfo } from '../../utils/config.js'
 import { getGlobalConfig, saveGlobalConfig } from '../../utils/config.js'
 import { logForDebugging } from '../../utils/debug.js'
@@ -64,6 +68,8 @@ export function buildAuthUrl({
   loginHint?: string
   loginMethod?: string
 }): string {
+  assertAnthropicOnlineServicesEnabled('Anthropic OAuth')
+
   const authUrlBase = loginWithClaudeAi
     ? getOauthConfig().CLAUDE_AI_AUTHORIZE_URL
     : getOauthConfig().CONSOLE_AUTHORIZE_URL
@@ -112,6 +118,8 @@ export async function exchangeCodeForTokens(
   useManualRedirect: boolean = false,
   expiresIn?: number,
 ): Promise<OAuthTokenExchangeResponse> {
+  assertAnthropicOnlineServicesEnabled('Anthropic OAuth')
+
   const requestBody: Record<string, string | number> = {
     grant_type: 'authorization_code',
     code: authorizationCode,
@@ -147,6 +155,8 @@ export async function refreshOAuthToken(
   refreshToken: string,
   { scopes: requestedScopes }: { scopes?: string[] } = {},
 ): Promise<OAuthTokens> {
+  assertAnthropicOnlineServicesEnabled('Anthropic OAuth')
+
   const requestBody = {
     grant_type: 'refresh_token',
     refresh_token: refreshToken,
@@ -276,6 +286,8 @@ export async function refreshOAuthToken(
 export async function fetchAndStoreUserRoles(
   accessToken: string,
 ): Promise<void> {
+  assertAnthropicOnlineServicesEnabled('Anthropic OAuth')
+
   const response = await axios.get(getOauthConfig().ROLES_URL, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
@@ -311,6 +323,8 @@ export async function fetchAndStoreUserRoles(
 export async function createAndStoreApiKey(
   accessToken: string,
 ): Promise<string | null> {
+  assertAnthropicOnlineServicesEnabled('Anthropic OAuth')
+
   try {
     const response = await axios.post(getOauthConfig().API_KEY_URL, null, {
       headers: { Authorization: `Bearer ${accessToken}` },
@@ -362,6 +376,8 @@ export async function fetchProfileInfo(accessToken: string): Promise<{
   subscriptionCreatedAt?: string
   rawProfile?: OAuthProfileResponse
 }> {
+  assertAnthropicOnlineServicesEnabled('Anthropic OAuth')
+
   const profile = await getOauthProfileFromOauthToken(accessToken)
   const orgType = profile?.organization?.organization_type
 
@@ -424,6 +440,10 @@ export async function fetchProfileInfo(accessToken: string): Promise<{
  * @returns The organization UUID or null if not authenticated
  */
 export async function getOrganizationUUID(): Promise<string | null> {
+  if (!isAnthropicOnlineServicesEnabled()) {
+    return getGlobalConfig().oauthAccount?.organizationUuid ?? null
+  }
+
   // Check global config first to avoid unnecessary API call
   const globalConfig = getGlobalConfig()
   const orgUUID = globalConfig.oauthAccount?.organizationUuid
@@ -449,6 +469,10 @@ export async function getOrganizationUUID(): Promise<string | null> {
  * @returns Whether or not the oauth account info was populated.
  */
 export async function populateOAuthAccountInfoIfNeeded(): Promise<boolean> {
+  if (!isAnthropicOnlineServicesEnabled()) {
+    return false
+  }
+
   // Check env vars first (synchronous, no network call needed).
   // SDK callers like Cowork can provide account info directly, which also
   // eliminates the race condition where early telemetry events lack account info.

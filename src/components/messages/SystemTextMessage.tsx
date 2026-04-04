@@ -782,7 +782,7 @@ function BridgeStatusMessage(t0) {
   }
   let t3;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = <Text><ThemedText color="suggestion">/remote-control</ThemedText> is active. Code in CLI or at</Text>;
+    t3 = <Text>Remote session link:</Text>;
     $[1] = t3;
   } else {
     t3 = $[1];

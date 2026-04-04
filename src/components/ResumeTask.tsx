@@ -244,7 +244,8 @@ function determineErrorType(errorMessage: string): LoadErrorType {
     message.includes('permission') ||
     message.includes('oauth') ||
     message.includes('not authenticated') ||
-    message.includes('/login') ||
+    message.includes('online login is unavailable') ||
+    message.includes('online authentication has been removed') ||
     message.includes('console account') ||
     message.includes('403')
   ) {

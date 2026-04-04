@@ -36,6 +36,7 @@ import { stripDisplayTagsAllowEmpty } from '../utils/displayTags.js'
 import { errorMessage } from '../utils/errors.js'
 import { getBranch, getRemoteUrl } from '../utils/git.js'
 import { toSDKMessages } from '../utils/messages/mappers.js'
+import { getAnthropicOnlineServicesDisabledMessage } from '../utils/anthropicOnlineServices.js'
 import {
   getContentText,
   getMessagesAfterCompactBoundary,
@@ -146,7 +147,10 @@ export async function initReplBridge(
   // instead of a misleading policy error from a stale/wrong-org cache.
   if (!getBridgeAccessToken()) {
     logBridgeSkip('no_oauth', '[bridge:repl] Skipping: no OAuth tokens')
-    onStateChange?.('failed', '/login')
+    onStateChange?.(
+      'failed',
+      getAnthropicOnlineServicesDisabledMessage('Remote Control'),
+    )
     return null
   }
 
@@ -221,7 +225,10 @@ export async function initReplBridge(
         'oauth_expired_unrefreshable',
         '[bridge:repl] Skipping: OAuth token expired and refresh failed (re-login required)',
       )
-      onStateChange?.('failed', '/login')
+      onStateChange?.(
+        'failed',
+        getAnthropicOnlineServicesDisabledMessage('Remote Control'),
+      )
       // Persist for the next process. Increments failCount when re-discovering
       // the same dead token (matched by expiresAt); resets to 1 for a different
       // token. Once count reaches 3, step 2a's early-return fires and this path
@@ -390,7 +397,10 @@ export async function initReplBridge(
   const orgUUID = await getOrganizationUUID()
   if (!orgUUID) {
     logBridgeSkip('no_org_uuid', '[bridge:repl] Skipping: no org UUID')
-    onStateChange?.('failed', '/login')
+    onStateChange?.(
+      'failed',
+      getAnthropicOnlineServicesDisabledMessage('Remote Control'),
+    )
     return null
   }
 
