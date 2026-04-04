@@ -138,9 +138,9 @@ export function Notifications(t0) {
           jsx: (
             <Text dimColor={true}>
               {translate(uiLanguage, 'settings.editInEditorHint', {
-              shortcut: 'ctrl+g',
-              editor: toIDEDisplayName(editor),
-            })}
+                shortcut: 'ctrl+g',
+                editor: toIDEDisplayName(editor),
+              })}
             </Text>
           ),
           priority: 'immediate',
@@ -326,7 +326,7 @@ function NotificationContent({
           </Text>
         </Box>
       )}
-      {(apiKeyStatus === 'invalid' || apiKeyStatus === 'missing') && (
+      {apiKeyStatus === 'invalid' && (
         <Box>
           <Text color="error" wrap="truncate">
             {isEnvTruthy(process.env.CLAUDE_CODE_REMOTE)

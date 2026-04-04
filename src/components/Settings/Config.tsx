@@ -39,6 +39,7 @@ import { ThemePicker } from '../ThemePicker.js';
 import { useAppState, useSetAppState, useAppStateStore } from '../../state/AppState.js';
 import { ModelPicker } from '../ModelPicker.js';
 import { modelDisplayString, isOpus1mMergeEnabled } from '../../utils/model/model.js';
+import { parseUserSpecifiedModel } from '../../utils/model/model.js';
 import { isBilledAsExtraUsage } from '../../utils/extraUsage.js';
 import { ClaudeMdExternalIncludesDialog } from '../ClaudeMdExternalIncludesDialog.js';
 import { Dialog } from '../design-system/Dialog.js';
@@ -83,6 +84,7 @@ import {
 import { isFullscreenEnvEnabled } from '../../utils/fullscreen.js';
 import type { LLMProvider } from '../../utils/config.js';
 import { createProviderId, getActiveProvider, getProviders } from '../../utils/providers.js';
+import { getAPIProvider } from '../../utils/model/providers.js';
 import { isBridgeEnabled } from '../../bridge/bridgeEnabled.js';
 type Props = {
   onClose: (
@@ -276,6 +278,59 @@ export function Config({
     focusedProviderDetailAction === 'detail:name' ||
     focusedProviderDetailAction === 'detail:apiKey' ||
     focusedProviderDetailAction === 'detail:baseUrl';
+  const refreshProviderModels = useCallback(async (provider: LLMProvider) => {
+    if (provider.type !== 'openai') {
+      return;
+    }
+
+    try {
+      const { fetchOpenAIModels } = await import('../../services/api/openai.js');
+      const models = await fetchOpenAIModels();
+      const modelIds = models.map(model => model.id);
+
+      saveGlobalConfig(current => ({
+        ...current,
+        openaiModels: modelIds,
+        llmProviders: (current.llmProviders ?? []).map(item =>
+          item.id === provider.id
+            ? {
+                ...item,
+                models: modelIds,
+              }
+            : item,
+        ),
+      }));
+      setGlobalConfig(getGlobalConfig());
+
+      const isCurrentActiveProvider = getGlobalConfig().activeProviderId === provider.id;
+      if (!isCurrentActiveProvider || getAPIProvider() !== 'openai') {
+        return;
+      }
+
+      setAppState(prev => {
+        if (prev.mainLoopModel === null || prev.mainLoopModel === undefined) {
+          return {
+            ...prev,
+            mainLoopModel: modelIds[0] ?? prev.mainLoopModel,
+            mainLoopModelForSession: null,
+          };
+        }
+
+        const resolvedCurrentModel = parseUserSpecifiedModel(prev.mainLoopModel);
+        if (modelIds.includes(prev.mainLoopModel) || modelIds.includes(resolvedCurrentModel)) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          mainLoopModel: modelIds[0] ?? prev.mainLoopModel,
+          mainLoopModelForSession: null,
+        };
+      });
+    } catch (error) {
+      logError(error);
+    }
+  }, [setAppState]);
   function getNextProviderName(baseName: string): string {
     const existingNames = new Set(providers.map(provider => provider.name));
     if (!existingNames.has(baseName)) {
@@ -1784,13 +1839,15 @@ export function Config({
 
       if (key.return) {
         isDirty.current = true;
+        const nextProviderDetailDraft = providerDetailDraft;
         saveGlobalConfig(current => ({
           ...current,
           llmProviders: (current.llmProviders ?? []).map(provider =>
-            provider.id === providerDetailDraft.id ? providerDetailDraft : provider,
+            provider.id === nextProviderDetailDraft.id ? nextProviderDetailDraft : provider,
           ),
         }));
         setGlobalConfig(getGlobalConfig());
+        void refreshProviderModels(nextProviderDetailDraft);
         setShowSubmenu('Providers');
         return;
       }
