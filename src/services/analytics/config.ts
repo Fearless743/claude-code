@@ -6,6 +6,7 @@
  */
 
 import { isEnvTruthy } from '../../utils/envUtils.js'
+import { isAnthropicOnlineServicesEnabled } from '../../utils/anthropicOnlineServices.js'
 import { isTelemetryDisabled } from '../../utils/privacyLevel.js'
 
 /**
@@ -18,6 +19,7 @@ import { isTelemetryDisabled } from '../../utils/privacyLevel.js'
  */
 export function isAnalyticsDisabled(): boolean {
   return (
+    !isAnthropicOnlineServicesEnabled() ||
     process.env.NODE_ENV === 'test' ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) ||

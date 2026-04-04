@@ -272,6 +272,10 @@ export function Config({
   const [providerDetailInputMode, setProviderDetailInputMode] = useState(false);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
   const selectedProvider = providers.find(provider => provider.id === selectedProviderId) ?? activeProvider;
+  const isFocusedProviderDetailField =
+    focusedProviderDetailAction === 'detail:name' ||
+    focusedProviderDetailAction === 'detail:apiKey' ||
+    focusedProviderDetailAction === 'detail:baseUrl';
   function getNextProviderName(baseName: string): string {
     const existingNames = new Set(providers.map(provider => provider.name));
     if (!existingNames.has(baseName)) {
@@ -300,6 +304,8 @@ export function Config({
         value: 'detail:name',
         initialValue: providerDetailDraft.name,
         placeholder: translate(uiLanguage, 'settings.providerPlaceholderName'),
+        showLabelWithValue: true,
+        labelValueSeparator: ': ',
         onChange: (value: string) => {
           setProviderDetailDraft(current => (current ? { ...current, name: value } : current));
           setProviderDetailInputMode(false);
@@ -313,6 +319,7 @@ export function Config({
         initialValue: providerDetailDraft.apiKey ?? '',
         placeholder: 'sk-...',
         showLabelWithValue: true,
+        labelValueSeparator: ': ',
         onChange: (value: string) => {
           setProviderDetailDraft(current => (current ? { ...current, apiKey: value } : current));
           setProviderDetailInputMode(false);
@@ -325,6 +332,8 @@ export function Config({
         value: 'detail:baseUrl',
         initialValue: providerDetailDraft.baseUrl ?? '',
         placeholder: translate(uiLanguage, 'settings.providerPlaceholderBaseUrl'),
+        showLabelWithValue: true,
+        labelValueSeparator: ': ',
         onChange: (value: string) => {
           setProviderDetailDraft(current => (current ? { ...current, baseUrl: value } : current));
           setProviderDetailInputMode(false);
@@ -2115,6 +2124,7 @@ export function Config({
             setProviderDetailDraft(selectedProvider ? { ...selectedProvider } : null);
             setShowSubmenu('Providers');
           }}
+          isCancelActive={!providerDetailInputMode && !isFocusedProviderDetailField}
           hideBorder
           hideInputGuide
         >

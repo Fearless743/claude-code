@@ -175,7 +175,7 @@ async function appendSessionLogImpl(
       return false
     }
 
-    const delayMs = Math.min(BASE_DELAY_MS * Math.pow(2, attempt - 1), 8000)
+    const delayMs = Math.min(BASE_DELAY_MS * 2 ** (attempt - 1), 8000)
     logForDebugging(
       `Remote persistence attempt ${attempt}/${MAX_RETRIES} failed, retrying in ${delayMs}ms…`,
     )
@@ -355,7 +355,7 @@ export async function getTeleportEvents(
     if (response.status === 401) {
       logForDiagnosticsNoPII('error', 'teleport_events_bad_token')
       throw new Error(
-        'Your session has expired. Please run /login to sign in again.',
+        'Your session has expired. Claude login is disabled in this build.',
       )
     }
 
@@ -463,7 +463,7 @@ async function fetchSessionLogsFromUrl(
       logForDebugging('Auth token expired or invalid')
       logForDiagnosticsNoPII('error', 'session_get_fail_bad_token')
       throw new Error(
-        'Your session has expired. Please run /login to sign in again.',
+        'Your session has expired. Claude login is disabled in this build.',
       )
     }
 

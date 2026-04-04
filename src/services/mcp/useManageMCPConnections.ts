@@ -445,7 +445,7 @@ export function useManageMCPConnections(
 
                   // Schedule next retry with exponential backoff
                   const backoffMs = Math.min(
-                    INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1),
+                    INITIAL_BACKOFF_MS * 2 ** (attempt - 1),
                     MAX_BACKOFF_MS,
                   )
                   logMCPDebug(
@@ -597,7 +597,7 @@ export function useManageMCPConnections(
                     gate.kind === 'disabled'
                       ? 'Channels are not currently available'
                       : gate.kind === 'auth'
-                        ? 'Channels require claude.ai authentication · run /login'
+                        ? 'Channels require claude.ai authentication, which is unavailable in this build'
                         : gate.kind === 'policy'
                           ? 'Channels are not enabled for your org · have an administrator set channelsEnabled: true in managed settings'
                           : gate.reason

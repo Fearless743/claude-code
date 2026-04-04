@@ -1,9 +1,13 @@
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from 'react/compiler-runtime';
 import * as React from 'react';
 import { useState } from 'react';
 import { Text } from '../../ink.js';
 import { logEvent } from '../../services/analytics/index.js';
-import { formatGrantAmount, getCachedOverageCreditGrant, refreshOverageCreditGrantCache } from '../../services/api/overageCreditGrant.js';
+import {
+  formatGrantAmount,
+  getCachedOverageCreditGrant,
+  refreshOverageCreditGrantCache,
+} from '../../services/api/overageCreditGrant.js';
 import { getGlobalConfig, saveGlobalConfig } from '../../utils/config.js';
 import { truncate } from '../../utils/format.js';
 import type { FeedConfig } from './Feed.js';
@@ -59,22 +63,22 @@ export function incrementOverageCreditUpsellSeenCount(): void {
     newCount = (prev.overageCreditUpsellSeenCount ?? 0) + 1;
     return {
       ...prev,
-      overageCreditUpsellSeenCount: newCount
+      overageCreditUpsellSeenCount: newCount,
     };
   });
   logEvent('tengu_overage_credit_upsell_shown', {
-    seen_count: newCount
+    seen_count: newCount,
   });
 }
 
 // Copy from "OC & Bulk Overages copy" doc (#6 — CLI /usage)
 function getUsageText(amount: string): string {
-  return `${amount} in extra usage for third-party apps · /extra-usage`;
+  return `${amount} in extra usage for third-party apps`;
 }
 
 // Copy from "OC & Bulk Overages copy" doc (#4 — CLI Welcome screen).
 // Char budgets: title ≤19, subtitle ≤48.
-const FEED_SUBTITLE = 'On us. Works on third-party apps · /extra-usage';
+const FEED_SUBTITLE = 'On us. Works on third-party apps';
 function getFeedTitle(amount: string): string {
   return `${amount} in extra usage`;
 }
@@ -84,14 +88,11 @@ type Props = {
 };
 export function OverageCreditUpsell(t0) {
   const $ = _c(8);
-  const {
-    maxWidth,
-    twoLine
-  } = t0;
+  const { maxWidth, twoLine } = t0;
   let t1;
   let t2;
   if ($[0] !== maxWidth || $[1] !== twoLine) {
-    t2 = Symbol.for("react.early_return_sentinel");
+    t2 = Symbol.for('react.early_return_sentinel');
     bb0: {
       const info = getCachedOverageCreditGrant();
       if (!info) {
@@ -121,13 +122,23 @@ export function OverageCreditUpsell(t0) {
         } else {
           t4 = $[7];
         }
-        t2 = <><Text color="claude">{maxWidth ? truncate(title, maxWidth) : title}</Text>{t4}</>;
+        t2 = (
+          <>
+            <Text color="claude">{maxWidth ? truncate(title, maxWidth) : title}</Text>
+            {t4}
+          </>
+        );
         break bb0;
       }
       const text = getUsageText(amount);
       const display = maxWidth ? truncate(text, maxWidth) : text;
       const highlightLen = Math.min(getFeedTitle(amount).length, display.length);
-      t1 = <Text dimColor={true}><Text color="claude">{display.slice(0, highlightLen)}</Text>{display.slice(highlightLen)}</Text>;
+      t1 = (
+        <Text dimColor={true}>
+          <Text color="claude">{display.slice(0, highlightLen)}</Text>
+          {display.slice(highlightLen)}
+        </Text>
+      );
     }
     $[0] = maxWidth;
     $[1] = twoLine;
@@ -137,7 +148,7 @@ export function OverageCreditUpsell(t0) {
     t1 = $[2];
     t2 = $[3];
   }
-  if (t2 !== Symbol.for("react.early_return_sentinel")) {
+  if (t2 !== Symbol.for('react.early_return_sentinel')) {
     return t2;
   }
   return t1;
@@ -159,7 +170,7 @@ export function createOverageCreditFeed(): FeedConfig {
     lines: [],
     customContent: {
       content: <Text dimColor>{FEED_SUBTITLE}</Text>,
-      width: Math.max(title.length, FEED_SUBTITLE.length)
-    }
+      width: Math.max(title.length, FEED_SUBTITLE.length),
+    },
   };
 }

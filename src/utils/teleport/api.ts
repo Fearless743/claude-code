@@ -4,6 +4,7 @@ import { getOauthConfig } from 'src/constants/oauth.js'
 import { getOrganizationUUID } from 'src/services/oauth/client.js'
 import z from 'zod/v4'
 import { getClaudeAIOAuthTokens } from '../auth.js'
+import { assertAnthropicOnlineServicesEnabled } from '../anthropicOnlineServices.js'
 import { logForDebugging } from '../debug.js'
 import { parseGitHubRepository } from '../detectRepository.js'
 import { errorMessage, toError } from '../errors.js'
@@ -182,10 +183,12 @@ export async function prepareApiRequest(): Promise<{
   accessToken: string
   orgUUID: string
 }> {
+  assertAnthropicOnlineServicesEnabled('Teleport')
+
   const accessToken = getClaudeAIOAuthTokens()?.accessToken
   if (accessToken === undefined) {
     throw new Error(
-      'Claude Code web sessions require authentication with a Claude.ai account. API key authentication is not sufficient. Please run /login to authenticate, or check your authentication status with /status.',
+      'Claude Code web sessions require Claude.ai authentication. That login flow is disabled in this build.',
     )
   }
 
@@ -274,6 +277,8 @@ export async function fetchCodeSessionsFromSessionsAPI(): Promise<
  * @returns Headers object with Authorization, Content-Type, and anthropic-version
  */
 export function getOAuthHeaders(accessToken: string): Record<string, string> {
+  assertAnthropicOnlineServicesEnabled('Teleport')
+
   return {
     Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'application/json',
@@ -314,7 +319,9 @@ export async function fetchSession(
     }
 
     if (response.status === 401) {
-      throw new Error('Session expired. Please run /login to sign in again.')
+      throw new Error(
+        'Session expired. Claude login is disabled in this build.',
+      )
     }
 
     throw new Error(

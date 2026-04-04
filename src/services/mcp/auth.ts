@@ -33,6 +33,7 @@ import { parse } from 'url'
 import xss from 'xss'
 import { MCP_CLIENT_METADATA_URL } from '../../constants/oauth.js'
 import { openBrowser } from '../../utils/browser.js'
+import { assertAnthropicOnlineServicesEnabled } from '../../utils/anthropicOnlineServices.js'
 import { getClaudeConfigHomeDir } from '../../utils/envUtils.js'
 import { errorMessage, getErrnoCode } from '../../utils/errors.js'
 import * as lockfile from '../../utils/lockfile.js'
@@ -469,6 +470,8 @@ export async function revokeServerTokens(
   serverConfig: McpSSEServerConfig | McpHTTPServerConfig,
   { preserveStepUpState = false }: { preserveStepUpState?: boolean } = {},
 ): Promise<void> {
+  assertAnthropicOnlineServicesEnabled('MCP OAuth')
+
   const storage = getSecureStorage()
   const existingData = storage.read()
   if (!existingData?.mcpOAuth) return
@@ -854,6 +857,8 @@ export async function performMCPOAuthFlow(
     onWaitingForCallback?: (submit: (callbackUrl: string) => void) => void
   },
 ): Promise<void> {
+  assertAnthropicOnlineServicesEnabled('MCP OAuth')
+
   // XAA (SEP-990): if configured, bypass the per-server consent dance.
   // If the IdP id_token isn't cached, this pops the browser once at the IdP
   // (shared across all XAA servers for that issuer). Subsequent servers hit
@@ -2346,7 +2351,7 @@ export class ClaudeAuthProvider implements OAuthClientProvider {
           return undefined
         }
 
-        const delayMs = 1000 * Math.pow(2, attempt - 1) // 1s, 2s, 4s
+        const delayMs = 1000 * 2 ** (attempt - 1) // 1s, 2s, 4s
         logMCPDebug(
           this.serverName,
           `Token refresh failed, retrying in ${delayMs}ms (attempt ${attempt}/${MAX_ATTEMPTS})`,
