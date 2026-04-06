@@ -5,10 +5,12 @@ import { useCallback, useMemo, useState } from 'react';
 import { useExitOnCtrlCDWithKeybindings } from 'src/hooks/useExitOnCtrlCDWithKeybindings.js';
 import { type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS, logEvent } from 'src/services/analytics/index.js';
 import { FAST_MODE_MODEL_DISPLAY, isFastModeAvailable, isFastModeCooldown, isFastModeEnabled } from 'src/utils/fastMode.js';
+import { normalizeFullWidthSpace } from 'src/utils/stringUtils.js';
 import { translate } from '../i18n/index.js';
 import { Box, Text } from '../ink.js';
-import { useKeybindings } from '../keybindings/useKeybinding.js';
+import { useKeybinding, useKeybindings } from '../keybindings/useKeybinding.js';
 import { useAppState, useSetAppState } from '../state/AppState.js';
+import TextInput from './TextInput.js';
 import { convertEffortValueToLevel, type EffortLevel, getDefaultEffortForModel, modelSupportsEffort, modelSupportsMaxEffort, resolvePickerEffortPersistence, toPersistableEffort } from '../utils/effort.js';
 import { getDefaultMainLoopModel, type ModelSetting, modelDisplayString, parseUserSpecifiedModel } from '../utils/model/model.js';
 import { getModelOptions } from '../utils/model/modelOptions.js';
@@ -38,7 +40,7 @@ export type Props = {
 };
 const NO_PREFERENCE = '__NO_PREFERENCE__';
 export function ModelPicker(t0) {
-  const $ = _c(82);
+  const $ = _c(90);
   const {
     initial,
     sessionModel,
@@ -54,6 +56,9 @@ export function ModelPicker(t0) {
   const exitState = useExitOnCtrlCDWithKeybindings();
   const initialValue = initial === null ? NO_PREFERENCE : initial;
   const [focusedValue, setFocusedValue] = useState(initialValue);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCursorOffset, setSearchCursorOffset] = useState(0);
+  const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
   const isFastMode = useAppState(_temp);
   const [hasToggledEffort, setHasToggledEffort] = useState(false);
   const effortValue = useAppState(_temp2);
@@ -115,10 +120,23 @@ export function ModelPicker(t0) {
     t4 = modelOptions;
   }
   const optionsWithInitial = t4;
+  const filteredOptions = useMemo(() => {
+    if (!normalizedSearchQuery) {
+      return optionsWithInitial;
+    }
+    return optionsWithInitial.filter(option => {
+      if (option.value === NO_PREFERENCE) {
+        return true;
+      }
+      const label = typeof option.label === 'string' ? option.label : getTextFromLabel(option.label);
+      const description = option.description ?? '';
+      return normalizeSearchQuery(`${label} ${description}`).includes(normalizedSearchQuery);
+    });
+  }, [normalizedSearchQuery, optionsWithInitial]);
   let t5;
-  if ($[12] !== optionsWithInitial) {
-    t5 = optionsWithInitial.map(_temp3);
-    $[12] = optionsWithInitial;
+  if ($[12] !== filteredOptions) {
+    t5 = filteredOptions.map(_temp3);
+    $[12] = filteredOptions;
     $[13] = t5;
   } else {
     t5 = $[13];
@@ -191,7 +209,7 @@ export function ModelPicker(t0) {
       if (!focusedSupportsEffort) {
         return;
       }
-      setEffort(prev => cycleEffortLevel(prev ?? focusedDefaultEffort, direction, focusedSupportsMax));
+      setEffort(prev => cycleEffortLevel(prev ?? focusedDefaultEffort, direction, focusedSupportsMax, focusedValue === NO_PREFERENCE ? undefined : focusedValue));
       setHasToggledEffort(true);
     };
     $[28] = focusedDefaultEffort;
@@ -223,6 +241,16 @@ export function ModelPicker(t0) {
     t13 = $[34];
   }
   useKeybindings(t12, t13);
+  useKeybinding('confirm:no', () => {
+    if (searchQuery) {
+      setSearchQuery('');
+      setSearchCursorOffset(0);
+      return;
+    }
+    onCancel?.();
+  }, {
+    context: 'Settings'
+  });
   let t14;
   if ($[35] !== effort || $[36] !== hasToggledEffort || $[37] !== onSelect || $[38] !== setAppState || $[39] !== skipSettingsWrite) {
     t14 = function handleSelect(value_0) {
@@ -287,50 +315,68 @@ export function ModelPicker(t0) {
     t18 = $[45];
   }
   let t19;
-  if ($[46] !== t17 || $[47] !== t18) {
-    t19 = <Box marginBottom={1} flexDirection="column">{t15}{t17}{t18}</Box>;
-    $[46] = t17;
-    $[47] = t18;
-    $[48] = t19;
+  if ($[46] !== searchCursorOffset || $[47] !== searchQuery || $[48] !== uiLanguage) {
+    t19 = <Box marginBottom={1} flexDirection="row" gap={1}><Text color="suggestion">›</Text><TextInput value={searchQuery} onChange={setSearchQuery} onSubmit={() => {}} focus={true} showCursor={true} placeholder={translate(uiLanguage, 'settings.modelPickerSearchPlaceholder')} columns={60} cursorOffset={searchCursorOffset} onChangeCursorOffset={setSearchCursorOffset} /></Box>;
+    $[46] = searchCursorOffset;
+    $[47] = searchQuery;
+    $[48] = uiLanguage;
+    $[49] = t19;
   } else {
-    t19 = $[48];
+    t19 = $[49];
   }
-  const t20 = onCancel ?? _temp4;
-  let t21;
-  if ($[49] !== handleFocus || $[50] !== handleSelect || $[51] !== initialFocusValue || $[52] !== initialValue || $[53] !== selectOptions || $[54] !== t20 || $[55] !== visibleCount) {
-    t21 = <Box flexDirection="column"><Select defaultValue={initialValue} defaultFocusValue={initialFocusValue} options={selectOptions} onChange={handleSelect} onFocus={handleFocus} onCancel={t20} visibleOptionCount={visibleCount} /></Box>;
-    $[49] = handleFocus;
-    $[50] = handleSelect;
-    $[51] = initialFocusValue;
-    $[52] = initialValue;
-    $[53] = selectOptions;
-    $[54] = t20;
-    $[55] = visibleCount;
-    $[56] = t21;
+  let t20;
+  if ($[50] !== t17 || $[51] !== t18 || $[52] !== t19) {
+    t20 = <Box marginBottom={1} flexDirection="column">{t15}{t17}{t18}{t19}</Box>;
+    $[50] = t17;
+    $[51] = t18;
+    $[52] = t19;
+    $[53] = t20;
   } else {
-    t21 = $[56];
+    t20 = $[53];
+  }
+  const selectOnCancel = onCancel ?? _temp4;
+  let t21;
+  if ($[54] !== handleFocus || $[55] !== handleSelect || $[56] !== initialFocusValue || $[57] !== initialValue || $[58] !== normalizedSearchQuery || $[59] !== selectOptions || $[60] !== selectOnCancel || $[61] !== visibleCount) {
+    t21 = <Box flexDirection="column"><Select defaultValue={initialValue} defaultFocusValue={initialFocusValue} options={selectOptions} onChange={handleSelect} onFocus={handleFocus} onCancel={selectOnCancel} visibleOptionCount={visibleCount} highlightText={normalizedSearchQuery || undefined} /></Box>;
+    $[54] = handleFocus;
+    $[55] = handleSelect;
+    $[56] = initialFocusValue;
+    $[57] = initialValue;
+    $[58] = normalizedSearchQuery;
+    $[59] = selectOptions;
+    $[60] = selectOnCancel;
+    $[61] = visibleCount;
+    $[62] = t21;
+  } else {
+    t21 = $[62];
   }
   let t22;
-  if ($[57] !== hiddenCount) {
-    t22 = hiddenCount > 0 && <Box paddingLeft={3}><Text dimColor={true}>{translate(uiLanguage, 'settings.modelPickerMoreCount', {
+  if ($[63] !== filteredOptions.length || $[64] !== hiddenCount || $[65] !== normalizedSearchQuery || $[66] !== uiLanguage) {
+    t22 = normalizedSearchQuery ? <Box paddingLeft={3}><Text dimColor={true}>{filteredOptions.length === 0 ? translate(uiLanguage, 'settings.modelPickerSearchNoResults') : translate(uiLanguage, 'settings.modelPickerSearchResultsCount', {
+      count: filteredOptions.length,
+      plural: filteredOptions.length === 1 ? '' : 's'
+    })}</Text></Box> : hiddenCount > 0 && <Box paddingLeft={3}><Text dimColor={true}>{translate(uiLanguage, 'settings.modelPickerMoreCount', {
       count: hiddenCount
     })}</Text></Box>;
-    $[57] = hiddenCount;
-    $[58] = t22;
+    $[63] = filteredOptions.length;
+    $[64] = hiddenCount;
+    $[65] = normalizedSearchQuery;
+    $[66] = uiLanguage;
+    $[67] = t22;
   } else {
-    t22 = $[58];
+    t22 = $[67];
   }
   let t23;
-  if ($[59] !== t21 || $[60] !== t22) {
+  if ($[68] !== t21 || $[69] !== t22) {
     t23 = <Box flexDirection="column" marginBottom={1}>{t21}{t22}</Box>;
-    $[59] = t21;
-    $[60] = t22;
-    $[61] = t23;
+    $[68] = t21;
+    $[69] = t22;
+    $[70] = t23;
   } else {
-    t23 = $[61];
+    t23 = $[70];
   }
   let t24;
-  if ($[62] !== displayEffort || $[63] !== focusedDefaultEffort || $[64] !== focusedModelName || $[65] !== focusedSupportsEffort) {
+  if ($[71] !== displayEffort || $[72] !== focusedDefaultEffort || $[73] !== focusedModelName || $[74] !== focusedSupportsEffort) {
     t24 = <Box marginBottom={1} flexDirection="column">{focusedSupportsEffort ? <Text dimColor={true}><EffortLevelIndicator effort={displayEffort} />{" "}{translate(uiLanguage, 'settings.modelPickerEffortLabel', {
       effort: capitalize(displayEffort),
       defaultSuffix: displayEffort === focusedDefaultEffort ? translate(uiLanguage, 'settings.modelPickerDefaultSuffix') : ''
@@ -339,68 +385,68 @@ export function ModelPicker(t0) {
         model: focusedModelName
       }) : ''
     })}</Text>}</Box>;
-    $[62] = displayEffort;
-    $[63] = focusedDefaultEffort;
-    $[64] = focusedModelName;
-    $[65] = focusedSupportsEffort;
-    $[66] = t24;
+    $[71] = displayEffort;
+    $[72] = focusedDefaultEffort;
+    $[73] = focusedModelName;
+    $[74] = focusedSupportsEffort;
+    $[75] = t24;
   } else {
-    t24 = $[66];
+    t24 = $[75];
   }
   let t25;
-  if ($[67] !== showFastModeNotice) {
+  if ($[76] !== showFastModeNotice) {
     t25 = isFastModeEnabled() ? showFastModeNotice ? <Box marginBottom={1}><Text dimColor={true}>{translate(uiLanguage, 'settings.modelPickerFastModePrefix')}<Text bold={true}>{translate(uiLanguage, 'settings.modelPickerFastModeOnWord')}</Text>{translate(uiLanguage, 'settings.modelPickerFastModeOnSuffix', {
       model: FAST_MODE_MODEL_DISPLAY
     })}</Text></Box> : isFastModeAvailable() && !isFastModeCooldown() ? <Box marginBottom={1}><Text dimColor={true}>{translate(uiLanguage, 'settings.modelPickerFastModeOffPrefix')}<Text bold={true}>/fast</Text>{translate(uiLanguage, 'settings.modelPickerFastModeOffSuffix', {
       model: FAST_MODE_MODEL_DISPLAY
     })}</Text></Box> : null : null;
-    $[67] = showFastModeNotice;
-    $[68] = t25;
+    $[76] = showFastModeNotice;
+    $[77] = t25;
   } else {
-    t25 = $[68];
+    t25 = $[77];
   }
   let t26;
-  if ($[69] !== t19 || $[70] !== t23 || $[71] !== t24 || $[72] !== t25) {
-    t26 = <Box flexDirection="column">{t19}{t23}{t24}{t25}</Box>;
-    $[69] = t19;
-    $[70] = t23;
-    $[71] = t24;
-    $[72] = t25;
-    $[73] = t26;
+  if ($[78] !== t20 || $[79] !== t23 || $[80] !== t24 || $[81] !== t25) {
+    t26 = <Box flexDirection="column">{t20}{t23}{t24}{t25}</Box>;
+    $[78] = t20;
+    $[79] = t23;
+    $[80] = t24;
+    $[81] = t25;
+    $[82] = t26;
   } else {
-    t26 = $[73];
+    t26 = $[82];
   }
   let t27;
-  if ($[74] !== exitState || $[75] !== isStandaloneCommand) {
+  if ($[83] !== exitState || $[84] !== isStandaloneCommand) {
     t27 = isStandaloneCommand && <Text dimColor={true} italic={true}>{exitState.pending ? translate(uiLanguage, 'settings.pressAgainToExit', {
       key: exitState.keyName
     }) : <Byline><KeyboardShortcutHint shortcut="Enter" action="confirm" /><ConfigurableShortcutHint action="select:cancel" context="Select" fallback="Esc" description={translate(uiLanguage, 'settings.exitAction')} /></Byline>}</Text>;
-    $[74] = exitState;
-    $[75] = isStandaloneCommand;
-    $[76] = t27;
+    $[83] = exitState;
+    $[84] = isStandaloneCommand;
+    $[85] = t27;
   } else {
-    t27 = $[76];
+    t27 = $[85];
   }
   let t28;
-  if ($[77] !== t26 || $[78] !== t27) {
+  if ($[86] !== t26 || $[87] !== t27) {
     t28 = <Box flexDirection="column">{t26}{t27}</Box>;
-    $[77] = t26;
-    $[78] = t27;
-    $[79] = t28;
+    $[86] = t26;
+    $[87] = t27;
+    $[88] = t28;
   } else {
-    t28 = $[79];
+    t28 = $[88];
   }
   const content = t28;
   if (!isStandaloneCommand) {
     return content;
   }
   let t29;
-  if ($[80] !== content) {
+  if ($[89] !== content) {
     t29 = <Pane color="permission">{content}</Pane>;
-    $[80] = content;
-    $[81] = t29;
+    $[89] = content;
+    $[90] = t29;
   } else {
-    t29 = $[81];
+    t29 = $[90];
   }
   return t29;
 }
@@ -447,20 +493,61 @@ function EffortLevelIndicator(t0) {
   }
   return t4;
 }
-function cycleEffortLevel(current: EffortLevel, direction: 'left' | 'right', includeMax: boolean): EffortLevel {
-  const levels: EffortLevel[] = includeMax ? ['low', 'medium', 'high', 'max'] : ['low', 'medium', 'high'];
-  // If the current level isn't in the cycle (e.g. 'max' after switching to a
-  // non-Opus model), clamp to 'high'.
-  const idx = levels.indexOf(current);
-  const currentIndex = idx !== -1 ? idx : levels.indexOf('high');
+function cycleEffortLevel(current: EffortLevel, direction: 'left' | 'right', includeMax: boolean, model?: string): EffortLevel {
+  const m = model?.toLowerCase() || ''
+  let levels: EffortLevel[] = ['low', 'medium', 'high']
+
+  if (m.includes('gpt-5.4')) {
+    levels = ['none', 'low', 'medium', 'high', 'xhigh']
+  } else if (m.includes('gpt-5.4-pro')) {
+    levels = ['medium', 'high', 'xhigh']
+  } else if (m.includes('gpt-5.4-mini')) {
+    levels = ['none', 'low', 'medium', 'high']
+  } else if (m.includes('o1') || m.includes('o3') || m.includes('gpt-5.3')) {
+    levels = ['low', 'medium', 'high']
+  } else if (m.includes('gemini-2.0-thinking') || m.includes('thinking-exp')) {
+    levels = ['low', 'medium', 'high', 'xhigh']
+  } else if (m.includes('gemini-3.1-pro')) {
+    levels = ['low', 'medium', 'high']
+  } else if (m.includes('gemini-3.1-flash')) {
+    levels = ['none', 'low', 'medium']
+  } else if (m.includes('gemini-3-deep-think')) {
+    levels = ['high', 'ultra']
+  }
+
+  if (includeMax && !levels.includes('max')) {
+    levels.push('max')
+  }
+
+  // If the current level isn't in the cycle, clamp to nearest or default
+  const idx = levels.indexOf(current)
+  const currentIndex = idx !== -1 ? idx : (levels.includes('high') ? levels.indexOf('high') : 0)
   if (direction === 'right') {
-    return levels[(currentIndex + 1) % levels.length]!;
+    return levels[(currentIndex + 1) % levels.length]!
   } else {
-    return levels[(currentIndex - 1 + levels.length) % levels.length]!;
+    return levels[(currentIndex - 1 + levels.length) % levels.length]!
   }
 }
 function getDefaultEffortLevelForOption(value?: string): EffortLevel {
   const resolved = resolveOptionModel(value) ?? getDefaultMainLoopModel();
   const defaultValue = getDefaultEffortForModel(resolved);
   return defaultValue !== undefined ? convertEffortValueToLevel(defaultValue) : 'high';
+}
+function normalizeSearchQuery(value: string): string {
+  return normalizeFullWidthSpace(value).trim().toLowerCase();
+}
+function getTextFromLabel(label: React.ReactNode): string {
+  if (typeof label === 'string' || typeof label === 'number') {
+    return String(label);
+  }
+  if (!label) {
+    return '';
+  }
+  if (Array.isArray(label)) {
+    return label.map(getTextFromLabel).join('');
+  }
+  if (React.isValidElement<{ children?: React.ReactNode }>(label)) {
+    return getTextFromLabel(label.props.children);
+  }
+  return '';
 }

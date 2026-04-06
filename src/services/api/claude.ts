@@ -454,6 +454,45 @@ function configureEffortParams(
   betas: string[],
   model: string,
 ): void {
+  const m = model.toLowerCase()
+  const provider = getAPIProvider()
+
+  // OpenAI Support
+  if (provider === 'openai' || m.includes('gpt-')) {
+    if (effortValue === 'none') {
+      // reasoning_effort doesn't support 'none' yet, but we map it if needed
+      // Actually, many o-series models don't allow disabling reasoning if they are reasoning-only
+      return
+    }
+    const effortMap: Record<string, string> = {
+      low: 'low',
+      medium: 'medium',
+      high: 'high',
+      xhigh: 'high', // OpenAI maxes at high
+      max: 'high',
+    }
+    const openaiEffort = effortMap[effortValue as string]
+    if (openaiEffort) {
+      ;(extraBodyParams as any).reasoning_effort = openaiEffort
+    }
+    return
+  }
+
+  // Google Gemini Support
+  if (m.includes('gemini-2.0-thinking') || m.includes('thinking-exp')) {
+    const thinkingConfig: any = {
+      include_thoughts: true,
+    }
+    if (effortValue === 'low') thinkingConfig.max_thinking_tokens = 4000
+    if (effortValue === 'medium') thinkingConfig.max_thinking_tokens = 16000
+    if (effortValue === 'high') thinkingConfig.max_thinking_tokens = 32000
+    if (effortValue === 'xhigh' || effortValue === 'max')
+      thinkingConfig.max_thinking_tokens = 64000
+
+    ;(extraBodyParams as any).thinking_config = thinkingConfig
+    return
+  }
+
   if (!modelSupportsEffort(model) || 'effort' in outputConfig) {
     return
   }

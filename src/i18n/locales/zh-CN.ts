@@ -295,6 +295,9 @@ export const zhCN = {
     modelPickerCurrentModelDescription: '当前模型',
     modelPickerCurrentSessionUsing:
       '当前会话正在使用 {model}（由规划模式设置）。选择其他模型会撤销此设置。',
+    modelPickerSearchPlaceholder: '搜索模型',
+    modelPickerSearchNoResults: '没有匹配的模型',
+    modelPickerSearchResultsCount: '找到 {count} 个模型',
     modelPickerMoreCount: '以及另外 {count} 个…',
     modelPickerEffortLabel: '{effort} 强度{defaultSuffix}',
     modelPickerDefaultSuffix: '（默认）',

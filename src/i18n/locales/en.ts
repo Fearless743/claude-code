@@ -307,6 +307,9 @@ export const en = {
     modelPickerCurrentModelDescription: 'Current model',
     modelPickerCurrentSessionUsing:
       'Currently using {model} for this session (set by plan mode). Selecting a model will undo this.',
+    modelPickerSearchPlaceholder: 'Search models',
+    modelPickerSearchNoResults: 'No models match your search',
+    modelPickerSearchResultsCount: 'Found {count} model{plural}',
     modelPickerMoreCount: 'and {count} more…',
     modelPickerEffortLabel: '{effort} effort{defaultSuffix}',
     modelPickerDefaultSuffix: ' (default)',

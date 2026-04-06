@@ -11,10 +11,13 @@ import type { EffortLevel } from 'src/entrypoints/sdk/runtimeTypes.js'
 export type { EffortLevel }
 
 export const EFFORT_LEVELS = [
+  'none',
   'low',
   'medium',
   'high',
+  'xhigh',
   'max',
+  'ultra',
 ] as const satisfies readonly EffortLevel[]
 
 export type EffortValue = EffortLevel | number
@@ -25,6 +28,29 @@ export function modelSupportsEffort(model: string): boolean {
   if (isEnvTruthy(process.env.CLAUDE_CODE_ALWAYS_ENABLE_EFFORT)) {
     return true
   }
+
+  // OpenAI Support
+  if (
+    m.includes('gpt-5.4') ||
+    m.includes('gpt-5.3') ||
+    m.includes('gpt-5.2') ||
+    m.includes('o3-') ||
+    m.includes('o1')
+  ) {
+    return true
+  }
+
+  // Google Gemini Support
+  if (
+    m.includes('gemini-2.0-thinking') ||
+    m.includes('thinking-exp') ||
+    m.includes('gemini-3.1-pro') ||
+    m.includes('gemini-3.1-flash') ||
+    m.includes('gemini-3-deep-think')
+  ) {
+    return true
+  }
+
   const supported3P = get3PModelCapabilityOverride(model, 'effort')
   if (supported3P !== undefined) {
     return supported3P
@@ -51,6 +77,10 @@ export function modelSupportsEffort(model: string): boolean {
 // @[MODEL LAUNCH]: Add the new model to the allowlist if it supports 'max' effort.
 // Per API docs, 'max' is Opus 4.6 only for public models — other models return an error.
 export function modelSupportsMaxEffort(model: string): boolean {
+  const m = model.toLowerCase()
+  if (m.includes('gpt-5.4') || m.includes('xhigh')) {
+    return true
+  }
   const supported3P = get3PModelCapabilityOverride(model, 'max_effort')
   if (supported3P !== undefined) {
     return supported3P
@@ -223,14 +253,20 @@ export function convertEffortValueToLevel(value: EffortValue): EffortLevel {
  */
 export function getEffortLevelDescription(level: EffortLevel): string {
   switch (level) {
+    case 'none':
+      return 'Disable reasoning (if supported by model)'
     case 'low':
       return 'Quick, straightforward implementation with minimal overhead'
     case 'medium':
       return 'Balanced approach with standard implementation and testing'
     case 'high':
       return 'Comprehensive implementation with extensive testing and documentation'
+    case 'xhigh':
+      return 'Extreme reasoning for the most complex problems'
     case 'max':
       return 'Maximum capability with deepest reasoning (Opus 4.6 only)'
+    case 'ultra':
+      return 'Unlimited reasoning for the most complex problems'
   }
 }
 
