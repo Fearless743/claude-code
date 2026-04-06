@@ -55,6 +55,12 @@ const getRipgrepConfig = memoize((): RipgrepConfig => {
     }
   }
 
+  // Fallback to system rg since vendor directory is missing
+  const { cmd: fallbackSystemPath } = findExecutable('rg', [])
+  if (fallbackSystemPath !== 'rg') {
+    return { mode: 'system', command: 'rg', args: [] }
+  }
+
   const rgRoot = path.resolve(__dirname, 'vendor', 'ripgrep')
   const command =
     process.platform === 'win32'
