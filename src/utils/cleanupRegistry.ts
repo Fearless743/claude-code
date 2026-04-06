@@ -21,5 +21,20 @@ export function registerCleanup(cleanupFn: () => Promise<void>): () => void {
  * Used internally by gracefulShutdown.
  */
 export async function runCleanupFunctions(): Promise<void> {
-  await Promise.all(Array.from(cleanupFunctions).map(fn => fn()))
+  const functions = Array.from(cleanupFunctions)
+  await Promise.all(
+    functions.map(async fn => {
+      try {
+        // Use a timeout for each individual cleanup function
+        await Promise.race([
+          fn(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Cleanup function timed out')), 1000),
+          ),
+        ])
+      } catch (error) {
+        console.error('Cleanup function failed or timed out:', error)
+      }
+    }),
+  )
 }

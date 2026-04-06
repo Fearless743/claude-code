@@ -261,7 +261,6 @@ bun run build
 | `/torch` | `TORCH` |
 | `/peers` | `UDS_INBOX` |
 | `/fork` | `FORK_SUBAGENT` |
-| `/buddy` | `BUDDY` |
 
 ### 斜杠命令 — ANT-ONLY（不可用）
 
