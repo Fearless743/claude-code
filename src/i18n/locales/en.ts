@@ -489,6 +489,7 @@ export const en = {
     branch: 'Create a branch of the current conversation at this point',
     btw: 'Ask a quick side question without interrupting the main conversation',
     chrome: 'Claude in Chrome (Beta) settings',
+    collaborate: 'Initiate a multi-model collaboration for a given task',
     clear: 'Clear conversation history and free up context',
     color: 'Set the prompt bar color for this session',
     compact:

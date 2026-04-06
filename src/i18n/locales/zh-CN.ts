@@ -470,6 +470,7 @@ export const zhCN = {
     branch: '基于当前对话在此处创建分支',
     btw: '在不中断主对话的情况下提一个简短的旁支问题',
     chrome: 'Claude in Chrome（测试版）设置',
+    collaborate: '针对给定任务启动多模型协作',
     clear: '清空对话历史并释放上下文',
     color: '设置当前会话的提示栏颜色',
     compact: '清空对话历史，但在上下文中保留摘要。可选：/compact [摘要说明]',
