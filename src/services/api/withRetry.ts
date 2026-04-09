@@ -110,6 +110,42 @@ function isTransientCapacityError(error: unknown): boolean {
   )
 }
 
+// Extract status code from error (supports both APIError and regular Error like OpenAI)
+function extractStatusCode(err: unknown): number | undefined {
+  if (err instanceof APIError && err.status) {
+    return err.status
+  }
+  // Handle OpenAI-style errors: "OpenAI API error (504): ..."
+  if (err instanceof Error) {
+    const match = err.message.match(/\((\d{3})\)/)
+    if (match) {
+      return parseInt(match[1], 10)
+    }
+  }
+  return undefined
+}
+
+// Check if error should be retried (supports both APIError and regular Error)
+function errorShouldRetry(err: unknown): boolean {
+  // APIError uses the existing shouldRetry function
+  if (err instanceof APIError) {
+    return shouldRetry(err)
+  }
+  // For regular errors (like OpenAI), extract status code and apply similar logic
+  const status = extractStatusCode(err)
+  if (status) {
+    // Retry on 5xx errors
+    if (status >= 500) return true
+    // Retry on 429 (rate limit)
+    if (status === 429) return true
+    // Retry on 408 (timeout)
+    if (status === 408) return true
+    // Retry on 409 (conflict)
+    if (status === 409) return true
+  }
+  return false
+}
+
 function isStaleConnectionError(error: unknown): boolean {
   if (!(error instanceof APIConnectionError)) {
     return false
@@ -377,7 +413,7 @@ export async function* withRetry<T>(
         handleAwsCredentialError(error) || handleGcpCredentialError(error)
       if (
         !handledCloudAuthError &&
-        (!(error instanceof APIError) || !shouldRetry(error))
+        !errorShouldRetry(error)
       ) {
         throw new CannotRetryError(error, retryContext)
       }
