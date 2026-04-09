@@ -45,9 +45,10 @@ export function normalizeAppLocale(language: string | undefined): AppLocale {
 }
 
 export function interpolate(
-  template: string,
+  template: string | undefined,
   values: Record<string, string | number>,
 ): string {
+  if (!template) return ''
   return template.replace(/\{(\w+)\}/g, (_, key: string) => `${values[key] ?? ''}`)
 }
 

@@ -708,6 +708,7 @@ export const en = {
     remoteSessionReviewDeduping: 'deduping',
     remoteSessionReviewFinding: 'finding',
     backgroundTasksDialogDismissed: 'Background tasks dialog dismissed',
+    backgroundTasksDialogTitle: 'Background Tasks',
     backgroundTasksNoTasksRunning: 'No tasks currently running',
     backgroundTasksViewingTeammate: 'Viewing teammate',
     backgroundTasksViewingLeader: 'Viewing leader',

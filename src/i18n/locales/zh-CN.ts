@@ -679,6 +679,7 @@ export const zhCN = {
     remoteSessionReviewDeduping: '去重中',
     remoteSessionReviewFinding: '发现中',
     backgroundTasksDialogDismissed: '后台任务面板已关闭',
+    backgroundTasksDialogTitle: '任务面板',
     backgroundTasksNoTasksRunning: '当前没有正在运行的任务',
     backgroundTasksViewingTeammate: '正在查看队友',
     backgroundTasksViewingLeader: '正在查看负责人',
