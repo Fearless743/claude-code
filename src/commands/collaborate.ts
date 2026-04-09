@@ -4,6 +4,7 @@ import { getModelStrings } from '../utils/model/modelStrings.js'
 
 const ALLOWED_TOOLS = [
   'Agent',
+  'SendMessage',
   'Bash(*)',
   'Read(*)',
   'Grep(*)',
@@ -29,9 +30,16 @@ ${availableModels}
    - **Haiku 系列**：适合快速检索、简单文档、单元测试生成或琐碎任务。
 3. **分发执行 (Distribution)**：
    - 必须通过调用 \`Agent\` 工具拉起子任务模型。
+   - **强烈建议使用 \`name\` 参数** 为其命名（如 \`"researcher"\`, \`"coder"\`），这样你可以更方便地通过 \`to: "name"\` 与其通信。
    - **必须为每个 Agent 显式指定 \`model\` 参数**（填入模型矩阵中的 ID）。
    - **必须为每个 Agent 指定明确的职责范围和产出位置**。
-   - **状态同步机制 (Crucial)**：你必须要求所有 Agent 将自己的执行状态、中间产出和最终结果，通过 Write 工具写入或追加到一个共享的临时文件中（例如：\`.claude/COLLAB_STATE.md\` 或 \`COLLAB_SYNC.md\`）。这样，其他的 Agent 就可以在执行自己的任务前，先去这个文件里读取上下文，确保它们彼此能感知对方的进度。
+   - **状态同步机制与实时通讯 (Crucial)**：
+     - 拉起 Agent 时，**强烈建议开启 \`run_in_background: true\`** 并指示其任务目标，实现并发执行。
+     - **消息通信 (SendMessage)**：你和子 Agent 之间不再只能依赖文件共享！你现在可以使用 \`SendMessage\` 工具与它们实时通信。
+       - 使用 \`SendMessage\` 且 \`to: "agentId"\` （Agent 启动后返回的内部 ID）给特定 Agent 派发新任务或询问进度。
+       - 子 Agent 也会被赋予 \`SendMessage\` 能力，它们会主动向你汇报中间状态、请求审核或交付最终结果。
+       - 你必须在拉起 Agent 的 Prompt 中**明确告诉它们**：“完成后请使用 SendMessage 工具将结果汇报给我”。
+     - **消息中枢机制**：你作为 team-lead 需要承担消息中枢的作用。子 Agent 之间可能不知道彼此的存在，但你可以将一个 Agent 的输出通过 SendMessage 传递给另一个 Agent。
    - **红线约束**：**前端设计类任务** 严禁使用任何 \`gpt\` 系列模型（如果列表包含）。应优先使用 \`claude-sonnet-4-6\`。
 4. **结果闭环 (Closure)**：整合所有子模型交付的结果，形成完整的战略报告交付给用户。
 
