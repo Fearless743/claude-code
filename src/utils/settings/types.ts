@@ -1058,6 +1058,14 @@ export const SettingsSchema = lazySchema(() =>
             'Useful for enterprise administrators to add organization-specific context ' +
             '(e.g., "All plugins from our internal marketplace are vetted and approved.").',
         ),
+      maxRetries: z
+        .number()
+        .int()
+        .nonnegative()
+        .optional()
+        .describe(
+          'Maximum number of retries for API errors. Set to 0 to disable retries. Default: 10.',
+        ),
     })
     .passthrough(),
 )

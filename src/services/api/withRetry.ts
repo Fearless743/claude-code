@@ -46,6 +46,7 @@ import {
 } from '../rateLimitMocking.js'
 import { REPEATED_529_ERROR_MESSAGE } from './errors.js'
 import { extractConnectionErrorDetails } from './errorUtils.js'
+import { getInitialSettings } from '../../utils/settings/settings.js'
 
 const abortError = () => new APIUserAbortError()
 
@@ -787,6 +788,11 @@ function shouldRetry(error: APIError): boolean {
 }
 
 export function getDefaultMaxRetries(): number {
+  // Priority: CLI arg > settings > env var > default
+  const settings = getInitialSettings()
+  if (settings.maxRetries !== undefined) {
+    return settings.maxRetries
+  }
   if (process.env.CLAUDE_CODE_MAX_RETRIES) {
     return parseInt(process.env.CLAUDE_CODE_MAX_RETRIES, 10)
   }
