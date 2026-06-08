@@ -17,6 +17,8 @@ function getEnvVarForProvider(provider: string): string {
       return 'CLAUDE_CODE_USE_GEMINI'
     case 'grok':
       return 'CLAUDE_CODE_USE_GROK'
+    case 'commandcode':
+      return 'CLAUDE_CODE_USE_COMMANDCODE'
     default:
       throw new Error(`Unknown provider: ${provider}`)
   }
@@ -55,6 +57,7 @@ const call: LocalCommandCall = async (args, _context) => {
     delete process.env.CLAUDE_CODE_USE_OPENAI
     delete process.env.CLAUDE_CODE_USE_GEMINI
     delete process.env.CLAUDE_CODE_USE_GROK
+    delete process.env.CLAUDE_CODE_USE_COMMANDCODE
     return {
       type: 'text',
       value: 'API provider cleared (will use environment variables).',
@@ -67,6 +70,7 @@ const call: LocalCommandCall = async (args, _context) => {
     'openai',
     'gemini',
     'grok',
+    'commandcode',
     'bedrock',
     'vertex',
     'foundry',
@@ -123,6 +127,19 @@ const call: LocalCommandCall = async (args, _context) => {
     }
   }
 
+  // Check env vars when switching to commandcode (including settings.env)
+  if (arg === 'commandcode') {
+    const mergedEnv = getMergedEnv()
+    const hasKey = !!mergedEnv.COMMANDCODE_API_KEY
+    if (!hasKey) {
+      updateSettingsForSource('userSettings', { modelType: 'commandcode' })
+      return {
+        type: 'text',
+        value: `Switched to Command Code provider.\nWarning: Missing env var: COMMANDCODE_API_KEY\nConfigure it via /login or set manually.`,
+      }
+    }
+  }
+
   // Handle different provider types
   // - 'anthropic', 'openai', 'gemini' are stored in settings.json (persistent)
   // - 'bedrock', 'vertex', 'foundry' are env-only (do NOT touch settings.json)
@@ -130,7 +147,8 @@ const call: LocalCommandCall = async (args, _context) => {
     arg === 'anthropic' ||
     arg === 'openai' ||
     arg === 'gemini' ||
-    arg === 'grok'
+    arg === 'grok' ||
+    arg === 'commandcode'
   ) {
     // Clear any cloud provider env vars to avoid conflicts
     delete process.env.CLAUDE_CODE_USE_BEDROCK
@@ -139,6 +157,7 @@ const call: LocalCommandCall = async (args, _context) => {
     delete process.env.CLAUDE_CODE_USE_OPENAI
     delete process.env.CLAUDE_CODE_USE_GEMINI
     delete process.env.CLAUDE_CODE_USE_GROK
+    delete process.env.CLAUDE_CODE_USE_COMMANDCODE
     // Update settings.json
     updateSettingsForSource('userSettings', { modelType: arg })
     // Ensure settings.env gets applied to process.env
@@ -165,9 +184,10 @@ const provider = {
   type: 'local',
   name: 'provider',
   description:
-    'Switch API provider (anthropic/openai/gemini/grok/bedrock/vertex/foundry)',
+    'Switch API provider (anthropic/openai/gemini/grok/commandcode/bedrock/vertex/foundry)',
   aliases: ['api'],
-  argumentHint: '[anthropic|openai|gemini|grok|bedrock|vertex|foundry|unset]',
+  argumentHint:
+    '[anthropic|openai|gemini|grok|commandcode|bedrock|vertex|foundry|unset]',
   supportsNonInteractive: true,
   load: () => Promise.resolve({ call }),
 } satisfies Command

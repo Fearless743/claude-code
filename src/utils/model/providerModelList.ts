@@ -14,6 +14,8 @@ type ProviderModelConfig = {
   baseUrl: string
   apiKey: string
   headers: Record<string, string>
+  /** Override URLs — when set, skip buildProviderModelsUrls and use these directly. */
+  urls?: string[]
 }
 
 type FetchLike = (
@@ -97,7 +99,7 @@ export async function fetchDynamicModelOptions(params?: {
   const cached = modelListCache.get(cacheKey)
   if (cached) return cached
 
-  const urls = buildProviderModelsUrls(config.baseUrl)
+  const urls = config.urls ?? buildProviderModelsUrls(config.baseUrl)
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), MODEL_LIST_TIMEOUT_MS)
   const signal = mergeAbortSignals(params?.signal, controller.signal)
@@ -187,6 +189,20 @@ function getProviderModelConfig(): ProviderModelConfig | null {
       baseUrl,
       apiKey,
       headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
+    }
+  }
+
+  if (provider === 'commandcode') {
+    const baseUrl =
+      process.env.COMMANDCODE_BASE_URL || 'https://api.commandcode.ai'
+    const apiKey = process.env.COMMANDCODE_API_KEY ?? ''
+    if (!apiKey) return null
+    const trimmed = baseUrl.replace(/\/+$/, '')
+    return {
+      baseUrl,
+      apiKey,
+      headers: { Authorization: `Bearer ${apiKey}` },
+      urls: [`${trimmed}/provider/v1/models`],
     }
   }
 

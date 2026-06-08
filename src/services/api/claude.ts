@@ -1371,6 +1371,18 @@ async function* queryModel(
     return
   }
 
+  if (getAPIProvider() === 'commandcode') {
+    const { queryModelCommandCode } = await import('./commandcode/index.js')
+    yield* queryModelCommandCode(
+      messagesForAPI,
+      systemPrompt,
+      filteredTools,
+      signal,
+      options,
+    )
+    return
+  }
+
   // Instrumentation: Track message count after normalization
   logEvent('tengu_api_after_normalize', {
     postNormalizedMessageCount: messagesForAPI.length,

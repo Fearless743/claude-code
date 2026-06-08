@@ -56,6 +56,10 @@ type OAuthStatus =
       apiKey: string;
       activeField: 'base_url' | 'api_key';
     } // Gemini Generate Content API platform
+  | {
+      state: 'commandcode_api';
+      apiKey: string;
+    } // Command Code API platform
   | { state: 'ready_to_start' } // Flow started, waiting for browser to open
   | { state: 'waiting_for_login'; url: string } // Browser opened, waiting for user to login
   | { state: 'creating_api_key' } // Got access token, creating API key
@@ -467,6 +471,15 @@ function OAuthStatusMessage({
                 {
                   label: (
                     <Text>
+                      Command Code API · <Text dimColor>commandcode.ai — just need an API key</Text>
+                      {'\n'}
+                    </Text>
+                  ),
+                  value: 'commandcode_api',
+                },
+                {
+                  label: (
+                    <Text>
                       Claude account with subscription · <Text dimColor>Pro, Max, Team, or Enterprise</Text>
                       {process.env.USER_TYPE === 'ant' && (
                         <Text>
@@ -532,6 +545,12 @@ function OAuthStatusMessage({
                     baseUrl: process.env.GEMINI_BASE_URL ?? '',
                     apiKey: process.env.GEMINI_API_KEY ?? '',
                     activeField: 'base_url',
+                  });
+                } else if (value === 'commandcode_api') {
+                  logEvent('tengu_commandcode_api_selected', {});
+                  setOAuthStatus({
+                    state: 'commandcode_api',
+                    apiKey: process.env.COMMANDCODE_API_KEY ?? '',
                   });
                 } else if (value === 'platform') {
                   logEvent('tengu_oauth_platform_selected', {});
@@ -1214,6 +1233,94 @@ function OAuthStatusMessage({
             {renderGeminiRow('api_key', 'API Key  ', { mask: true })}
           </Box>
           <Text dimColor>↑↓/Tab to switch · Enter on last field to save · Esc to go back</Text>
+        </Box>
+      );
+    }
+
+    case 'commandcode_api': {
+      const ccp = oauthStatus as {
+        state: 'commandcode_api';
+        apiKey: string;
+      };
+      const ccApiKey = ccp.apiKey;
+
+      const [ccInputValue, setCcInputValue] = useState(() => ccApiKey);
+      const [ccInputCursorOffset, setCcInputCursorOffset] = useState(() => ccApiKey.length);
+
+      const doCcSave = useCallback(() => {
+        if (!ccInputValue.trim()) {
+          setOAuthStatus({
+            state: 'error',
+            message: 'API key is required',
+            toRetry: {
+              state: 'commandcode_api',
+              apiKey: '',
+            },
+          });
+          return;
+        }
+        const env: Record<string, string | undefined> = {
+          COMMANDCODE_API_KEY: ccInputValue.trim(),
+        };
+        const { error } = updateSettingsForSource('userSettings', {
+          modelType: 'commandcode' as any,
+          env,
+        } as any);
+        if (error) {
+          setOAuthStatus({
+            state: 'error',
+            message: `Failed to save: ${error.message}`,
+            toRetry: {
+              state: 'commandcode_api',
+              apiKey: ccInputValue,
+            },
+          });
+        } else {
+          for (const [k, v] of Object.entries(env)) {
+            if (v === undefined) {
+              delete process.env[k];
+            } else {
+              process.env[k] = v;
+            }
+          }
+          setOAuthStatus({ state: 'success' });
+          void onDone();
+        }
+      }, [ccInputValue, onDone, setOAuthStatus]);
+
+      useKeybinding(
+        'confirm:no',
+        () => {
+          setOAuthStatus({ state: 'idle' });
+        },
+        { context: 'Confirmation' },
+      );
+
+      const ccColumns = useTerminalSize().columns - 20;
+
+      return (
+        <Box flexDirection="column" gap={1}>
+          <Text bold>Command Code API Setup</Text>
+          <Text dimColor>Enter your Command Code API key (user_* format). Uses https://api.commandcode.ai.</Text>
+          <Box flexDirection="column" gap={1}>
+            <Box>
+              <Text backgroundColor="suggestion" color="inverseText">
+                {' API Key '}
+              </Text>
+              <Text> </Text>
+              <TextInput
+                value={ccInputValue}
+                onChange={setCcInputValue}
+                onSubmit={doCcSave}
+                cursorOffset={ccInputCursorOffset}
+                onChangeCursorOffset={setCcInputCursorOffset}
+                columns={ccColumns}
+                mask="*"
+                focus={true}
+              />
+            </Box>
+          </Box>
+          <Text dimColor>Enter to save · Esc to go back</Text>
         </Box>
       );
     }
