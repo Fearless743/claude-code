@@ -1,6 +1,6 @@
 import capitalize from 'lodash-es/capitalize.js';
 import * as React from 'react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { has1mContext } from '../utils/context.js';
 import { useExitOnCtrlCDWithKeybindings } from 'src/hooks/useExitOnCtrlCDWithKeybindings.js';
 import {
@@ -32,7 +32,8 @@ import {
   modelDisplayString,
   parseUserSpecifiedModel,
 } from '../utils/model/model.js';
-import { getModelOptions } from '../utils/model/modelOptions.js';
+import { getModelOptions, type ModelOption } from '../utils/model/modelOptions.js';
+import { fetchDynamicModelOptions } from '../utils/model/providerModelList.js';
 import { getSettingsForSource, updateSettingsForSource } from '../utils/settings/settings.js';
 import { ConfigurableShortcutHint } from './ConfigurableShortcutHint.js';
 import { Select } from './CustomSelect/index.js';
@@ -105,8 +106,44 @@ export function ModelPicker({
     effortValue !== undefined ? convertEffortValueToLevel(effortValue) : undefined,
   );
 
+  const [dynamicModelOptions, setDynamicModelOptions] = useState<ModelOption[] | null>(null);
+  const [dynamicModelError, setDynamicModelError] = useState<string | null>(null);
+  const [isLoadingDynamicModels, setIsLoadingDynamicModels] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+
+    setIsLoadingDynamicModels(true);
+    setDynamicModelError(null);
+
+    void fetchDynamicModelOptions({ signal: controller.signal }).then(result => {
+      if (cancelled) return;
+      setIsLoadingDynamicModels(false);
+
+      if (result.status === 'success') {
+        setDynamicModelOptions(result.options);
+        return;
+      }
+
+      setDynamicModelOptions(null);
+      if (result.status === 'error') {
+        setDynamicModelError(result.error);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, []);
+
   // Memoize all derived values to prevent re-renders
-  const modelOptions = useMemo(() => getModelOptions(isFastMode ?? false), [isFastMode]);
+  const fallbackModelOptions = useMemo(() => getModelOptions(isFastMode ?? false), [isFastMode]);
+  const modelOptions = useMemo(
+    () => mergeDynamicModelOptions(fallbackModelOptions, dynamicModelOptions),
+    [fallbackModelOptions, dynamicModelOptions],
+  );
 
   // Ensure the initial value is in the options list
   // This handles edge cases where the user's current model (e.g., 'haiku' for 3P users)
@@ -248,6 +285,10 @@ export function ModelPicker({
               will undo this.
             </Text>
           )}
+          {isLoadingDynamicModels && <Text dimColor>Fetching models from configured provider…</Text>}
+          {dynamicModelError && (
+            <Text color="warning">Could not fetch provider models: {dynamicModelError}. Showing fallback options.</Text>
+          )}
         </Box>
 
         <Box flexDirection="column" marginBottom={1}>
@@ -333,6 +374,23 @@ export function ModelPicker({
   }
 
   return <Pane color="permission">{content}</Pane>;
+}
+
+function mergeDynamicModelOptions(fallbackOptions: ModelOption[], dynamicOptions: ModelOption[] | null): ModelOption[] {
+  if (!dynamicOptions?.length) return fallbackOptions;
+
+  const defaultOption = fallbackOptions.find(option => option.value === null);
+  const merged: ModelOption[] = defaultOption ? [defaultOption] : [];
+  const seen = new Set<ModelSetting>();
+  if (defaultOption) seen.add(defaultOption.value);
+
+  for (const option of dynamicOptions) {
+    if (seen.has(option.value)) continue;
+    seen.add(option.value);
+    merged.push(option);
+  }
+
+  return merged;
 }
 
 function resolveOptionModel(value?: string): string | undefined {
