@@ -9,9 +9,9 @@ import { getInitialSettings } from '../../../utils/settings/settings.js'
 
 /** Default model map: Anthropic family → CC model ID */
 const DEFAULT_MODEL_MAP: Record<string, string> = {
-  sonnet: 'anthropic/claude-sonnet-4-20250514',
-  opus: 'anthropic/claude-opus-4-20250514',
-  haiku: 'anthropic/claude-haiku-4-5-20251001',
+  sonnet: 'deepseek/deepseek-v4-pro',
+  opus: 'deepseek/deepseek-v4-pro',
+  haiku: 'deepseek/deepseek-v4-pro',
 }
 
 /**

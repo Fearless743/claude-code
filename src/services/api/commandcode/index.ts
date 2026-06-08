@@ -19,6 +19,7 @@ import { randomUUID } from 'crypto'
 import { normalizeMessagesForAPI } from '../../../utils/messages.js'
 import { toolToAPISchema } from '../../../utils/api.js'
 import { logForDebugging } from '../../../utils/debug.js'
+import { getAPIProvider } from '../../../utils/model/providers.js'
 import { addToTotalSessionCost } from '../../../cost-tracker.js'
 import { calculateUSDCost } from '../../../utils/modelCost.js'
 import { recordLLMObservation } from '../../../services/langfuse/tracing.js'
@@ -53,7 +54,11 @@ export async function* queryModelCommandCode(
   void
 > {
   try {
+    logForDebugging(
+      `[CommandCode] Input model="${options.model}", provider=${getAPIProvider()}`,
+    )
     const ccModel = resolveCommandCodeModel(options.model)
+    logForDebugging(`[CommandCode] Resolved model="${ccModel}"`)
     const messagesForAPI = normalizeMessagesForAPI(messages, tools)
 
     const toolSchemas = await Promise.all(

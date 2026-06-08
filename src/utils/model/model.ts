@@ -130,6 +130,7 @@ function getProviderPrimaryModel(): ModelName | undefined {
   if (provider === 'openai') return process.env.OPENAI_MODEL
   if (provider === 'gemini') return process.env.GEMINI_MODEL
   if (provider === 'grok') return process.env.GROK_MODEL
+  if (provider === 'commandcode') return process.env.COMMANDCODE_MODEL
   return undefined
 }
 
