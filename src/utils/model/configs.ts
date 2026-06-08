@@ -14,7 +14,7 @@ export const CLAUDE_3_7_SONNET_CONFIG = {
   openai: 'claude-3-7-sonnet-20250219',
   gemini: 'claude-3-7-sonnet-20250219',
   grok: 'claude-3-7-sonnet-20250219',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-3-7-sonnet-20250219',
 } as const satisfies ModelConfig
 
 export const CLAUDE_3_5_V2_SONNET_CONFIG = {
@@ -25,7 +25,7 @@ export const CLAUDE_3_5_V2_SONNET_CONFIG = {
   openai: 'claude-3-5-sonnet-20241022',
   gemini: 'claude-3-5-sonnet-20241022',
   grok: 'claude-3-5-sonnet-20241022',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-3-5-sonnet-20241022',
 } as const satisfies ModelConfig
 
 export const CLAUDE_3_5_HAIKU_CONFIG = {
@@ -36,7 +36,7 @@ export const CLAUDE_3_5_HAIKU_CONFIG = {
   openai: 'claude-3-5-haiku-20241022',
   gemini: 'claude-3-5-haiku-20241022',
   grok: 'claude-3-5-haiku-20241022',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-3-5-haiku-20241022',
 } as const satisfies ModelConfig
 
 export const CLAUDE_HAIKU_4_5_CONFIG = {
@@ -47,7 +47,7 @@ export const CLAUDE_HAIKU_4_5_CONFIG = {
   openai: 'claude-haiku-4-5-20251001',
   gemini: 'claude-haiku-4-5-20251001',
   grok: 'claude-haiku-4-5-20251001',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-haiku-4-5-20251001',
 } as const satisfies ModelConfig
 
 export const CLAUDE_SONNET_4_CONFIG = {
@@ -58,7 +58,7 @@ export const CLAUDE_SONNET_4_CONFIG = {
   openai: 'claude-sonnet-4-20250514',
   gemini: 'claude-sonnet-4-20250514',
   grok: 'claude-sonnet-4-20250514',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-sonnet-4-20250514',
 } as const satisfies ModelConfig
 
 export const CLAUDE_SONNET_4_5_CONFIG = {
@@ -69,7 +69,7 @@ export const CLAUDE_SONNET_4_5_CONFIG = {
   openai: 'claude-sonnet-4-5-20250929',
   gemini: 'claude-sonnet-4-5-20250929',
   grok: 'claude-sonnet-4-5-20250929',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-sonnet-4-5-20250929',
 } as const satisfies ModelConfig
 
 export const CLAUDE_OPUS_4_CONFIG = {
@@ -80,7 +80,7 @@ export const CLAUDE_OPUS_4_CONFIG = {
   openai: 'claude-opus-4-20250514',
   gemini: 'claude-opus-4-20250514',
   grok: 'claude-opus-4-20250514',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-opus-4-20250514',
 } as const satisfies ModelConfig
 
 export const CLAUDE_OPUS_4_1_CONFIG = {
@@ -91,7 +91,7 @@ export const CLAUDE_OPUS_4_1_CONFIG = {
   openai: 'claude-opus-4-1-20250805',
   gemini: 'claude-opus-4-1-20250805',
   grok: 'claude-opus-4-1-20250805',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-opus-4-1-20250805',
 } as const satisfies ModelConfig
 
 export const CLAUDE_OPUS_4_5_CONFIG = {
@@ -102,7 +102,7 @@ export const CLAUDE_OPUS_4_5_CONFIG = {
   openai: 'claude-opus-4-5-20251101',
   gemini: 'claude-opus-4-5-20251101',
   grok: 'claude-opus-4-5-20251101',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-opus-4-5-20251101',
 } as const satisfies ModelConfig
 
 export const CLAUDE_OPUS_4_6_CONFIG = {
@@ -113,7 +113,7 @@ export const CLAUDE_OPUS_4_6_CONFIG = {
   openai: 'claude-opus-4-6',
   gemini: 'claude-opus-4-6',
   grok: 'claude-opus-4-6',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-opus-4-6',
 } as const satisfies ModelConfig
 
 export const CLAUDE_OPUS_4_7_CONFIG = {
@@ -124,7 +124,7 @@ export const CLAUDE_OPUS_4_7_CONFIG = {
   openai: 'claude-opus-4-7',
   gemini: 'claude-opus-4-7',
   grok: 'claude-opus-4-7',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-opus-4-7',
 } as const satisfies ModelConfig
 
 export const CLAUDE_SONNET_4_6_CONFIG = {
@@ -135,7 +135,7 @@ export const CLAUDE_SONNET_4_6_CONFIG = {
   openai: 'claude-sonnet-4-6',
   gemini: 'claude-sonnet-4-6',
   grok: 'claude-sonnet-4-6',
-  commandcode: 'deepseek/deepseek-v4-pro',
+  commandcode: 'anthropic/claude-sonnet-4-6',
 } as const satisfies ModelConfig
 
 // @[MODEL LAUNCH]: Register the new config here.
